@@ -33,50 +33,15 @@ async function readCronFiles(): Promise<string> {
     }
   }
 
+  // In Docker, use the host's crontab binary
   try {
-    const crontabPath = "/host/crontab";
-    const crontabsDir = "/host/cron/crontabs";
-
-    let cronContent = "";
-
-    try {
-      const systemCrontab = await fs.readFile(crontabPath, "utf-8");
-      cronContent += systemCrontab + "\n";
-    } catch (error) {
-      console.log("System crontab not found or not readable");
-    }
-
-    try {
-      const files = await fs.readdir(crontabsDir);
-      for (const file of files) {
-        if (file !== "root") {
-          try {
-            const userCrontab = await fs.readFile(
-              path.join(crontabsDir, file),
-              "utf-8"
-            );
-            if (userCrontab.trim()) {
-              cronContent += `# User: ${file}\n${userCrontab}\n`;
-            }
-          } catch (error) {
-            console.log(`Could not read crontab for user ${file}`);
-          }
-        }
-      }
-    } catch (error) {
-      console.log("User crontabs directory not found or not readable");
-    }
-
-    return cronContent || "";
+    const { stdout } = await execAsync(
+      '/host/usr/bin/crontab -l 2>/dev/null || echo ""'
+    );
+    return stdout;
   } catch (error) {
-    console.error("Error reading cron files:", error);
-    try {
-      const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
-      return stdout;
-    } catch (fallbackError) {
-      console.error("Fallback crontab command also failed:", fallbackError);
-      return "";
-    }
+    console.error("Error reading crontab:", error);
+    return "";
   }
 }
 

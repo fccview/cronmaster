@@ -3,13 +3,13 @@ services:
     image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster
     user: "root"
-    ports:
-      # Mapping custom port 40123 due to 3000 being very common
-      - "40123:3000"
+    network_mode: host
     environment:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
+      # Feel free to change port, as we're running this as host you won't be able to externally map it
+      - PORT=40123
       # Enter the FULL relative path to the project directory where this docker-compose.yml file is located (use `pwd` to find it)
       - NEXT_PUBLIC_HOST_PROJECT_DIR=/absolute/path/to/project/directory
     volumes:
@@ -20,6 +20,7 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
+      - /usr:/host/usr:ro
       # Mount scripts directory for script execution
       - ./scripts:/app/scripts
       # Mount data directory for persistence

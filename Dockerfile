@@ -1,8 +1,8 @@
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apt-get update && apt-get install -y libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
@@ -34,8 +34,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 nextjs
 
 # Create directories for mounted volumes with proper permissions
 RUN mkdir -p /app/scripts /app/data /app/snippets && \
@@ -57,6 +57,9 @@ COPY --from=builder /app/yarn.lock ./yarn.lock
 
 # Copy node_modules for production dependencies
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Don't set default user - let docker-compose decide
+# USER nextjs
 
 EXPOSE 3000
 
