@@ -78,9 +78,7 @@ export async function createCronJob(
 
     let finalCommand = command;
 
-    // If a script is selected, use the script file path
     if (selectedScriptId) {
-      // Get the script filename from the selected script
       const { fetchScripts } = await import("../scripts");
       const scripts = await fetchScripts();
       const selectedScript = scripts.find((s) => s.id === selectedScriptId);

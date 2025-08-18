@@ -4,7 +4,6 @@ import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { CronExpressionHelper } from "../CronExpressionHelper";
-import { BashSnippetHelper } from "../BashSnippetHelper";
 import { Edit, Terminal } from "lucide-react";
 
 interface EditTaskModalProps {
@@ -26,14 +25,6 @@ export function EditTaskModal({
   form,
   onFormChange,
 }: EditTaskModalProps) {
-  const handleInsertSnippet = (snippet: string) => {
-    const currentContent = form.command;
-    const newContent = currentContent
-      ? `${currentContent}\n\n${snippet}`
-      : snippet;
-    onFormChange({ command: newContent });
-  };
-
   return (
     <Modal
       isOpen={isOpen}
@@ -42,7 +33,6 @@ export function EditTaskModal({
       size="xl"
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        {/* Schedule */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Schedule
@@ -55,7 +45,6 @@ export function EditTaskModal({
           />
         </div>
 
-        {/* Command */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Command
@@ -76,7 +65,6 @@ export function EditTaskModal({
           </div>
         </div>
 
-        {/* Description */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Description{" "}
@@ -90,7 +78,6 @@ export function EditTaskModal({
           />
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
           <Button
             type="button"

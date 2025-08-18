@@ -19,7 +19,6 @@ export function TabbedInterface({ cronJobs, scripts }: TabbedInterfaceProps) {
 
   return (
     <div className="space-y-6">
-      {/* Tab Navigation */}
       <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-lg p-1 glass-card">
         <div className="flex">
           <button
@@ -53,7 +52,6 @@ export function TabbedInterface({ cronJobs, scripts }: TabbedInterfaceProps) {
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="min-h-[400px]">
         {activeTab === "cronjobs" ? (
           <CronJobList cronJobs={cronJobs} scripts={scripts} />

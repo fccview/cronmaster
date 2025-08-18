@@ -25,10 +25,8 @@ export function DeleteScriptModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Delete Script" size="sm">
       <div className="space-y-3">
-        {/* Script Preview */}
         <div className="bg-muted/30 rounded p-2 border border-border/50">
           <div className="space-y-1">
-            {/* Name */}
             <div className="flex items-center gap-2">
               <FileText className="h-3 w-3 text-muted-foreground" />
               <span className="text-xs font-medium text-foreground">
@@ -36,7 +34,6 @@ export function DeleteScriptModal({
               </span>
             </div>
 
-            {/* Description */}
             {script.description && (
               <div className="flex items-start gap-2">
                 <FileText className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -46,7 +43,6 @@ export function DeleteScriptModal({
               </div>
             )}
 
-            {/* Filename */}
             <div className="flex items-start gap-2">
               <FileText className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
               <code className="text-xs font-mono bg-muted/30 px-1 py-0.5 rounded border border-border/30">
@@ -56,7 +52,6 @@ export function DeleteScriptModal({
           </div>
         </div>
 
-        {/* Warning */}
         <div className="bg-destructive/5 border border-destructive/20 rounded p-2">
           <div className="flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
@@ -71,7 +66,6 @@ export function DeleteScriptModal({
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
           <Button
             variant="outline"

@@ -39,7 +39,6 @@ export function CronExpressionHelper({
   const [debouncedValue, setDebouncedValue] = useState(value);
   const [patternSearch, setPatternSearch] = useState("");
 
-  // Debounce the input to avoid too many calculations
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedValue(value);
@@ -48,7 +47,6 @@ export function CronExpressionHelper({
     return () => clearTimeout(timer);
   }, [value]);
 
-  // Parse cron expression when debounced value changes
   useEffect(() => {
     if (debouncedValue) {
       const result = parseCronExpression(debouncedValue);
@@ -63,7 +61,6 @@ export function CronExpressionHelper({
     setShowPatternsPanel(false);
   };
 
-  // Filter patterns based on search
   const filteredPatterns = cronPatterns
     .map((category) => ({
       ...category,
@@ -79,7 +76,6 @@ export function CronExpressionHelper({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {/* Input with real-time feedback */}
       <div className="relative">
         <Input
           value={value}
@@ -98,11 +94,9 @@ export function CronExpressionHelper({
         </div>
       </div>
 
-      {/* Real-time explanation */}
       {explanation && (
         <div className="bg-muted/30 rounded p-2 border border-border/30">
           <div className="space-y-1">
-            {/* Human readable description */}
             <div className="flex items-start gap-2">
               <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
               <div className="flex-1">
@@ -119,7 +113,6 @@ export function CronExpressionHelper({
               </div>
             </div>
 
-            {/* Next run times */}
             {explanation.isValid && explanation.nextRuns.length > 0 && (
               <div className="flex items-start gap-2">
                 <Calendar className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -141,7 +134,6 @@ export function CronExpressionHelper({
         </div>
       )}
 
-      {/* Quick patterns panel */}
       {showPatterns && (
         <div className="bg-muted/30 rounded-lg border border-border/50">
           <button
@@ -167,7 +159,6 @@ export function CronExpressionHelper({
 
           {showPatternsPanel && (
             <div className="p-3 border-t border-border/50">
-              {/* Search input */}
               <div className="relative mb-3">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input

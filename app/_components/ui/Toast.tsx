@@ -87,7 +87,6 @@ export function ToastContainer() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  // Expose addToast globally
   useEffect(() => {
     (window as any).showToast = addToast;
     return () => {
@@ -104,7 +103,6 @@ export function ToastContainer() {
   );
 }
 
-// Helper function to show toasts
 export function showToast(
   type: Toast["type"],
   title: string,

@@ -10,8 +10,6 @@ import {
   Code,
   Settings,
   Database,
-  ChevronDown,
-  ChevronUp,
   Copy,
   Check,
 } from "lucide-react";
@@ -45,7 +43,6 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
   const [filteredSnippets, setFilteredSnippets] = useState<BashSnippet[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load snippets and categories on mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -65,7 +62,6 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
     loadData();
   }, []);
 
-  // Filter snippets based on search and category
   useEffect(() => {
     const filterSnippets = async () => {
       if (searchQuery) {
@@ -107,7 +103,6 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
 
   return (
     <div className="space-y-3">
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -118,7 +113,6 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
         />
       </div>
 
-      {/* Category Filter */}
       {!searchQuery && (
         <div className="flex flex-wrap gap-2">
           <Button
@@ -150,7 +144,6 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
         </div>
       )}
 
-      {/* Snippets List */}
       <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
         {filteredSnippets.map((snippet) => {
           const Icon =

@@ -53,7 +53,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 
     return (
       <>
-        {/* Mobile burger menu button */}
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           className="fixed bottom-4 right-4 z-50 lg:hidden p-2 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg hover:bg-accent transition-colors"
@@ -65,7 +64,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
           )}
         </button>
 
-        {/* Mobile overlay backdrop */}
         <div
           className={cn(
             "fixed inset-0 bg-black/50 z-20 lg:hidden transition-opacity duration-300",
@@ -78,11 +76,9 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
           ref={ref}
           className={cn(
             "bg-background/95 backdrop-blur-md border-r border-border/50 transition-all duration-300 ease-in-out glass-card",
-            // Mobile behavior
             isMobileOpen
               ? "fixed left-0 top-0 h-full w-80 z-30 translate-x-0"
               : "fixed left-0 top-0 h-full w-80 z-30 -translate-x-full lg:translate-x-0",
-            // Desktop behavior - fixed positioning between header and bottom
             "lg:fixed lg:left-0 lg:pt-[90px] lg:bottom-0 lg:z-10",
             isCollapsed ? "lg:w-16" : "lg:w-80",
             className
@@ -95,7 +91,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
           }
           {...props}
         >
-          {/* Desktop Toggle Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="absolute -right-3 top-6 w-6 h-6 bg-background border border-border rounded-full items-center justify-center hover:bg-accent transition-colors z-40 hidden lg:flex"
@@ -107,7 +102,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             )}
           </button>
 
-          {/* Header */}
           <div className="p-4 border-b border-border/50 bg-background/95 backdrop-blur-md">
             <div
               className={cn(
@@ -126,7 +120,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             </div>
           </div>
 
-          {/* Content */}
           <div
             className={cn(
               "overflow-y-auto custom-scrollbar",
@@ -136,11 +129,9 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
           >
             {isCollapsed ? (
               <div className="space-y-4">
-                {/* Collapsed view - quick stats */}
                 <div className="flex flex-col items-center space-y-4">
                   {quickStats ? (
                     <>
-                      {/* CPU Usage */}
                       <div className="w-12 h-12 bg-card/50 border border-border/30 rounded-lg flex flex-col items-center justify-center p-1">
                         <Cpu className="h-3 w-3 text-pink-500 mb-1" />
                         <span className="text-xs font-bold text-foreground">
@@ -148,7 +139,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                         </span>
                       </div>
 
-                      {/* Memory Usage */}
                       <div className="w-12 h-12 bg-card/50 border border-border/30 rounded-lg flex flex-col items-center justify-center p-1">
                         <HardDrive className="h-3 w-3 text-cyan-500 mb-1" />
                         <span className="text-xs font-bold text-foreground">
@@ -156,7 +146,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                         </span>
                       </div>
 
-                      {/* Network Latency */}
                       <div className="w-12 h-12 bg-card/50 border border-border/30 rounded-lg flex flex-col items-center justify-center p-1">
                         <Wifi className="h-3 w-3 text-teal-500 mb-1" />
                         <div className="flex flex-col items-center">
@@ -170,7 +159,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                       </div>
                     </>
                   ) : (
-                    // Fallback to generic icons if no quick stats
                     React.Children.map(children, (child, index) => {
                       if (React.isValidElement(child) && child.type === "div") {
                         return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Clock } from "lucide-react";
+import { Copy } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { Input } from "../ui/Input";

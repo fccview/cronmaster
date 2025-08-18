@@ -4,26 +4,6 @@ import { readFileSync } from "fs";
 
 const execAsync = promisify(exec);
 
-/**
- * System Information Utilities
- *
- * PERFORMANCE OPTIMIZATIONS:
- * - Network speed test: Uses latency-based estimation instead of actual downloads (25MB → 1 ping)
- * - CPU usage calculation: Reduced wait time from 100ms to 50ms
- * - Real-time updates: System stats update every 30 seconds via API endpoint
- * - Time updates: Every 30 seconds (configurable via NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL)
- *
- * UPDATE FREQUENCY:
- * - System stats: Every 30 seconds (real-time via /api/system-info)
- * - Clock: Every 30 seconds (configurable via environment variable)
- * - Network: Estimated from latency (no actual speed tests)
- *
- * ENVIRONMENT VARIABLES:
- * - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL: Update interval in milliseconds (default: 30000)
- *
- * For real-time updates, the frontend polls the /api/system-info endpoint
- * every 30 seconds to get fresh system information.
- */
 export interface SystemInfo {
   platform: string;
   hostname: string;
@@ -67,10 +47,8 @@ export interface CronJob {
   comment?: string;
 }
 
-// Get actual OS information
 async function getOSInfo(): Promise<string> {
   try {
-    // Try to read /etc/os-release for detailed OS info
     const osRelease = readFileSync("/etc/os-release", "utf8");
     const lines = osRelease.split("\n");
     let name = "";
@@ -92,23 +70,19 @@ async function getOSInfo(): Promise<string> {
       return `${name} ${version}`;
     }
 
-    // Fallback to uname
     const { stdout } = await execAsync("uname -a");
     return stdout.trim();
   } catch (error) {
-    // Final fallback
     const { stdout } = await execAsync("uname -s -r");
     return stdout.trim();
   }
 }
 
-// Get real memory usage
 async function getMemoryInfo() {
   try {
     const { stdout } = await execAsync("free -b");
     const lines = stdout.split("\n");
 
-    // Find the memory line (should be the second line)
     const memLine = lines.find((line) => line.trim().startsWith("Mem:"));
     if (!memLine) {
       throw new Error("Could not find memory line in free output");
@@ -116,15 +90,9 @@ async function getMemoryInfo() {
 
     const parts = memLine.trim().split(/\s+/);
 
-    // free -b output format: Mem: total used free shared buff/cache available
     const total = parseInt(parts[1]);
-    const used = parseInt(parts[2]);
-    const free = parseInt(parts[3]);
-    const shared = parseInt(parts[4]);
-    const buffCache = parseInt(parts[5]);
     const available = parseInt(parts[6]);
 
-    // Calculate actual usage based on available memory
     const actualUsed = total - available;
     const usage = (actualUsed / total) * 100;
 
@@ -142,8 +110,8 @@ async function getMemoryInfo() {
 
     return {
       total: formatBytes(total),
-      used: formatBytes(actualUsed), // Show actually used memory
-      free: formatBytes(available), // Show available memory (what's actually free for use)
+      used: formatBytes(actualUsed),
+      free: formatBytes(available),
       usage: Math.round(usage),
       status,
     };
@@ -159,22 +127,18 @@ async function getMemoryInfo() {
   }
 }
 
-// Get real CPU information and usage
 async function getCPUInfo() {
   try {
-    // Get CPU model
     const { stdout: modelOutput } = await execAsync(
       "lscpu | grep 'Model name' | cut -f 2 -d ':'"
     );
     const model = modelOutput.trim();
 
-    // Get CPU cores
     const { stdout: coresOutput } = await execAsync("nproc");
     const cores = parseInt(coresOutput.trim());
 
-    // Get CPU usage by reading /proc/stat (optimized for speed)
     const stat1 = readFileSync("/proc/stat", "utf8").split("\n")[0];
-    await new Promise((resolve) => setTimeout(resolve, 50)); // Reduced from 100ms to 50ms
+    await new Promise((resolve) => setTimeout(resolve, 50));
     const stat2 = readFileSync("/proc/stat", "utf8").split("\n")[0];
 
     const parseCPU = (line: string) => {
@@ -224,17 +188,14 @@ async function getCPUInfo() {
   }
 }
 
-// Get GPU information
 async function getGPUInfo() {
   try {
-    // Try to get GPU info using lspci
     const { stdout } = await execAsync("lspci | grep -i vga");
     const gpuLines = stdout.split("\n").filter((line) => line.trim());
 
     if (gpuLines.length > 0) {
       const gpuInfo = gpuLines[0].split(":")[2]?.trim() || "Unknown GPU";
 
-      // Try to get memory info for NVIDIA GPUs
       let memory = "";
       try {
         const { stdout: nvidiaOutput } = await execAsync(
@@ -244,9 +205,7 @@ async function getGPUInfo() {
           const memMB = parseInt(nvidiaOutput.trim());
           memory = `${Math.round(memMB / 1024)} GB`;
         }
-      } catch (e) {
-        // NVIDIA-SMI not available
-      }
+      } catch (e) {}
 
       return {
         model: gpuInfo,
@@ -267,10 +226,8 @@ async function getGPUInfo() {
   }
 }
 
-// Perform network speed test
 async function getNetworkInfo() {
   try {
-    // Test latency first (this is fast)
     const { stdout: pingOutput } = await execAsync(
       'ping -c 1 -W 1 8.8.8.8 2>/dev/null || echo "timeout"'
     );
@@ -288,7 +245,6 @@ async function getNetworkInfo() {
       };
     }
 
-    // Parse ping results for latency
     const lines = pingOutput.split("\n");
     const timeLine = lines.find((line) => line.includes("time="));
     let latency = 0;
@@ -300,33 +256,29 @@ async function getNetworkInfo() {
       }
     }
 
-    // Quick network speed estimation based on latency (much faster than actual download test)
     let downloadSpeed = 0;
     let speed = "Unknown";
     let status = "Stable";
 
-    // Estimate speed based on latency and a quick small test
     if (latency < 10) {
-      downloadSpeed = 50; // Excellent connection
+      downloadSpeed = 50;
       speed = "Excellent";
       status = "Optimal";
     } else if (latency < 30) {
-      downloadSpeed = 25; // Good connection
+      downloadSpeed = 25;
       speed = "Good";
       status = "Stable";
     } else if (latency < 100) {
-      downloadSpeed = 10; // Fair connection
+      downloadSpeed = 10;
       speed = "Fair";
       status = "Slow";
     } else {
-      downloadSpeed = 2; // Poor connection
+      downloadSpeed = 2;
       speed = "Poor";
       status = "Poor";
     }
 
-    // Optional: Quick speed test with much smaller file (only if needed)
-    // This can be enabled for more accurate results but will slow down initial load
-    const enableSpeedTest = false; // Set to true for actual speed testing
+    const enableSpeedTest = false;
     if (enableSpeedTest) {
       try {
         const startTime = Date.now();
@@ -337,10 +289,10 @@ async function getNetworkInfo() {
 
         const speedBytesPerSec = parseFloat(curlOutput);
         if (speedBytesPerSec > 0) {
-          downloadSpeed = speedBytesPerSec / (1024 * 1024); // Convert to MB/s
+          downloadSpeed = speedBytesPerSec / (1024 * 1024);
         }
       } catch (e) {
-        // Keep the estimated speed if test fails
+        console.error("Error getting network info:", e);
       }
     }
 
@@ -362,7 +314,6 @@ async function getNetworkInfo() {
   }
 }
 
-// Determine overall system status
 function getSystemStatus(memory: any, cpu: any, network: any) {
   const statuses = [memory.status, cpu.status, network.status];
   const criticalCount = statuses.filter((s) => s === "Critical").length;

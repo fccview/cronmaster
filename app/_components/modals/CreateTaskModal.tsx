@@ -43,7 +43,6 @@ export function CreateTaskModal({
     useState<string>("");
   const selectedScript = scripts.find((s) => s.id === form.selectedScriptId);
 
-  // Load script content when script is selected
   useEffect(() => {
     const loadScriptContent = async () => {
       if (selectedScript) {
@@ -79,7 +78,6 @@ export function CreateTaskModal({
       size="lg"
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        {/* Schedule */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Schedule
@@ -92,7 +90,6 @@ export function CreateTaskModal({
           />
         </div>
 
-        {/* Task Type Selection */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
             Task Type
@@ -141,7 +138,6 @@ export function CreateTaskModal({
           </div>
         </div>
 
-        {/* Script Selection */}
         {form.selectedScriptId && scripts.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
@@ -169,7 +165,6 @@ export function CreateTaskModal({
           </div>
         )}
 
-        {/* Command Input */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Command
@@ -198,7 +193,6 @@ export function CreateTaskModal({
           )}
         </div>
 
-        {/* Script Content Preview */}
         {form.selectedScriptId && selectedScriptContent && (
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
@@ -212,7 +206,6 @@ export function CreateTaskModal({
           </div>
         )}
 
-        {/* Description */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
             Description{" "}
@@ -226,7 +219,6 @@ export function CreateTaskModal({
           />
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
           <Button
             type="button"

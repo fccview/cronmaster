@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Button } from "./ui/Button";
@@ -30,7 +30,6 @@ export function BashEditor({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Sync scroll position between textarea and syntax highlighter
   const handleScroll = () => {
     if (textareaRef.current) {
       const scrollTop = textareaRef.current.scrollTop;

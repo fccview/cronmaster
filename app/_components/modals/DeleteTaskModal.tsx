@@ -34,10 +34,8 @@ export function DeleteTaskModal({
       size="sm"
     >
       <div className="space-y-3">
-        {/* Task Preview */}
         <div className="bg-muted/30 rounded p-2 border border-border/50">
           <div className="space-y-1">
-            {/* Schedule */}
             <div className="flex items-center gap-2">
               <Calendar className="h-3 w-3 text-muted-foreground" />
               <code className="text-xs font-mono bg-purple-500/10 text-purple-600 dark:text-purple-400 px-1 py-0.5 rounded border border-purple-500/20">
@@ -45,7 +43,6 @@ export function DeleteTaskModal({
               </code>
             </div>
 
-            {/* Command */}
             <div className="flex items-start gap-2">
               <Terminal className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
               <pre className="text-xs font-medium text-foreground break-words bg-muted/30 px-1 py-0.5 rounded border border-border/30 flex-1">
@@ -53,7 +50,6 @@ export function DeleteTaskModal({
               </pre>
             </div>
 
-            {/* Comment */}
             {job.comment && (
               <div className="flex items-start gap-2">
                 <MessageSquare className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -65,7 +61,6 @@ export function DeleteTaskModal({
           </div>
         </div>
 
-        {/* Warning */}
         <div className="bg-destructive/5 border border-destructive/20 rounded p-2">
           <div className="flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
@@ -80,7 +75,6 @@ export function DeleteTaskModal({
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
           <Button variant="outline" onClick={onClose} className="btn-outline">
             Cancel

@@ -24,25 +24,22 @@ const SCRIPTS_METADATA_FILE = join(
   "scripts-metadata.json"
 );
 
-// Function to sanitize script names for filenames
 function sanitizeScriptName(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, "-") // Replace spaces with hyphens
-    .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
-    .replace(/^-|-$/g, "") // Remove leading/trailing hyphens
-    .substring(0, 50); // Limit length
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .substring(0, 50);
 }
 
-// Function to generate unique filename
 async function generateUniqueFilename(baseName: string): Promise<string> {
   const scripts = await readScriptsMetadata();
   const sanitizedName = sanitizeScriptName(baseName);
   let filename = `${sanitizedName}.sh`;
   let counter = 1;
 
-  // Check if filename already exists
   while (scripts.some((script) => script.filename === filename)) {
     filename = `${sanitizedName}-${counter}.sh`;
     counter++;
@@ -92,19 +89,16 @@ async function writeScriptsMetadata(scripts: Script[]) {
 async function saveScriptFile(filename: string, content: string) {
   await ensureScriptsDirectory();
 
-  // Ensure both container and host scripts directories exist
   await ensureHostScriptsDirectory();
 
   const scriptPath = join(SCRIPTS_DIR, filename);
 
-  // Add shebang if not present
   const scriptContent = content.startsWith("#!/")
     ? content
     : `#!/bin/bash\n${content}`;
 
   await writeFile(scriptPath, scriptContent, "utf8");
 
-  // Make the script executable
   try {
     await execAsync(`chmod +x "${scriptPath}"`);
   } catch (error) {
@@ -149,10 +143,8 @@ export async function createScript(
       filename,
     };
 
-    // Save the actual script file
     await saveScriptFile(filename, content);
 
-    // Save metadata (without content)
     scripts.push(newScript);
     await writeScriptsMetadata(scripts);
     revalidatePath("/");
@@ -190,10 +182,8 @@ export async function updateScript(
 
     const oldScript = scripts[scriptIndex];
 
-    // Update the actual script file
     await saveScriptFile(oldScript.filename, content);
 
-    // Update metadata (without content)
     scripts[scriptIndex] = {
       ...oldScript,
       name,
@@ -221,10 +211,8 @@ export async function deleteScript(
       return { success: false, message: "Script not found" };
     }
 
-    // Delete the actual script file
     await deleteScriptFile(scriptToDelete.filename);
 
-    // Update metadata
     const filteredScripts = scripts.filter((s) => s.id !== id);
     await writeScriptsMetadata(filteredScripts);
     revalidatePath("/");
@@ -248,10 +236,8 @@ export async function cloneScript(
       return { success: false, message: "Script not found" };
     }
 
-    // Get the original script content
     const content = await getScriptContent(originalScript.filename);
 
-    // Create new script with the same content but new name
     const scriptId = `script_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
@@ -265,10 +251,8 @@ export async function cloneScript(
       filename,
     };
 
-    // Save the actual script file
     await saveScriptFile(filename, content);
 
-    // Save metadata
     scripts.push(newScript);
     await writeScriptsMetadata(scripts);
     revalidatePath("/");
@@ -284,7 +268,6 @@ export async function cloneScript(
   }
 }
 
-// Function to get script content from file (for editing)
 export async function getScriptContent(filename: string): Promise<string> {
   try {
     const scriptPath = join(SCRIPTS_DIR, filename);

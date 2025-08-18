@@ -27,7 +27,6 @@ function parseMetadata(content: string): SnippetMetadata {
   for (const line of lines) {
     const trimmed = line.trim();
 
-    // Parse metadata comments like # @id: value
     const match = trimmed.match(/^#\s*@(\w+):\s*(.+)$/);
     if (match) {
       const [, key, value] = match;
@@ -60,12 +59,10 @@ function extractTemplate(content: string): string {
   let inTemplate = false;
 
   for (const line of lines) {
-    // Skip metadata comments
     if (line.trim().match(/^#\s*@\w+:/)) {
       continue;
     }
 
-    // Start template after first non-metadata line
     if (!inTemplate && line.trim() && !line.trim().startsWith("# @")) {
       inTemplate = true;
     }
@@ -94,7 +91,6 @@ async function scanSnippetDirectory(
         const metadata = parseMetadata(content);
         const template = extractTemplate(content);
 
-        // Only include snippets with valid metadata
         if (
           metadata.id &&
           metadata.title &&

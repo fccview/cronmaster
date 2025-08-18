@@ -44,14 +44,12 @@ export function ScriptsManager({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
 
-  // Form state for create modal
   const [createForm, setCreateForm] = useState({
     name: "",
     description: "",
     content: "#!/bin/bash\n# Your script here\necho 'Hello World'",
   });
 
-  // Form state for edit modal
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
@@ -143,7 +141,6 @@ export function ScriptsManager({
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(content);
       } else {
-        // Fallback for non-secure contexts or when clipboard API is not available
         const textArea = document.createElement("textarea");
         textArea.value = content;
         textArea.style.position = "fixed";
@@ -221,7 +218,6 @@ export function ScriptsManager({
                   className="glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    {/* Main Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
                         <h4 className="font-medium text-foreground truncate">
@@ -241,7 +237,6 @@ export function ScriptsManager({
                       </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
@@ -275,7 +270,6 @@ export function ScriptsManager({
                         size="sm"
                         onClick={async () => {
                           setSelectedScript(script);
-                          // Load script content
                           const content = await getScriptContent(
                             script.filename
                           );

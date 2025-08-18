@@ -224,9 +224,7 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                   className="glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    {/* Main Content */}
                     <div className="flex-1 min-w-0">
-                      {/* Schedule and Command Row */}
                       <div className="flex items-center gap-3 mb-2">
                         <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
                           {job.schedule}
@@ -241,7 +239,6 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                         </div>
                       </div>
 
-                      {/* Comment (if exists) */}
                       {job.comment && (
                         <p
                           className="text-xs text-muted-foreground italic truncate"
@@ -252,7 +249,6 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                       )}
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
@@ -298,7 +294,6 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
         </CardContent>
       </Card>
 
-      {/* Modals */}
       <CreateTaskModal
         isOpen={isNewCronModalOpen}
         onClose={() => setIsNewCronModalOpen(false)}

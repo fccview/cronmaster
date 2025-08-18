@@ -30,7 +30,6 @@ export function SystemInfoCard({
     useState<SystemInfoType>(initialSystemInfo);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Function to fetch fresh system info using server action
   const updateSystemInfo = async () => {
     try {
       setIsUpdating(true);
@@ -53,9 +52,8 @@ export function SystemInfoCard({
     };
 
     updateTime();
-    updateStats(); // Initial update
+    updateStats();
 
-    // Update time and stats every 30 seconds
     const updateInterval = parseInt(
       process.env.NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL || "30000"
     );
@@ -67,14 +65,12 @@ export function SystemInfoCard({
     return () => clearInterval(interval);
   }, []);
 
-  // Quick stats for collapsed sidebar
   const quickStats = {
     cpu: systemInfo.cpu.usage,
     memory: systemInfo.memory.usage,
     network: `${systemInfo.network.latency}ms`,
   };
 
-  // Basic system information
   const basicInfoItems = [
     {
       icon: Monitor,
@@ -102,7 +98,6 @@ export function SystemInfoCard({
     },
   ];
 
-  // Performance metrics with progress bars
   const performanceItems = [
     {
       icon: HardDrive,
@@ -144,7 +139,6 @@ export function SystemInfoCard({
     },
   ];
 
-  // Performance summary metrics
   const performanceMetrics = [
     {
       label: "CPU Usage",
@@ -169,7 +163,6 @@ export function SystemInfoCard({
       defaultCollapsed={false}
       quickStats={quickStats}
     >
-      {/* System Status */}
       <SystemStatus
         status={systemInfo.systemStatus.overall}
         details={systemInfo.systemStatus.details}
@@ -177,7 +170,6 @@ export function SystemInfoCard({
         isUpdating={isUpdating}
       />
 
-      {/* Basic System Information */}
       <div>
         <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
           System Information
@@ -196,7 +188,6 @@ export function SystemInfoCard({
         </div>
       </div>
 
-      {/* Performance Metrics */}
       <div>
         <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
           Performance Metrics
@@ -219,10 +210,8 @@ export function SystemInfoCard({
         </div>
       </div>
 
-      {/* Performance Summary */}
       <PerformanceSummary metrics={performanceMetrics} />
 
-      {/* Performance Note */}
       <div className="text-xs text-muted-foreground text-center p-2 bg-muted/20 rounded-lg">
         💡 Stats update every{" "}
         {Math.round(
