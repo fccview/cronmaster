@@ -5,6 +5,34 @@ import { isDocker, getSystemPath, getMemoryInfoDocker, getCPUInfoDocker, getGPUI
 
 const execAsync = promisify(exec);
 
+function getCachedData<T>(key: string): T | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp > 24 * 60 * 60 * 1000) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        return data;
+    } catch {
+        return null;
+    }
+}
+
+function setCachedData<T>(key: string, data: T): void {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem(key, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
+    } catch (error) {
+        console.error("Error setting cached data:", error);
+    }
+}
+
 export interface SystemInfo {
     platform: string;
     hostname: string;
@@ -43,6 +71,11 @@ export interface SystemInfo {
 
 async function getOSInfo(): Promise<string> {
     try {
+        const cachedOS = getCachedData<string>('os_info');
+        if (cachedOS) {
+            return cachedOS;
+        }
+
         const osReleasePath = getSystemPath("/etc/os-release");
         const osRelease = readFileSync(osReleasePath, "utf8");
         const lines = osRelease.split("\n");
@@ -51,7 +84,9 @@ async function getOSInfo(): Promise<string> {
 
         for (const line of lines) {
             if (line.startsWith("PRETTY_NAME=")) {
-                return line.split("=")[1].replace(/"/g, "");
+                const osInfo = line.split("=")[1].replace(/"/g, "");
+                setCachedData('os_info', osInfo);
+                return osInfo;
             }
             if (line.startsWith("NAME=") && !name) {
                 name = line.split("=")[1].replace(/"/g, "");
@@ -62,14 +97,20 @@ async function getOSInfo(): Promise<string> {
         }
 
         if (name && version) {
-            return `${name} ${version}`;
+            const osInfo = `${name} ${version}`;
+            setCachedData('os_info', osInfo);
+            return osInfo;
         }
 
         const { stdout } = await execAsync("uname -a");
-        return stdout.trim();
+        const osInfo = stdout.trim();
+        setCachedData('os_info', osInfo);
+        return osInfo;
     } catch (error) {
         const { stdout } = await execAsync("uname -s -r");
-        return stdout.trim();
+        const osInfo = stdout.trim();
+        setCachedData('os_info', osInfo);
+        return osInfo;
     }
 }
 
@@ -134,16 +175,30 @@ async function getMemoryInfo() {
 
 async function getCPUInfo() {
     try {
+        const cachedStatic = getCachedData<{ model: string, cores: number }>('cpu_static');
         let model = "Unknown";
         let cores = 0;
 
-        if (isDocker) {
-            try {
-                const cpuInfo = await getCPUInfoDocker();
-                model = cpuInfo.model;
-                cores = cpuInfo.cores;
-            } catch (error) {
-                console.error("Error reading host CPU info:", error);
+        if (cachedStatic) {
+            model = cachedStatic.model;
+            cores = cachedStatic.cores;
+        } else {
+            if (isDocker) {
+                try {
+                    const cpuInfo = await getCPUInfoDocker();
+                    model = cpuInfo.model;
+                    cores = cpuInfo.cores;
+                } catch (error) {
+                    console.error("Error reading host CPU info:", error);
+                    const { stdout: modelOutput } = await execAsync(
+                        "lscpu | grep 'Model name' | cut -f 2 -d ':'"
+                    );
+                    model = modelOutput.trim();
+
+                    const { stdout: coresOutput } = await execAsync("nproc");
+                    cores = parseInt(coresOutput.trim());
+                }
+            } else {
                 const { stdout: modelOutput } = await execAsync(
                     "lscpu | grep 'Model name' | cut -f 2 -d ':'"
                 );
@@ -152,14 +207,8 @@ async function getCPUInfo() {
                 const { stdout: coresOutput } = await execAsync("nproc");
                 cores = parseInt(coresOutput.trim());
             }
-        } else {
-            const { stdout: modelOutput } = await execAsync(
-                "lscpu | grep 'Model name' | cut -f 2 -d ':'"
-            );
-            model = modelOutput.trim();
 
-            const { stdout: coresOutput } = await execAsync("nproc");
-            cores = parseInt(coresOutput.trim());
+            setCachedData('cpu_static', { model, cores });
         }
 
         const statPath = getSystemPath("/proc/stat");
@@ -216,46 +265,53 @@ async function getCPUInfo() {
 
 async function getGPUInfo() {
     try {
-        if (isDocker) {
-            return await getGPUInfoDocker();
+        const cachedGPU = getCachedData<{ model: string, memory?: string }>('gpu_static');
+        let model = "Unknown";
+        let memory = "";
+
+        if (cachedGPU) {
+            model = cachedGPU.model;
+            memory = cachedGPU.memory || "";
         } else {
-            try {
-                const { stdout } = await execAsync("lspci | grep -i vga");
-                const gpuLines = stdout.split("\n").filter((line) => line.trim());
-                if (gpuLines.length > 0) {
-                    const gpuInfo = gpuLines[0].split(":")[2]?.trim() || "Unknown GPU";
-                    return {
-                        model: gpuInfo,
-                        status: "Available",
-                    };
+            if (isDocker) {
+                const gpuInfo = await getGPUInfoDocker();
+                model = gpuInfo.model;
+            } else {
+                try {
+                    const { stdout } = await execAsync("lspci | grep -i vga");
+                    const gpuLines = stdout.split("\n").filter((line) => line.trim());
+                    if (gpuLines.length > 0) {
+                        model = gpuLines[0].split(":")[2]?.trim() || "Unknown GPU";
+                    }
+                } catch (error) {
+                    console.log("lspci not available, using fallback methods");
                 }
-            } catch (error) {
-                console.log("lspci not available, using fallback methods");
+
+                try {
+                    const { stdout: nvidiaOutput } = await execAsync(
+                        "nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null"
+                    );
+                    if (nvidiaOutput.trim()) {
+                        const memMB = parseInt(nvidiaOutput.trim());
+                        memory = `${Math.round(memMB / 1024)} GB`;
+                    }
+                } catch (e) { }
             }
+
+            setCachedData('gpu_static', { model, memory });
         }
 
-        let memory = "";
-        try {
-            const { stdout: nvidiaOutput } = await execAsync(
-                "nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null"
-            );
-            if (nvidiaOutput.trim()) {
-                const memMB = parseInt(nvidiaOutput.trim());
-                memory = `${Math.round(memMB / 1024)} GB`;
-            }
-        } catch (e) { }
-
-        if (isDocker) {
-            return {
-                model: "No dedicated GPU detected",
-                status: "Integrated",
-            };
+        let status = "Unknown";
+        if (model !== "Unknown" && model !== "No dedicated GPU detected") {
+            status = "Available";
+        } else if (model === "No dedicated GPU detected") {
+            status = "Integrated";
         }
 
         return {
-            model: "Unknown GPU",
+            model,
             memory,
-            status: "Unknown",
+            status,
         };
     } catch (error) {
         return {
