@@ -1,8 +1,10 @@
 services:
   cronjob-manager:
-    build: .
+    image: ghcr.io/fccview/cronmaster:main
+    container_name: chronmaster
+    user: "root"
     ports:
-      - "3000:3000"
+      - "40123:3000"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
@@ -24,8 +26,6 @@ services:
       - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/snippets:/app/snippets
     # Run with host network to access system information
     network_mode: host
-    # Run as root to access system commands (needed for cron operations)
-    user: root
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -33,3 +33,4 @@ services:
       - SYS_ADMIN
     cap_drop:
       - ALL
+    init: true

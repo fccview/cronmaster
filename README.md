@@ -44,7 +44,9 @@
 ```bash
 services:
   cronjob-manager:
-    build: .
+    image: ghcr.io/fccview/cronmaster:main
+    container_name: chronmaster
+    user: "root"
     ports:
       # Mapping custom port 40123 due to 3000 being very common
       - "40123:3000"

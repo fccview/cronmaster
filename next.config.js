@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone',
+    // Removed standalone output for traditional Next.js deployment
 }
 
 module.exports = nextConfig
