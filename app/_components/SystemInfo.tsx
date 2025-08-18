@@ -71,7 +71,7 @@ export function SystemInfoCard({
   const quickStats = {
     cpu: systemInfo.cpu.usage,
     memory: systemInfo.memory.usage,
-    network: `${systemInfo.network.downloadSpeed} MB/s`,
+    network: `${systemInfo.network.latency}ms`,
   };
 
   // Basic system information
@@ -137,8 +137,8 @@ export function SystemInfoCard({
     {
       icon: Wifi,
       label: "Network",
-      value: systemInfo.network.speed,
-      detail: `${systemInfo.network.latency}ms latency • ~${systemInfo.network.downloadSpeed} MB/s`,
+      value: `${systemInfo.network.latency}ms`,
+      detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
       status: systemInfo.network.status,
       color: "text-teal-500",
     },
@@ -157,8 +157,8 @@ export function SystemInfoCard({
       status: systemInfo.memory.status,
     },
     {
-      label: "Network Speed",
-      value: `${systemInfo.network.downloadSpeed} MB/s`,
+      label: "Network Latency",
+      value: `${systemInfo.network.latency}ms`,
       status: systemInfo.network.status,
     },
   ];

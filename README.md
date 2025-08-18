@@ -2,41 +2,74 @@
 
 A modern, web-based interface for managing cron jobs across different operating systems (Linux, macOS, Windows). Built with Next.js, TypeScript, and Tailwind CSS.
 
+<br />
+<p align="center">
+  <a href="https://www.buymeacoffee.com/fccview">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="150">
+  </a>
+</p>
+
 ## Features
 
-- 🌐 **Cross-platform support**: Works on Linux, macOS, and Windows
-- 🎨 **Modern UI**: Beautiful, responsive interface with dark/light mode
-- 📊 **System Information**: Display hostname, IP address, uptime, memory, and CPU info
-- ⏰ **Cron Job Management**: View, create, and delete cron jobs with comments
-- 🐳 **Docker Support**: Run entirely from a Docker container
-- 🔧 **Easy Setup**: Quick presets for common cron schedules
+- **Modern UI**: Beautiful, responsive interface with dark/light mode.
+- **System Information**: Display hostname, IP address, uptime, memory, network and CPU info.
+- **Cron Job Management**: View, create, and delete cron jobs with comments.
+- **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
+- **Docker Support**: Runs entirely from a Docker container.
+- **Easy Setup**: Quick presets for common cron schedules.
 
 ## Quick Start
 
 ### Using Docker (Recommended)
 
-1. Clone the repository:
+1. Create a `docker-compose.yml` file with this content:
 
 ```bash
-git clone <repository-url>
-cd cronjob-manager
+services:
+  cronjob-manager:
+    build: .
+    ports:
+      # Mapping custom port 40123 due to 3000 being very common
+      - "40123:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
+      # Enter the FULL relative path to the project directory where this docker-compose.yml file is located (use `pwd` to find it)
+      - NEXT_PUBLIC_HOST_PROJECT_DIR=/absolute/path/to/project/directory
+    volumes:
+      # Mount the host's crontab for Linux/Unix systems
+      - /var/spool/cron/crontabs:/var/spool/cron/crontabs:ro
+      - /etc/crontab:/etc/crontab:ro
+      # Mount system information directories
+      - /proc:/proc:ro
+      - /sys:/sys:ro
+      - /etc:/etc:ro
+      # Mount scripts directory for script execution
+      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/scripts:/app/scripts
+      # Mount data directory for persistence
+      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/data:/app/data
+      # Mount snippets directory for user-defined snippets
+      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/snippets:/app/snippets
+    # Run with host network to access system information
+    network_mode: host
+    # Run as root to access system commands (needed for cron operations)
+    user: root
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - SYS_ADMIN
+    cap_drop:
+      - ALL
 ```
 
 2. Build and run with Docker Compose:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-3. Open your browser and navigate to `http://localhost:3000`
-
-### Testing Docker Build
-
-To test the Docker build without running the full application:
-
-```bash
-./test-docker.sh
-```
+3. Open your browser and navigate to `http://localhost:40123`
 
 ### Local Development
 
@@ -54,22 +87,14 @@ yarn dev
 
 3. Open your browser and navigate to `http://localhost:3000`
 
-## Docker Configuration
-
-The application is configured to run in a Docker container with the following setup:
-
-- **Host Network Mode**: Allows access to system information
-- **Volume Mounts**: Mounts necessary system directories for cron access
-- **Root User**: Required for cron operations
-- **Security**: Minimal privileges with proper security options
-
 ### Environment Variables
 
 The following environment variables can be configured:
 
-| Variable                            | Default | Description                                        |
-| ----------------------------------- | ------- | -------------------------------------------------- |
-| `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds) |
+| Variable                            | Default | Description                                                  |
+| ----------------------------------- | ------- | ------------------------------------------------------------ |
+| `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds)           |
+| `NEXT_PUBLIC_HOST_PROJECT_DIR`      | `N/A`   | Mandatory variable to make sure cron runs on the right path. |
 
 **Example**: To change the clock update interval to 60 seconds:
 
@@ -82,7 +107,7 @@ NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
 - The container runs with `network_mode: host` to access system information
 - Root user is required for cron operations
 - System directories are mounted as read-only for security
-- The container has minimal capabilities for security
+- `NEXT_PUBLIC_HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly.
 
 ## Usage
 
@@ -90,7 +115,7 @@ NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
 
 The application automatically detects your operating system and displays:
 
-- Platform (Linux/macOS/Windows)
+- Platform (Linux/macOS/Windows - not supported)
 - Hostname
 - IP Address
 - System Uptime
@@ -104,6 +129,7 @@ The application automatically detects your operating system and displays:
 3. **Quick Presets**: Click on preset buttons for common schedules
 4. **Add Comments**: Include descriptions for your cron jobs
 5. **Delete Jobs**: Remove unwanted cron jobs with the delete button
+6. **Clone Jobs**: Clone jobs to quickly edit the command in case it's similar
 
 ### Cron Schedule Format
 
@@ -115,24 +141,13 @@ The application uses standard cron format: `* * * * *`
 - Fourth field: Month (1-12)
 - Fifth field: Day of week (0-7, where 0 and 7 are Sunday)
 
-## Project Structure
+### Managing Scripts
 
-```
-app/
-├── _components/          # Reusable UI components
-│   ├── ui/              # Base UI components
-│   ├── SystemInfo.tsx   # System information display
-│   ├── CronJobList.tsx  # Cron jobs list
-│   └── CronJobForm.tsx  # Create new cron job form
-├── _utils/              # Utility functions
-│   ├── cn.ts           # Class name utility
-│   └── system.ts       # System operations
-├── _server/             # Server actions
-│   └── actions/        # API endpoints
-├── globals.css         # Global styles
-├── layout.tsx          # Root layout
-└── page.tsx            # Main page
-```
+1. **View Existing Scripts**: All current user created scripts are displayed with their name and descriptions
+2. **Create New Script**: Use the editor and snippets to quickly create scripts for your cron jobs.
+3. **Quick Snippets**: Pre-set of snippets, with ability to add new ones. Check README.md in `./snippets`
+4. **Delete Scripts**: Remove unwanted scripts (this won't delete the cronjob, you will need to manually remove these yourself)
+5. **Clone Scripts**: Clone scripts to quickly edit them in case they are similar to one another.
 
 ## Technologies Used
 
@@ -147,7 +162,6 @@ app/
 
 - The application requires root access for cron operations
 - System directories are mounted as read-only
-- Container runs with minimal capabilities
 - Input validation is implemented for all user inputs
 
 ## Contributing

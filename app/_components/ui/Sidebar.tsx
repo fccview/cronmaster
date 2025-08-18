@@ -19,7 +19,7 @@ export interface SidebarProps extends HTMLAttributes<HTMLDivElement> {
   quickStats?: {
     cpu: number;
     memory: number;
-    network: string;
+    network: string; // This will now be ping latency in ms
   };
 }
 
@@ -56,7 +56,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         {/* Mobile burger menu button */}
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="fixed top-4 right-4 z-50 lg:hidden p-2 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg hover:bg-accent transition-colors"
+          className="fixed bottom-4 right-4 z-50 lg:hidden p-2 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg hover:bg-accent transition-colors"
         >
           {isMobileOpen ? (
             <X className="h-5 w-5" />
@@ -83,7 +83,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
               ? "fixed left-0 top-0 h-full w-80 z-30 translate-x-0"
               : "fixed left-0 top-0 h-full w-80 z-30 -translate-x-full lg:translate-x-0",
             // Desktop behavior - fixed positioning between header and bottom
-            "lg:fixed lg:left-0 lg:top-[88px] lg:bottom-0 lg:z-10",
+            "lg:fixed lg:left-0 lg:pt-[90px] lg:bottom-0 lg:z-10",
             isCollapsed ? "lg:w-16" : "lg:w-80",
             className
           )}
@@ -156,15 +156,15 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                         </span>
                       </div>
 
-                      {/* Network Status */}
+                      {/* Network Latency */}
                       <div className="w-12 h-12 bg-card/50 border border-border/30 rounded-lg flex flex-col items-center justify-center p-1">
                         <Wifi className="h-3 w-3 text-teal-500 mb-1" />
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-foreground leading-none">
-                            {quickStats.network.split(" ")[0]}
+                            {quickStats.network}
                           </span>
                           <span className="text-[10px] text-muted-foreground leading-none">
-                            MB/s
+                            ms
                           </span>
                         </div>
                       </div>
