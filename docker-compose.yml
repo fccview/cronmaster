@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   cronjob-manager:
     build: .
@@ -8,6 +6,8 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
+      # Enter the FULL relative path to the project directory where this docker-compose.yml file is located (use `pwd` to find it)
+      - NEXT_PUBLIC_HOST_PROJECT_DIR=/absolute/path/to/project/directory
     volumes:
       # Mount the host's crontab for Linux/Unix systems
       - /var/spool/cron/crontabs:/var/spool/cron/crontabs:ro
@@ -16,7 +16,10 @@ services:
       - /proc:/proc:ro
       - /sys:/sys:ro
       - /etc:/etc:ro
-      - ./scripts:/app/scripts
+      # Mount scripts directory for script execution
+      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/scripts:/app/scripts
+      # Mount data directory for persistence
+      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/data:/app/data
     # Run with host network to access system information
     network_mode: host
     # Run as root to access system commands (needed for cron operations)

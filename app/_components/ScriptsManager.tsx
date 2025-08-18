@@ -1,19 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import { Button } from "./ui/Button";
-import { Modal } from "./ui/Modal";
-import { BashEditor } from "./BashEditor";
-import { BashSnippetHelper } from "./BashSnippetHelper";
-import { Plus, FileText, Edit, Trash2, Copy, Check } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  Edit,
+  Trash2,
+  Copy,
+  Copy as CopyIcon,
+  CheckCircle,
+  Files,
+} from "lucide-react";
+import { type Script } from "@/app/_server/actions/scripts";
 import {
   createScript,
   updateScript,
   deleteScript,
-  fetchScripts,
-  type Script,
+  cloneScript,
+  getScriptContent,
 } from "@/app/_server/actions/scripts";
+import { CreateScriptModal } from "./modals/CreateScriptModal";
+import { EditScriptModal } from "./modals/EditScriptModal";
+import { DeleteScriptModal } from "./modals/DeleteScriptModal";
+import { CloneScriptModal } from "./modals/CloneScriptModal";
+import { showToast } from "./ui/Toast";
 
 interface ScriptsManagerProps {
   scripts: Script[];
@@ -25,90 +37,131 @@ export function ScriptsManager({
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingScript, setEditingScript] = useState<Script | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+  const [selectedScript, setSelectedScript] = useState<Script | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [newScript, setNewScript] = useState({
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCloning, setIsCloning] = useState(false);
+
+  // Form state for create modal
+  const [createForm, setCreateForm] = useState({
     name: "",
     description: "",
     content: "#!/bin/bash\n# Your script here\necho 'Hello World'",
   });
 
-  // Refresh scripts when initialScripts changes
-  useEffect(() => {
-    setScripts(initialScripts);
-  }, [initialScripts]);
+  // Form state for edit modal
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    content: "",
+  });
 
   const refreshScripts = async () => {
-    const freshScripts = await fetchScripts();
-    setScripts(freshScripts);
+    try {
+      const { fetchScripts } = await import("@/app/_server/actions/scripts");
+      const freshScripts = await fetchScripts();
+      setScripts(freshScripts);
+    } catch (error) {
+      console.error("Failed to refresh scripts:", error);
+      showToast(
+        "error",
+        "Failed to refresh scripts",
+        "Please try again later."
+      );
+    }
   };
 
-  const handleCreate = async () => {
-    const formData = new FormData();
-    formData.append("name", newScript.name);
-    formData.append("description", newScript.description);
-    formData.append("content", newScript.content);
-
+  const handleCreate = async (formData: FormData) => {
     const result = await createScript(formData);
     if (result.success) {
-      setIsCreateModalOpen(false);
-      setNewScript({
-        name: "",
-        description: "",
-        content: "#!/bin/bash\n# Your script here\necho 'Hello World'",
-      });
       await refreshScripts();
+      setIsCreateModalOpen(false);
+      showToast("success", "Script created successfully");
     } else {
-      alert(result.message);
+      showToast("error", "Failed to create script", result.message);
     }
+    return result;
   };
 
-  const handleEdit = (script: Script) => {
-    setEditingScript(script);
-    setIsEditModalOpen(true);
-  };
-
-  const handleUpdate = async () => {
-    if (!editingScript) return;
-
-    const formData = new FormData();
-    formData.append("id", editingScript.id);
-    formData.append("name", editingScript.name);
-    formData.append("description", editingScript.description);
-    formData.append("content", editingScript.content);
-
+  const handleEdit = async (formData: FormData) => {
     const result = await updateScript(formData);
     if (result.success) {
-      setIsEditModalOpen(false);
-      setEditingScript(null);
       await refreshScripts();
+      setIsEditModalOpen(false);
+      setSelectedScript(null);
+      showToast("success", "Script updated successfully");
     } else {
-      alert(result.message);
+      showToast("error", "Failed to update script", result.message);
+    }
+    return result;
+  };
+
+  const handleDelete = async () => {
+    if (!selectedScript) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteScript(selectedScript.id);
+      if (result.success) {
+        await refreshScripts();
+        setIsDeleteModalOpen(false);
+        setSelectedScript(null);
+        showToast("success", "Script deleted successfully");
+      } else {
+        showToast("error", "Failed to delete script", result.message);
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this script?")) {
-      const result = await deleteScript(id);
+  const handleClone = async (newName: string) => {
+    if (!selectedScript) return;
+
+    setIsCloning(true);
+    try {
+      const result = await cloneScript(selectedScript.id, newName);
       if (result.success) {
         await refreshScripts();
+        setIsCloneModalOpen(false);
+        setSelectedScript(null);
+        showToast("success", "Script cloned successfully");
       } else {
-        alert(result.message);
+        showToast("error", "Failed to clone script", result.message);
       }
+    } finally {
+      setIsCloning(false);
     }
   };
 
   const handleCopy = async (script: Script) => {
-    await navigator.clipboard.writeText(script.content);
-    setCopiedId(script.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+    try {
+      const content = await getScriptContent(script.filename);
 
-  const handleInsertSnippet = (snippet: string) => {
-    if (isCreateModalOpen) {
-      setNewScript((prev) => ({ ...prev, content: snippet }));
-    } else if (isEditModalOpen && editingScript) {
-      setEditingScript((prev) => (prev ? { ...prev, content: snippet } : null));
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        // Fallback for non-secure contexts or when clipboard API is not available
+        const textArea = document.createElement("textarea");
+        textArea.value = content;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+
+      setCopiedId(script.id);
+      setTimeout(() => setCopiedId(null), 2000);
+      showToast("success", "Script content copied to clipboard");
+    } catch (error) {
+      console.error("Failed to copy script content:", error);
+      showToast("error", "Failed to copy script content");
     }
   };
 
@@ -183,9 +236,9 @@ export function ScriptsManager({
                           {script.description}
                         </p>
                       )}
-                      <pre className="text-xs bg-muted/30 p-2 rounded border border-border/30 overflow-x-auto max-h-20">
-                        {script.content.split("\n")[0]}...
-                      </pre>
+                      <div className="text-xs text-muted-foreground">
+                        File: {script.filename}
+                      </div>
                     </div>
 
                     {/* Actions */}
@@ -195,26 +248,60 @@ export function ScriptsManager({
                         size="sm"
                         onClick={() => handleCopy(script)}
                         className="btn-outline h-8 px-3"
+                        title="Copy script content to clipboard"
+                        aria-label="Copy script content to clipboard"
                       >
                         {copiedId === script.id ? (
-                          <Check className="h-3 w-3" />
+                          <CheckCircle className="h-3 w-3 text-green-500" />
                         ) : (
-                          <Copy className="h-3 w-3" />
+                          <CopyIcon className="h-3 w-3" />
                         )}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(script)}
+                        onClick={() => {
+                          setSelectedScript(script);
+                          setIsCloneModalOpen(true);
+                        }}
                         className="btn-outline h-8 px-3"
+                        title="Clone script"
+                        aria-label="Clone script"
+                      >
+                        <Files className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          setSelectedScript(script);
+                          // Load script content
+                          const content = await getScriptContent(
+                            script.filename
+                          );
+                          setEditForm({
+                            name: script.name,
+                            description: script.description,
+                            content: content,
+                          });
+                          setIsEditModalOpen(true);
+                        }}
+                        className="btn-outline h-8 px-3"
+                        title="Edit script"
+                        aria-label="Edit script"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleDelete(script.id)}
+                        onClick={() => {
+                          setSelectedScript(script);
+                          setIsDeleteModalOpen(true);
+                        }}
                         className="btn-destructive h-8 px-3"
+                        title="Delete script"
+                        aria-label="Delete script"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -227,172 +314,51 @@ export function ScriptsManager({
         </CardContent>
       </Card>
 
-      {/* Create Script Modal */}
-      <Modal
+      <CreateScriptModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Create New Script"
-        size="xl"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Script Name
-              </label>
-              <input
-                type="text"
-                value={newScript.name}
-                onChange={(e) =>
-                  setNewScript((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="My Script"
-                className="w-full p-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Description
-              </label>
-              <input
-                type="text"
-                value={newScript.description}
-                onChange={(e) =>
-                  setNewScript((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="What does this script do?"
-                className="w-full p-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
-              />
-            </div>
-          </div>
+        onSubmit={handleCreate}
+        form={createForm}
+        onFormChange={(updates) =>
+          setCreateForm((prev) => ({ ...prev, ...updates }))
+        }
+      />
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Script Content
-            </label>
-            <BashEditor
-              value={newScript.content}
-              onChange={(value) =>
-                setNewScript((prev) => ({ ...prev, content: value }))
-              }
-              placeholder="#!/bin/bash&#10;# Your script here&#10;echo 'Hello World'"
-            />
-          </div>
-
-          <div>
-            <BashSnippetHelper onInsertSnippet={handleInsertSnippet} />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsCreateModalOpen(false)}
-              className="btn-outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleCreate}
-              className="btn-primary glow-primary"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Script
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Edit Script Modal */}
-      <Modal
+      <EditScriptModal
+        script={selectedScript}
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Edit Script"
-        size="xl"
-      >
-        {editingScript && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Script Name
-                </label>
-                <input
-                  type="text"
-                  value={editingScript.name}
-                  onChange={(e) =>
-                    setEditingScript((prev) =>
-                      prev ? { ...prev, name: e.target.value } : null
-                    )
-                  }
-                  placeholder="My Script"
-                  className="w-full p-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={editingScript.description}
-                  onChange={(e) =>
-                    setEditingScript((prev) =>
-                      prev ? { ...prev, description: e.target.value } : null
-                    )
-                  }
-                  placeholder="What does this script do?"
-                  className="w-full p-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
-                />
-              </div>
-            </div>
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedScript(null);
+        }}
+        onSubmit={handleEdit}
+        form={editForm}
+        onFormChange={(updates) =>
+          setEditForm((prev) => ({ ...prev, ...updates }))
+        }
+      />
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Script Content
-              </label>
-              <BashEditor
-                value={editingScript.content}
-                onChange={(value) =>
-                  setEditingScript((prev) =>
-                    prev ? { ...prev, content: value } : null
-                  )
-                }
-                placeholder="#!/bin/bash&#10;# Your script here&#10;echo 'Hello World'"
-              />
-            </div>
+      <DeleteScriptModal
+        script={selectedScript}
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedScript(null);
+        }}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+      />
 
-            <div>
-              <BashSnippetHelper onInsertSnippet={handleInsertSnippet} />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditModalOpen(false)}
-                className="btn-outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleUpdate}
-                className="btn-primary glow-primary"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Update Script
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <CloneScriptModal
+        script={selectedScript}
+        isOpen={isCloneModalOpen}
+        onClose={() => {
+          setIsCloneModalOpen(false);
+          setSelectedScript(null);
+        }}
+        onConfirm={handleClone}
+        isCloning={isCloning}
+      />
     </>
   );
 }

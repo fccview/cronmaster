@@ -2,18 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import { Button } from "./ui/Button";
-import { Trash2, Clock, Edit, Plus } from "lucide-react";
+import { Trash2, Clock, Edit, Plus, Files } from "lucide-react";
 import { CronJob } from "@/app/_utils/system";
 import {
   removeCronJob,
   editCronJob,
   createCronJob,
+  cloneCronJob,
 } from "@/app/_server/actions/cronjobs";
 import { useState } from "react";
 import { CreateTaskModal } from "./modals/CreateTaskModal";
 import { EditTaskModal } from "./modals/EditTaskModal";
 import { DeleteTaskModal } from "./modals/DeleteTaskModal";
+import { CloneTaskModal } from "./modals/CloneTaskModal";
 import { type Script } from "@/app/_server/actions/scripts";
+import { showToast } from "./ui/Toast";
 
 interface CronJobListProps {
   cronJobs: CronJob[];
@@ -26,7 +29,10 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isNewCronModalOpen, setIsNewCronModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<CronJob | null>(null);
+  const [jobToClone, setJobToClone] = useState<CronJob | null>(null);
+  const [isCloning, setIsCloning] = useState(false);
   const [editForm, setEditForm] = useState({
     schedule: "",
     command: "",
@@ -43,11 +49,17 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
     setDeletingId(id);
     try {
       const result = await removeCronJob(id);
-      if (!result.success) {
-        alert(result.message);
+      if (result.success) {
+        showToast("success", "Cron job deleted successfully");
+      } else {
+        showToast("error", "Failed to delete cron job", result.message);
       }
     } catch (error) {
-      alert("Failed to delete cron job");
+      showToast(
+        "error",
+        "Failed to delete cron job",
+        "Please try again later."
+      );
     } finally {
       setDeletingId(null);
       setIsDeleteModalOpen(false);
@@ -55,9 +67,32 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
     }
   };
 
+  const handleClone = async (newComment: string) => {
+    if (!jobToClone) return;
+
+    setIsCloning(true);
+    try {
+      const result = await cloneCronJob(jobToClone.id, newComment);
+      if (result.success) {
+        setIsCloneModalOpen(false);
+        setJobToClone(null);
+        showToast("success", "Cron job cloned successfully");
+      } else {
+        showToast("error", "Failed to clone cron job", result.message);
+      }
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
   const confirmDelete = (job: CronJob) => {
     setJobToDelete(job);
     setIsDeleteModalOpen(true);
+  };
+
+  const confirmClone = (job: CronJob) => {
+    setJobToClone(job);
+    setIsCloneModalOpen(true);
   };
 
   const handleEdit = (job: CronJob) => {
@@ -85,11 +120,16 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
       if (result.success) {
         setIsEditModalOpen(false);
         setEditingJob(null);
+        showToast("success", "Cron job updated successfully");
       } else {
-        alert(result.message);
+        showToast("error", "Failed to update cron job", result.message);
       }
     } catch (error) {
-      alert("Failed to update cron job");
+      showToast(
+        "error",
+        "Failed to update cron job",
+        "Please try again later."
+      );
     }
   };
 
@@ -100,6 +140,9 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
       formData.append("schedule", newCronForm.schedule);
       formData.append("command", newCronForm.command);
       formData.append("comment", newCronForm.comment);
+      if (newCronForm.selectedScriptId) {
+        formData.append("selectedScriptId", newCronForm.selectedScriptId);
+      }
 
       const result = await createCronJob(formData);
       if (result.success) {
@@ -110,11 +153,16 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
           comment: "",
           selectedScriptId: null,
         });
+        showToast("success", "Cron job created successfully");
       } else {
-        alert(result.message);
+        showToast("error", "Failed to create cron job", result.message);
       }
     } catch (error) {
-      alert("Failed to create cron job");
+      showToast(
+        "error",
+        "Failed to create cron job",
+        "Please try again later."
+      );
     }
   };
 
@@ -211,8 +259,20 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                         size="sm"
                         onClick={() => handleEdit(job)}
                         className="btn-outline h-8 px-3"
+                        title="Edit cron job"
+                        aria-label="Edit cron job"
                       >
                         <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => confirmClone(job)}
+                        className="btn-outline h-8 px-3"
+                        title="Clone cron job"
+                        aria-label="Clone cron job"
+                      >
+                        <Files className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="destructive"
@@ -220,6 +280,8 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                         onClick={() => confirmDelete(job)}
                         disabled={deletingId === job.id}
                         className="btn-destructive h-8 px-3"
+                        title="Delete cron job"
+                        aria-label="Delete cron job"
                       >
                         {deletingId === job.id ? (
                           <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -265,6 +327,14 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
           jobToDelete ? handleDelete(jobToDelete.id) : undefined
         }
         job={jobToDelete}
+      />
+
+      <CloneTaskModal
+        cronJob={jobToClone}
+        isOpen={isCloneModalOpen}
+        onClose={() => setIsCloneModalOpen(false)}
+        onConfirm={handleClone}
+        isCloning={isCloning}
       />
     </>
   );

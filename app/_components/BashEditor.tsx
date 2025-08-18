@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import { Button } from "./ui/Button";
-import { Terminal, Copy, Check, Edit3 } from "lucide-react";
+import { Terminal, Copy, Check } from "lucide-react";
 
 interface BashEditorProps {
   value: string;
@@ -22,8 +21,8 @@ export function BashEditor({
   className = "",
   label = "Bash Script",
 }: BashEditorProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(value);
@@ -31,12 +30,19 @@ export function BashEditor({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFocus = () => {
-    setIsEditing(true);
-  };
+  // Sync scroll position between textarea and syntax highlighter
+  const handleScroll = () => {
+    if (textareaRef.current) {
+      const scrollTop = textareaRef.current.scrollTop;
+      const scrollLeft = textareaRef.current.scrollLeft;
 
-  const handleBlur = () => {
-    setIsEditing(false);
+      const syntaxElement = textareaRef.current
+        .nextElementSibling as HTMLElement;
+      if (syntaxElement) {
+        syntaxElement.scrollTop = scrollTop;
+        syntaxElement.scrollLeft = scrollLeft;
+      }
+    }
   };
 
   const SyntaxHighlighterComponent = SyntaxHighlighter as any;
@@ -66,22 +72,23 @@ export function BashEditor({
       )}
       <div className="relative">
         <textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          onScroll={handleScroll}
           placeholder={placeholder}
-          className="w-full h-24 p-2 border border-border rounded bg-background text-foreground font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/20 placeholder:text-shadow-none placeholder:shadow-none"
+          className="w-full h-32 p-3 border border-border rounded bg-background text-foreground font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/20 relative z-10"
           style={{
             fontFamily:
               'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+            lineHeight: "1.4",
             color: "transparent",
             caretColor: "hsl(var(--foreground))",
             background: "transparent",
           }}
         />
         <div
-          className="absolute inset-0 p-2 pointer-events-none overflow-auto"
+          className="absolute inset-0 p-3 pointer-events-none overflow-auto"
           style={{
             fontFamily:
               'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',

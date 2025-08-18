@@ -1,17 +1,20 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { CronExpressionHelper } from "../CronExpressionHelper";
 import { Plus, Terminal, FileText } from "lucide-react";
+import { getScriptContent } from "@/app/_server/actions/scripts";
+import { getHostScriptPath } from "@/app/_utils/scripts";
 
 interface Script {
   id: string;
   name: string;
   description: string;
-  content: string;
   createdAt: string;
+  filename: string;
 }
 
 interface CreateTaskModalProps {
@@ -36,12 +39,28 @@ export function CreateTaskModal({
   form,
   onFormChange,
 }: CreateTaskModalProps) {
+  const [selectedScriptContent, setSelectedScriptContent] =
+    useState<string>("");
   const selectedScript = scripts.find((s) => s.id === form.selectedScriptId);
+
+  // Load script content when script is selected
+  useEffect(() => {
+    const loadScriptContent = async () => {
+      if (selectedScript) {
+        const content = await getScriptContent(selectedScript.filename);
+        setSelectedScriptContent(content);
+      } else {
+        setSelectedScriptContent("");
+      }
+    };
+
+    loadScriptContent();
+  }, [selectedScript]);
 
   const handleScriptSelect = (script: Script) => {
     onFormChange({
       selectedScriptId: script.id,
-      command: script.content,
+      command: getHostScriptPath(script.filename),
     });
   };
 
@@ -153,7 +172,7 @@ export function CreateTaskModal({
         {/* Command Input */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            {form.selectedScriptId ? "Script Content" : "Command"}
+            Command
           </label>
           <div className="relative">
             <textarea
@@ -161,7 +180,7 @@ export function CreateTaskModal({
               onChange={(e) => onFormChange({ command: e.target.value })}
               placeholder={
                 form.selectedScriptId
-                  ? "Script content will appear here..."
+                  ? "/app/scripts/script_name.sh"
                   : "/usr/bin/command"
               }
               className="w-full h-24 p-2 border border-border rounded bg-background text-foreground font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/20"
@@ -174,11 +193,24 @@ export function CreateTaskModal({
           </div>
           {form.selectedScriptId && (
             <p className="text-xs text-muted-foreground mt-1">
-              Script content is read-only. Edit the script in the Scripts
-              Library.
+              Script path is read-only. Edit the script in the Scripts Library.
             </p>
           )}
         </div>
+
+        {/* Script Content Preview */}
+        {form.selectedScriptId && selectedScriptContent && (
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Script Content Preview
+            </label>
+            <div className="bg-muted/30 p-3 rounded border border-border/30 max-h-32 overflow-auto">
+              <pre className="text-xs font-mono text-foreground whitespace-pre-wrap">
+                {selectedScriptContent}
+              </pre>
+            </div>
+          </div>
+        )}
 
         {/* Description */}
         <div>

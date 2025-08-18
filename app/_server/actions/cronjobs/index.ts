@@ -10,8 +10,7 @@ import {
   type SystemInfo,
 } from "@/app/_utils/system";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { getScriptPath } from "@/app/_utils/scripts";
 
 export async function fetchCronJobs(): Promise<CronJob[]> {
   try {
@@ -28,8 +27,8 @@ export async function fetchSystemInfo(): Promise<SystemInfo> {
   } catch (error) {
     console.error("Error fetching system info:", error);
     return {
-      platform: "Unknown",
       hostname: "Unknown",
+      platform: "Unknown",
       ip: "Unknown",
       uptime: "Unknown",
       memory: {
@@ -39,11 +38,19 @@ export async function fetchSystemInfo(): Promise<SystemInfo> {
         usage: 0,
         status: "Unknown",
       },
-      cpu: { model: "Unknown", cores: 0, usage: 0, status: "Unknown" },
-      gpu: { model: "Unknown", status: "Unknown" },
+      cpu: {
+        model: "Unknown",
+        cores: 0,
+        usage: 0,
+        status: "Unknown",
+      },
+      gpu: {
+        model: "Unknown",
+        status: "Unknown",
+      },
       network: {
-        speed: "Unknown",
         latency: 0,
+        speed: "Unknown",
         downloadSpeed: 0,
         uploadSpeed: 0,
         status: "Unknown",
@@ -63,40 +70,31 @@ export async function createCronJob(
     const schedule = formData.get("schedule") as string;
     const command = formData.get("command") as string;
     const comment = formData.get("comment") as string;
-    const scriptContent = formData.get("scriptContent") as string;
+    const selectedScriptId = formData.get("selectedScriptId") as string;
 
-    if (!schedule || (!command && !scriptContent)) {
-      return { success: false, message: "Missing required fields" };
+    if (!schedule) {
+      return { success: false, message: "Schedule is required" };
     }
 
     let finalCommand = command;
 
-    // If script content is provided, save it as a file
-    if (scriptContent) {
-      try {
-        // Create scripts directory if it doesn't exist
-        const scriptsDir = join(process.cwd(), "scripts");
-        await mkdir(scriptsDir, { recursive: true });
+    // If a script is selected, use the script file path
+    if (selectedScriptId) {
+      // Get the script filename from the selected script
+      const { fetchScripts } = await import("../scripts");
+      const scripts = await fetchScripts();
+      const selectedScript = scripts.find((s) => s.id === selectedScriptId);
 
-        // Generate unique filename
-        const filename = `script_${Date.now()}.sh`;
-        const scriptPath = join(scriptsDir, filename);
-
-        // Add shebang and save the script
-        const fullScript = `#!/bin/bash\n${scriptContent}`;
-        await writeFile(scriptPath, fullScript, "utf8");
-
-        // Make the script executable
-        const { exec } = await import("child_process");
-        const { promisify } = await import("util");
-        const execAsync = promisify(exec);
-        await execAsync(`chmod +x "${scriptPath}"`);
-
-        finalCommand = scriptPath;
-      } catch (error) {
-        console.error("Error saving script:", error);
-        return { success: false, message: "Failed to save script file" };
+      if (selectedScript) {
+        finalCommand = getScriptPath(selectedScript.filename);
+      } else {
+        return { success: false, message: "Selected script not found" };
       }
+    } else if (!command) {
+      return {
+        success: false,
+        message: "Command or script selection is required",
+      };
     }
 
     const success = await addCronJob(schedule, finalCommand, comment);
@@ -152,5 +150,35 @@ export async function editCronJob(
   } catch (error) {
     console.error("Error updating cron job:", error);
     return { success: false, message: "Error updating cron job" };
+  }
+}
+
+export async function cloneCronJob(
+  id: string,
+  newComment: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const cronJobs = await getCronJobs();
+    const originalJob = cronJobs.find((job) => job.id === id);
+
+    if (!originalJob) {
+      return { success: false, message: "Cron job not found" };
+    }
+
+    const success = await addCronJob(
+      originalJob.schedule,
+      originalJob.command,
+      newComment
+    );
+
+    if (success) {
+      revalidatePath("/");
+      return { success: true, message: "Cron job cloned successfully" };
+    } else {
+      return { success: false, message: "Failed to clone cron job" };
+    }
+  } catch (error) {
+    console.error("Error cloning cron job:", error);
+    return { success: false, message: "Error cloning cron job" };
   }
 }
