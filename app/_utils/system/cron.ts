@@ -216,13 +216,20 @@ export async function updateCronJob(
         let jobIndex = 0;
         let targetJobIndex = parseInt(id.replace("unix-", ""));
 
-        lines.forEach((line) => {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             const trimmedLine = line.trim();
 
-            if (!trimmedLine) return;
+            if (!trimmedLine) continue;
 
-            if (trimmedLine.startsWith("#")) {
-                currentComment = trimmedLine;
+            if (trimmedLine.startsWith("# User:") || trimmedLine.startsWith("# System Crontab")) {
+                cronEntries.push(trimmedLine);
+            } else if (trimmedLine.startsWith("#")) {
+                if (i + 1 < lines.length && !lines[i + 1].trim().startsWith("#") && lines[i + 1].trim()) {
+                    currentComment = trimmedLine;
+                } else {
+                    cronEntries.push(trimmedLine);
+                }
             } else {
                 if (jobIndex === targetJobIndex) {
                     const newEntry = comment
@@ -238,7 +245,7 @@ export async function updateCronJob(
                 jobIndex++;
                 currentComment = "";
             }
-        });
+        }
 
         const newCron = cronEntries.join("\n") + "\n";
         await writeCronFiles(newCron);
