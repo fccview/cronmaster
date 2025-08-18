@@ -15,7 +15,7 @@ services:
       - NEXT_PUBLIC_HOST_PROJECT_DIR=/absolute/path/to/project/directory
     volumes:
       # Mount the host's crontab for Linux/Unix systems
-      - /var/spool/cron/crontabs:/host/cron/crontabs:ro
+      - /var/spool/cron/crontabs:/host/cron/crontabs
       - /etc/crontab:/host/crontab:ro
       # Mount system information directories
       - /proc:/host/proc:ro

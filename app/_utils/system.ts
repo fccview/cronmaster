@@ -16,7 +16,28 @@ async function getHostInfo(): Promise<{ hostname: string; ip: string; uptime: st
       const hostname = await fs.readFile("/host/etc/hostname", "utf-8");
 
       // Read IP from host's network interfaces
-      const { stdout: ipOutput } = await execAsync("ip route get 1.1.1.1 | awk '{print $7}' | head -1");
+      let ipOutput = "";
+      try {
+        // Try to get IP from hostname -I first
+        const { stdout } = await execAsync("hostname -I | awk '{print $1}'");
+        ipOutput = stdout;
+        console.log("Docker mode: Got IP from hostname -I:", ipOutput);
+      } catch (error) {
+        // Fallback: try to read from /proc/net/fib_trie
+        try {
+          const fibInfo = await fs.readFile("/host/proc/net/fib_trie", "utf-8");
+          const lines = fibInfo.split("\n");
+          for (const line of lines) {
+            const match = line.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+            if (match && !match[1].startsWith("127.") && !match[1].startsWith("0.")) {
+              ipOutput = match[1];
+              break;
+            }
+          }
+        } catch (fibError) {
+          console.error("Could not determine IP address:", fibError);
+        }
+      }
 
       // Read uptime from host's /proc/uptime
       const uptimeContent = await fs.readFile("/host/proc/uptime", "utf-8");
@@ -134,7 +155,9 @@ async function readCronFiles(): Promise<string> {
   // In Docker, read directly from user crontab files
   try {
     const crontabDir = "/host/cron/crontabs";
+    console.log("Docker mode: Reading crontab from", crontabDir);
     const files = await fs.readdir(crontabDir);
+    console.log("Found crontab files:", files);
 
     let allCronContent = "";
 
@@ -143,12 +166,29 @@ async function readCronFiles(): Promise<string> {
 
       try {
         const filePath = path.join(crontabDir, file);
-        const content = await fs.readFile(filePath, "utf-8");
+
+        // Try to read with sudo or change permissions temporarily
+        let content = "";
+        try {
+          content = await fs.readFile(filePath, "utf-8");
+        } catch (permError) {
+          // If permission denied, try to change permissions temporarily
+          try {
+            await execAsync(`chmod 644 ${filePath}`);
+            content = await fs.readFile(filePath, "utf-8");
+            // Restore original permissions
+            await execAsync(`chmod 600 ${filePath}`);
+          } catch (chmodError) {
+            console.error(`Could not read crontab for user ${file}:`, chmodError);
+            continue;
+          }
+        }
 
         // Add user identifier comment
         allCronContent += `# User: ${file}\n`;
         allCronContent += content;
         allCronContent += "\n\n";
+        console.log(`Successfully read crontab for user ${file}:`, content.substring(0, 100) + "...");
       } catch (fileError) {
         console.error(`Error reading crontab for user ${file}:`, fileError);
       }
