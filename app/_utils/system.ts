@@ -1,8 +1,104 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { readFileSync } from "fs";
+import fs from "fs/promises";
+import path from "path";
 
 const execAsync = promisify(exec);
+
+const isDocker = process.env.DOCKER === "true";
+
+function getSystemPath(originalPath: string): string {
+  if (isDocker) {
+    switch (originalPath) {
+      case "/etc/os-release":
+        return "/host/etc/os-release";
+      case "/proc/stat":
+        return "/host/proc/stat";
+      default:
+        return originalPath;
+    }
+  }
+  return originalPath;
+}
+
+async function readCronFiles(): Promise<string> {
+  if (!isDocker) {
+    try {
+      const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
+      return stdout;
+    } catch (error) {
+      console.error("Error reading crontab:", error);
+      return "";
+    }
+  }
+
+  try {
+    const crontabPath = "/host/crontab";
+    const crontabsDir = "/host/cron/crontabs";
+
+    let cronContent = "";
+
+    try {
+      const systemCrontab = await fs.readFile(crontabPath, "utf-8");
+      cronContent += systemCrontab + "\n";
+    } catch (error) {
+      console.log("System crontab not found or not readable");
+    }
+
+    try {
+      const files = await fs.readdir(crontabsDir);
+      for (const file of files) {
+        if (file !== "root") {
+          try {
+            const userCrontab = await fs.readFile(
+              path.join(crontabsDir, file),
+              "utf-8"
+            );
+            if (userCrontab.trim()) {
+              cronContent += `# User: ${file}\n${userCrontab}\n`;
+            }
+          } catch (error) {
+            console.log(`Could not read crontab for user ${file}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.log("User crontabs directory not found or not readable");
+    }
+
+    return cronContent || "";
+  } catch (error) {
+    console.error("Error reading cron files:", error);
+    try {
+      const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
+      return stdout;
+    } catch (fallbackError) {
+      console.error("Fallback crontab command also failed:", fallbackError);
+      return "";
+    }
+  }
+}
+
+async function writeCronFiles(content: string): Promise<boolean> {
+  if (!isDocker) {
+    try {
+      await execAsync('echo "' + content + '" | crontab -');
+      return true;
+    } catch (error) {
+      console.error("Error writing crontab:", error);
+      return false;
+    }
+  }
+
+  try {
+    await execAsync('echo "' + content + '" | crontab -');
+    return true;
+  } catch (error) {
+    console.error("Error writing cron files:", error);
+    return false;
+  }
+}
 
 export interface SystemInfo {
   platform: string;
@@ -49,7 +145,8 @@ export interface CronJob {
 
 async function getOSInfo(): Promise<string> {
   try {
-    const osRelease = readFileSync("/etc/os-release", "utf8");
+    const osReleasePath = getSystemPath("/etc/os-release");
+    const osRelease = readFileSync(osReleasePath, "utf8");
     const lines = osRelease.split("\n");
     let name = "";
     let version = "";
@@ -137,9 +234,10 @@ async function getCPUInfo() {
     const { stdout: coresOutput } = await execAsync("nproc");
     const cores = parseInt(coresOutput.trim());
 
-    const stat1 = readFileSync("/proc/stat", "utf8").split("\n")[0];
+    const statPath = getSystemPath("/proc/stat");
+    const stat1 = readFileSync(statPath, "utf8").split("\n")[0];
     await new Promise((resolve) => setTimeout(resolve, 50));
-    const stat2 = readFileSync("/proc/stat", "utf8").split("\n")[0];
+    const stat2 = readFileSync(statPath, "utf8").split("\n")[0];
 
     const parseCPU = (line: string) => {
       const parts = line.split(/\s+/);
@@ -406,8 +504,8 @@ export async function getCronJobs(): Promise<CronJob[]> {
   const jobs: CronJob[] = [];
 
   try {
-    const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
-    const lines = stdout.split("\n");
+    const cronContent = await readCronFiles();
+    const lines = cronContent.split("\n");
     let currentComment = "";
     let jobIndex = 0;
 
@@ -450,15 +548,13 @@ export async function addCronJob(
   comment: string = ""
 ): Promise<boolean> {
   try {
-    const { stdout: currentCron } = await execAsync(
-      'crontab -l 2>/dev/null || echo ""'
-    );
+    const cronContent = await readCronFiles();
     const newEntry = comment
       ? `# ${comment}\n${schedule} ${command}`
       : `${schedule} ${command}`;
-    const newCron = currentCron + "\n" + newEntry;
+    const newCron = cronContent + "\n" + newEntry;
 
-    await execAsync('echo "' + newCron + '" | crontab -');
+    await writeCronFiles(newCron);
     return true;
   } catch (error) {
     console.error("Error adding cron job:", error);
@@ -468,10 +564,8 @@ export async function addCronJob(
 
 export async function deleteCronJob(id: string): Promise<boolean> {
   try {
-    const { stdout: currentCron } = await execAsync(
-      'crontab -l 2>/dev/null || echo ""'
-    );
-    const lines = currentCron.split("\n");
+    const cronContent = await readCronFiles();
+    const lines = cronContent.split("\n");
     let currentComment = "";
     let cronEntries: string[] = [];
     let jobIndex = 0;
@@ -497,7 +591,7 @@ export async function deleteCronJob(id: string): Promise<boolean> {
     });
 
     const newCron = cronEntries.join("\n") + "\n";
-    await execAsync('echo "' + newCron + '" | crontab -');
+    await writeCronFiles(newCron);
     return true;
   } catch (error) {
     console.error("Error deleting cron job:", error);
@@ -513,10 +607,8 @@ export async function updateCronJob(
   comment: string = ""
 ): Promise<boolean> {
   try {
-    const { stdout: currentCron } = await execAsync(
-      'crontab -l 2>/dev/null || echo ""'
-    );
-    const lines = currentCron.split("\n");
+    const cronContent = await readCronFiles();
+    const lines = cronContent.split("\n");
     let currentComment = "";
     let cronEntries: string[] = [];
     let jobIndex = 0;
@@ -547,7 +639,7 @@ export async function updateCronJob(
     });
 
     const newCron = cronEntries.join("\n") + "\n";
-    await execAsync('echo "' + newCron + '" | crontab -');
+    await writeCronFiles(newCron);
     return true;
   } catch (error) {
     console.error("Error updating cron job:", error);
