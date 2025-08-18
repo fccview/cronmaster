@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { readFileSync } from "fs";
-import { isDocker, getSystemPath, getMemoryInfoDocker, getCPUInfoDocker, getGPUInfoDocker, getNetworkInfoDocker } from "./docker";
+import { isDocker, getSystemPath, getMemoryInfoDocker, getCPUInfoDocker, getGPUInfoDocker, getNetworkInfoDocker, getHostInfo } from "./docker";
 
 const execAsync = promisify(exec);
 
@@ -75,7 +75,6 @@ async function getOSInfo(): Promise<string> {
 
 async function getMemoryInfo() {
     try {
-        // In Docker, read from host's memory information
         const memPath = isDocker ? "/host/proc/meminfo" : null;
 
         if (isDocker && memPath) {
@@ -83,11 +82,9 @@ async function getMemoryInfo() {
                 return await getMemoryInfoDocker();
             } catch (error) {
                 console.error("Error reading host memory info:", error);
-                // Fallback to container's free command
             }
         }
 
-        // Use container's free command (fallback or non-Docker mode)
         const { stdout } = await execAsync("free -b");
         const lines = stdout.split("\n");
 
@@ -147,7 +144,6 @@ async function getCPUInfo() {
                 cores = cpuInfo.cores;
             } catch (error) {
                 console.error("Error reading host CPU info:", error);
-                // Fallback to container commands
                 const { stdout: modelOutput } = await execAsync(
                     "lscpu | grep 'Model name' | cut -f 2 -d ':'"
                 );
@@ -157,7 +153,6 @@ async function getCPUInfo() {
                 cores = parseInt(coresOutput.trim());
             }
         } else {
-            // Not in Docker, use normal commands
             const { stdout: modelOutput } = await execAsync(
                 "lscpu | grep 'Model name' | cut -f 2 -d ':'"
             );
@@ -225,7 +220,6 @@ async function getGPUInfo() {
         if (isDocker) {
             return await getGPUInfoDocker();
         } else {
-            // Not in Docker, try lspci if available
             try {
                 const { stdout } = await execAsync("lspci | grep -i vga");
                 const gpuLines = stdout.split("\n").filter((line) => line.trim());
@@ -278,7 +272,6 @@ async function getNetworkInfo() {
         if (isDocker) {
             return await getNetworkInfoDocker();
         } else {
-            // Non-Docker network detection
             const { stdout: pingOutput } = await execAsync(
                 'ping -c 1 -W 1 8.8.8.8 2>/dev/null || echo "timeout"'
             );
@@ -380,7 +373,7 @@ export async function getSystemInfo(): Promise<SystemInfo> {
             gpu,
             network,
         ] = await Promise.all([
-            import("./docker").then(m => m.getHostInfo()),
+            getHostInfo(),
             getOSInfo(),
             getMemoryInfo(),
             getCPUInfo(),

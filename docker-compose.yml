@@ -2,7 +2,7 @@ services:
   cronjob-manager:
     image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster
-    user: "root"
+    user: "1000:1000"
     network_mode: host
     pid: "host"
     environment:

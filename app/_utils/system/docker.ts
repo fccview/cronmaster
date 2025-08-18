@@ -7,22 +7,17 @@ const execAsync = promisify(exec);
 
 const isDocker = process.env.DOCKER === "true";
 
-// Helper function to get host information when in Docker
 export async function getHostInfo(): Promise<{ hostname: string; ip: string; uptime: string }> {
     if (isDocker) {
         try {
-            // Read hostname from host's /etc/hostname
             const hostname = await fs.readFile("/host/etc/hostname", "utf-8");
 
-            // Read IP from host's network interfaces
             let ipOutput = "";
             try {
-                // Try to get IP from hostname -I first
                 const { stdout } = await execAsync("hostname -I | awk '{print $1}'");
                 ipOutput = stdout;
                 console.log("Docker mode: Got IP from hostname -I:", ipOutput);
             } catch (error) {
-                // Fallback: try to read from /proc/net/fib_trie
                 try {
                     const fibInfo = await fs.readFile("/host/proc/net/fib_trie", "utf-8");
                     const lines = fibInfo.split("\n");
@@ -38,7 +33,6 @@ export async function getHostInfo(): Promise<{ hostname: string; ip: string; upt
                 }
             }
 
-            // Read uptime from host's /proc/uptime
             const uptimeContent = await fs.readFile("/host/proc/uptime", "utf-8");
             const uptimeSeconds = parseFloat(uptimeContent.split(" ")[0]);
             const uptime = formatUptime(uptimeSeconds);
@@ -50,7 +44,6 @@ export async function getHostInfo(): Promise<{ hostname: string; ip: string; upt
             };
         } catch (error) {
             console.error("Error reading host info:", error);
-            // Fallback to container info
             const { stdout: hostname } = await execAsync("hostname");
             const { stdout: ip } = await execAsync("hostname -I | awk '{print $1}'");
             const { stdout: uptime } = await execAsync("uptime");
@@ -61,7 +54,6 @@ export async function getHostInfo(): Promise<{ hostname: string; ip: string; upt
             };
         }
     } else {
-        // Not in Docker, run commands normally
         const { stdout: hostname } = await execAsync("hostname");
         const { stdout: ip } = await execAsync("hostname -I | awk '{print $1}'");
         const { stdout: uptime } = await execAsync("uptime");
@@ -73,7 +65,6 @@ export async function getHostInfo(): Promise<{ hostname: string; ip: string; upt
     }
 }
 
-// Helper function to format uptime
 export function formatUptime(seconds: number): string {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
@@ -88,12 +79,9 @@ export function formatUptime(seconds: number): string {
     }
 }
 
-// Helper function to parse uptime command output and make it clearer
 export function parseUptimeOutput(uptimeOutput: string): string {
-    // Remove extra whitespace
     const cleanOutput = uptimeOutput.trim();
 
-    // Extract the time part (e.g., "5:54" from "up 5:54")
     const match = cleanOutput.match(/up\s+([^,]+)/);
     if (!match) {
         return "Unknown";
@@ -101,7 +89,6 @@ export function parseUptimeOutput(uptimeOutput: string): string {
 
     const timePart = match[1].trim();
 
-    // If it's in format "X:YY" (hours:minutes)
     const timeMatch = timePart.match(/^(\d+):(\d+)$/);
     if (timeMatch) {
         const hours = parseInt(timeMatch[1]);
@@ -122,11 +109,9 @@ export function parseUptimeOutput(uptimeOutput: string): string {
         }
     }
 
-    // If it's already in a readable format, return as is
     return timePart;
 }
 
-// Helper function to get system path for Docker
 export function getSystemPath(originalPath: string): string {
     if (isDocker) {
         switch (originalPath) {
@@ -141,13 +126,10 @@ export function getSystemPath(originalPath: string): string {
     return originalPath;
 }
 
-// Docker-specific crontab reading
 export async function readCronFilesDocker(): Promise<string> {
     try {
         const crontabDir = "/host/cron/crontabs";
-        console.log("Docker mode: Reading crontab from", crontabDir);
         const files = await fs.readdir(crontabDir);
-        console.log("Found crontab files:", files);
 
         let allCronContent = "";
 
@@ -157,24 +139,9 @@ export async function readCronFilesDocker(): Promise<string> {
             try {
                 const filePath = path.join(crontabDir, file);
 
-                // Try to read with sudo or change permissions temporarily
-                let content = "";
-                try {
-                    content = await fs.readFile(filePath, "utf-8");
-                } catch (permError) {
-                    // If permission denied, try to change permissions temporarily
-                    try {
-                        await execAsync(`chmod 644 ${filePath}`);
-                        content = await fs.readFile(filePath, "utf-8");
-                        // Restore original permissions
-                        await execAsync(`chmod 600 ${filePath}`);
-                    } catch (chmodError) {
-                        console.error(`Could not read crontab for user ${file}:`, chmodError);
-                        continue;
-                    }
-                }
+                // Read the crontab file directly
+                const content = await fs.readFile(filePath, "utf-8");
 
-                // Add user identifier comment
                 allCronContent += `# User: ${file}\n`;
                 allCronContent += content;
                 allCronContent += "\n\n";
@@ -184,7 +151,6 @@ export async function readCronFilesDocker(): Promise<string> {
             }
         }
 
-        // Also read system crontab
         try {
             const systemCrontab = await fs.readFile("/host/crontab", "utf-8");
             allCronContent += "# System Crontab\n";
@@ -197,7 +163,6 @@ export async function readCronFilesDocker(): Promise<string> {
         return allCronContent.trim();
     } catch (error) {
         console.error("Error reading host crontab files:", error);
-        // Fallback to container's crontab command
         try {
             const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
             return stdout;
@@ -208,10 +173,8 @@ export async function readCronFilesDocker(): Promise<string> {
     }
 }
 
-// Docker-specific crontab writing
 export async function writeCronFilesDocker(content: string): Promise<boolean> {
     try {
-        // Parse the content to separate different users
         const lines = content.split("\n");
         const userCrontabs: { [key: string]: string[] } = {};
         let currentUser = "";
@@ -219,44 +182,34 @@ export async function writeCronFilesDocker(content: string): Promise<boolean> {
 
         for (const line of lines) {
             if (line.startsWith("# User: ")) {
-                // Save previous user's content
                 if (currentUser && currentContent.length > 0) {
                     userCrontabs[currentUser] = [...currentContent];
                 }
-                // Start new user
                 currentUser = line.substring(8).trim();
                 currentContent = [];
             } else if (line.startsWith("# System Crontab")) {
-                // Save previous user's content
                 if (currentUser && currentContent.length > 0) {
                     userCrontabs[currentUser] = [...currentContent];
                 }
-                // Handle system crontab separately
                 currentUser = "system";
                 currentContent = [];
             } else if (currentUser && line.trim() && !line.startsWith("#")) {
-                // This is a cron job line
                 currentContent.push(line);
             }
         }
 
-        // Save last user's content
         if (currentUser && currentContent.length > 0) {
             userCrontabs[currentUser] = [...currentContent];
         }
 
-        // Write each user's crontab
         for (const [username, cronJobs] of Object.entries(userCrontabs)) {
             if (username === "system") {
-                // Write to system crontab
                 const systemContent = cronJobs.join("\n") + "\n";
                 await fs.writeFile("/host/crontab", systemContent);
             } else {
-                // Write to user crontab
                 const userCrontabPath = `/host/cron/crontabs/${username}`;
                 const userContent = cronJobs.join("\n") + "\n";
                 await fs.writeFile(userCrontabPath, userContent);
-                // Set proper permissions
                 await execAsync(`chmod 600 ${userCrontabPath}`);
                 await execAsync(`chown ${username}:crontab ${userCrontabPath}`);
             }
@@ -269,7 +222,6 @@ export async function writeCronFilesDocker(content: string): Promise<boolean> {
     }
 }
 
-// Docker-specific memory info
 export async function getMemoryInfoDocker() {
     try {
         const meminfo = await fs.readFile("/host/proc/meminfo", "utf-8");
@@ -314,14 +266,12 @@ export async function getMemoryInfoDocker() {
         };
     } catch (error) {
         console.error("Error reading host memory info:", error);
-        throw error; // Let the main function handle fallback
+        throw error;
     }
 }
 
-// Docker-specific CPU info
 export async function getCPUInfoDocker() {
     try {
-        // Read CPU info from host's /proc/cpuinfo
         const cpuinfo = await fs.readFile("/host/proc/cpuinfo", "utf-8");
         const lines = cpuinfo.split("\n");
 
@@ -333,25 +283,21 @@ export async function getCPUInfoDocker() {
             }
         }
 
-        // Count CPU cores from cpuinfo
         const cores = lines.filter(line => line.startsWith("processor")).length;
 
         return { model, cores };
     } catch (error) {
         console.error("Error reading host CPU info:", error);
-        throw error; // Let the main function handle fallback
+        throw error;
     }
 }
 
-// Docker-specific GPU info
 export async function getGPUInfoDocker() {
     console.log("getGPUInfo called");
     try {
-        // Try to get GPU info from host's PCI information
         let gpuInfo = "Unknown GPU";
 
         try {
-            // Try to read from host's sysfs first
             const { stdout } = await execAsync("find /host/sys/devices -name 'card*' -type d | head -1");
             if (stdout.trim()) {
                 const cardPath = stdout.trim();
@@ -361,7 +307,6 @@ export async function getGPUInfoDocker() {
             }
         } catch (sysfsError) {
             console.log("Could not read GPU info from host sysfs:", sysfsError);
-            // Fallback: try to read from /proc/bus/pci/devices
             try {
                 const pciInfo = await fs.readFile("/host/proc/bus/pci/devices", "utf-8");
                 const lines = pciInfo.split("\n");
@@ -399,7 +344,6 @@ export async function getGPUInfoDocker() {
     }
 }
 
-// Docker-specific network info
 export async function getNetworkInfoDocker() {
     console.log("getNetworkInfo called");
     try {
@@ -413,7 +357,6 @@ export async function getNetworkInfoDocker() {
             pingOutput = stdout;
         } catch (pingError) {
             console.log("Ping command failed, trying curl instead");
-            // Try using curl instead of ping
             try {
                 const startTime = Date.now();
                 const { stdout } = await execAsync(
@@ -442,7 +385,6 @@ export async function getNetworkInfoDocker() {
             };
         }
 
-        // If we used curl, latency is already calculated
         if (latency === 0) {
             const lines = pingOutput.split("\n");
             const timeLine = lines.find((line) => line.includes("time="));

@@ -22,7 +22,6 @@ async function readCronFiles(): Promise<string> {
         }
     }
 
-    // In Docker, use Docker-specific function
     return await readCronFilesDocker();
 }
 
@@ -37,7 +36,6 @@ async function writeCronFiles(content: string): Promise<boolean> {
         }
     }
 
-    // In Docker, use Docker-specific function
     return await writeCronFilesDocker(content);
 }
 
@@ -70,7 +68,6 @@ export async function getCronJobs(): Promise<CronJob[]> {
             }
 
             if (trimmedLine.startsWith("#")) {
-                // Skip user/system headers, but keep other comments
                 if (!trimmedLine.startsWith("# User:") && !trimmedLine.startsWith("# System Crontab")) {
                     currentComment = trimmedLine.substring(1).trim();
                 }
@@ -82,7 +79,6 @@ export async function getCronJobs(): Promise<CronJob[]> {
                 const schedule = parts.slice(0, 5).join(" ");
                 const command = parts.slice(5).join(" ");
 
-                // Add user info to comment if available
                 let fullComment = currentComment;
                 if (currentUser && currentUser !== "system") {
                     fullComment = fullComment ? `${currentComment} (User: ${currentUser})` : `User: ${currentUser}`;
@@ -116,9 +112,7 @@ export async function addCronJob(
     try {
         const cronContent = await readCronFiles();
 
-        // In Docker mode, we need to determine which user to add the job to
         if (isDocker) {
-            // For now, add to the first user found, or create a default user entry
             const lines = cronContent.split("\n");
             let hasUserSection = false;
 
@@ -130,14 +124,12 @@ export async function addCronJob(
             }
 
             if (!hasUserSection) {
-                // No user sections found, create a default one
                 const newEntry = comment
                     ? `# User: root\n# ${comment}\n${schedule} ${command}`
                     : `# User: root\n${schedule} ${command}`;
                 const newCron = cronContent + "\n" + newEntry;
                 await writeCronFiles(newCron);
             } else {
-                // Add to existing content
                 const newEntry = comment
                     ? `# ${comment}\n${schedule} ${command}`
                     : `${schedule} ${command}`;
@@ -145,7 +137,6 @@ export async function addCronJob(
                 await writeCronFiles(newCron);
             }
         } else {
-            // Non-Docker mode, use original logic
             const newEntry = comment
                 ? `# ${comment}\n${schedule} ${command}`
                 : `${schedule} ${command}`;
