@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 280 100% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 280 100% 60%;
+    --radius: 0.75rem;
+    --chart-1: 280 100% 60%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 30 100% 50%;
+    --chart-4: 340 100% 50%;
+    --chart-5: 200 100% 50%;
+  }
+
+  .dark {
+    --background: 240 10% 8%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 280 100% 40%;
+    --primary-foreground: 240 10% 8%;
+    --secondary: 240 3.7% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 18%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 18%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 25%;
+    --input: 240 3.7% 18%;
+    --ring: 280 100% 40%;
+    --chart-1: 280 100% 40%;
+    --chart-2: 160 84% 30%;
+    --chart-3: 30 100% 35%;
+    --chart-4: 340 100% 35%;
+    --chart-5: 200 100% 35%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    position: relative;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
+  }
+  
+  /* Terminal-style fonts for code elements */
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+  
+  /* Brand styling */
+  .brand-text {
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+}
+
+/* Cyberpunk-inspired gradient background */
+@layer components {
+  .hero-gradient {
+    background: linear-gradient(135deg, 
+      hsl(280 100% 60% / 0.1) 0%, 
+      hsl(160 84% 39% / 0.05) 25%, 
+      hsl(30 100% 50% / 0.05) 50%, 
+      hsl(340 100% 50% / 0.05) 75%, 
+      hsl(200 100% 50% / 0.1) 100%);
+  }
+
+  .hero-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 80%, hsl(280 100% 60% / 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(160 84% 39% / 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, hsl(340 100% 50% / 0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .dark .hero-gradient::before {
+    background: 
+      radial-gradient(circle at 20% 80%, hsl(280 100% 50% / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(160 84% 35% / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, hsl(340 100% 45% / 0.06) 0%, transparent 50%);
+  }
+
+  /* Glass morphism cards */
+  .glass-card {
+    @apply backdrop-blur-md bg-card/80 border border-border/50;
+  }
+
+  .dark .glass-card {
+    @apply backdrop-blur-md bg-card/80 border border-border/70;
+  }
+
+  .glass-card-hover {
+    @apply glass-card;
+  }
+
+  /* Vibrant gradient text */
+  .brand-gradient {
+    @apply bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent;
+  }
+
+  .dark .brand-gradient {
+    @apply bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent;
+  }
+
+  .brand-gradient-alt {
+    @apply bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent;
+  }
+
+  .dark .brand-gradient-alt {
+    @apply bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+
+  /* Neon glow effects */
+  .glow-primary {
+    box-shadow: none;
+  }
+
+  .glow-primary:hover {
+    box-shadow: none;
+  }
+
+  .glow-cyan {
+    box-shadow: none;
+  }
+
+  .glow-orange {
+    box-shadow: none;
+  }
+
+  .glow-pink {
+    box-shadow: none;
+  }
+
+  /* Status indicators */
+  .status-active {
+    @apply bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30;
+  }
+
+  .status-inactive {
+    @apply bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30;
+  }
+
+  .status-error {
+    @apply bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Tooltip styles */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg opacity-0 invisible transition-all duration-200;
+  }
+
+  .tooltip.show {
+    @apply opacity-100 visible;
+  }
+
+  /* Responsive text utilities */
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+
+  .text-responsive-lg {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+
+  .text-responsive-xl {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+
+  /* Button variants with new colors */
+  .btn-primary {
+    @apply bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all;
+  }
+
+  .dark .btn-primary {
+    @apply bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 transition-all;
+  }
+
+  .dark .btn-secondary {
+    @apply bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700 transition-all;
+  }
+
+  .btn-outline {
+    @apply border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-accent hover:text-accent-foreground transition-colors;
+  }
+
+  .btn-destructive {
+    @apply bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 transition-all;
+  }
+
+  .dark .btn-destructive {
+    @apply bg-gradient-to-r from-red-600 to-pink-600 text-white hover:from-red-700 hover:to-pink-700 transition-all;
+  }
+
+  /* Neon accent borders */
+  .neon-border {
+    border: 1px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(45deg, hsl(280 100% 60%), hsl(160 84% 39%), hsl(30 100% 50%)) border-box;
+  }
+
+  .neon-border-dark {
+    border: 1px solid transparent;
+    background: linear-gradient(hsl(240 10% 3.9%), hsl(240 10% 3.9%)) padding-box,
+                linear-gradient(45deg, hsl(280 100% 70%), hsl(160 84% 45%), hsl(30 100% 60%)) border-box;
+  }
+}

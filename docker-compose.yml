@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  cronjob-manager:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Mount the host's crontab for Linux/Unix systems
+      - /var/spool/cron/crontabs:/var/spool/cron/crontabs:ro
+      - /etc/crontab:/etc/crontab:ro
+      # Mount system information directories
+      - /proc:/proc:ro
+      - /sys:/sys:ro
+      - /etc:/etc:ro
+      - ./scripts:/app/scripts
+    # Run with host network to access system information
+    network_mode: host
+    # Run as root to access system commands (needed for cron operations)
+    user: root
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - SYS_ADMIN
+    cap_drop:
+      - ALL
