@@ -176,7 +176,7 @@ export async function writeCronFilesDocker(cronContent: string): Promise<boolean
                 }
                 currentUser = "system";
                 currentContent = [];
-            } else if (currentUser && line.trim() && !line.startsWith("#")) {
+            } else if (currentUser && line.trim()) {
                 currentContent.push(line);
             }
         }
@@ -201,7 +201,7 @@ export async function writeCronFilesDocker(cronContent: string): Promise<boolean
                     await execAsync(`chown root:root ${userCrontabPath}`);
                     await execAsync(`chmod 666 ${userCrontabPath}`);
                     await fs.writeFile(userCrontabPath, userContent);
-                    await execAsync(`chown ${username}:crontab ${userCrontabPath}`);
+                    await execAsync(`chown 1000:105 ${userCrontabPath}`);
                     await execAsync(`chmod 600 ${userCrontabPath}`);
                 } catch (error) {
                     console.error(`Failed to write crontab for user ${username}:`, error);

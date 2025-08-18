@@ -82,9 +82,9 @@ export async function getCronJobs(): Promise<CronJob[]> {
 
                 let fullComment = currentComment;
                 if (currentUser && currentUser !== "system") {
-                    fullComment = fullComment ? `${currentComment} (User: ${currentUser})` : `User: ${currentUser}`;
+                    fullComment = fullComment ? `${currentComment} (User: ${currentUser})` : "";
                 } else if (currentUser === "system") {
-                    fullComment = fullComment ? `${currentComment} (System)` : "System";
+                    fullComment = fullComment ? `${currentComment} (System)` : "";
                 }
 
                 jobs.push({
@@ -117,10 +117,20 @@ export async function addCronJob(
         if (isDocker) {
             const lines = cronContent.split("\n");
             let hasUserSection = false;
+            let userSectionEnd = -1;
 
-            for (const line of lines) {
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
                 if (line.startsWith("# User: ")) {
                     hasUserSection = true;
+                    userSectionEnd = i;
+                    for (let j = i + 1; j < lines.length; j++) {
+                        if (lines[j].startsWith("# User: ") || lines[j].startsWith("# System Crontab")) {
+                            userSectionEnd = j - 1;
+                            break;
+                        }
+                        userSectionEnd = j;
+                    }
                     break;
                 }
             }
@@ -135,7 +145,10 @@ export async function addCronJob(
                 const newEntry = comment
                     ? `# ${comment}\n${schedule} ${command}`
                     : `${schedule} ${command}`;
-                const newCron = cronContent + "\n" + newEntry;
+
+                const beforeSection = lines.slice(0, userSectionEnd + 1).join("\n");
+                const afterSection = lines.slice(userSectionEnd + 1).join("\n");
+                const newCron = beforeSection + "\n" + newEntry + "\n" + afterSection;
                 await writeCronFiles(newCron);
             }
         } else {

@@ -56,7 +56,7 @@ services:
       # Feel free to change port, as we're running this as host you won't be able to externally map it
       - PORT=40123
       # Enter the FULL relative path to the project directory where this docker-compose.yml file is located (use `pwd` to find it)
-      - NEXT_PUBLIC_HOST_PROJECT_DIR=/home/fccview/homelab/cronmaster
+      - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
     volumes:
       # Mount the host's crontab for Linux/Unix systems
       - /var/spool/cron/crontabs:/host/cron/crontabs
@@ -77,7 +77,6 @@ services:
       - no-new-privileges:true
     cap_add:
       - SYS_ADMIN
-      - SYS_PTRACE
     init: true
 ```
 
