@@ -448,7 +448,7 @@ export async function getSystemInfo(): Promise<SystemInfo> {
     ] = await Promise.all([
       execAsync("hostname"),
       execAsync("hostname -I | awk '{print $1}'"),
-      execAsync("uptime -p"),
+      execAsync("uptime | sed 's/.*up \\([^,]*\\).*/\\1/'"),
       getOSInfo(),
       getMemoryInfo(),
       getCPUInfo(),
