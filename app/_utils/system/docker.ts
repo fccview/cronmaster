@@ -141,8 +141,9 @@ export async function readCronFilesDocker(): Promise<string> {
             try {
                 const filePath = path.join(crontabDir, file);
                 const content = await fs.readFile(filePath, "utf-8");
+                allCronContent += `# User: ${file}\n`;
                 allCronContent += content;
-                allCronContent += "\n";
+                allCronContent += "\n\n";
             } catch (fileError) {
                 console.error(`Error reading crontab for user ${file}:`, fileError);
             }
@@ -157,18 +158,61 @@ export async function readCronFilesDocker(): Promise<string> {
 
 export async function writeCronFilesDocker(cronContent: string): Promise<boolean> {
     try {
-        const userCrontabPath = `/host/cron/crontabs/root`;
-        const content = cronContent + "\n";
+        // Parse the cron content and distribute to appropriate user crontabs
+        const lines = cronContent.split("\n");
+        const userCrontabs: { [key: string]: string[] } = {};
+        let currentUser = "root"; // Default to root user
+        let currentContent: string[] = [];
 
-        try {
-            await execAsync(`chown root:root ${userCrontabPath}`);
-            await execAsync(`chmod 666 ${userCrontabPath}`);
-            await fs.writeFile(userCrontabPath, content);
-            await execAsync(`chown 1000:105 ${userCrontabPath}`);
-            await execAsync(`chmod 600 ${userCrontabPath}`);
-        } catch (error) {
-            console.error(`Failed to write crontab:`, error);
-            return false;
+        for (const line of lines) {
+            if (line.startsWith("# User:")) {
+                // Save previous user's content
+                if (currentUser && currentContent.length > 0) {
+                    userCrontabs[currentUser] = [...currentContent];
+                }
+                currentUser = line.substring(8).trim();
+                currentContent = [];
+            } else if (line.startsWith("# System Crontab")) {
+                // Save previous user's content
+                if (currentUser && currentContent.length > 0) {
+                    userCrontabs[currentUser] = [...currentContent];
+                }
+                currentUser = "system";
+                currentContent = [];
+            } else if (currentUser && line.trim()) {
+                currentContent.push(line);
+            }
+        }
+
+        // Save the last user's content
+        if (currentUser && currentContent.length > 0) {
+            userCrontabs[currentUser] = [...currentContent];
+        }
+
+        // Write to appropriate crontab files
+        for (const [username, cronJobs] of Object.entries(userCrontabs)) {
+            if (username === "system") {
+                const systemContent = cronJobs.join("\n") + "\n";
+                try {
+                    await fs.writeFile("/host/crontab", systemContent);
+                } catch (error) {
+                    console.error("Failed to write system crontab:", error);
+                    return false;
+                }
+            } else {
+                const userCrontabPath = `/host/cron/crontabs/${username}`;
+                const userContent = cronJobs.join("\n") + "\n";
+                try {
+                    await execAsync(`chown root:root ${userCrontabPath}`);
+                    await execAsync(`chmod 666 ${userCrontabPath}`);
+                    await fs.writeFile(userCrontabPath, userContent);
+                    await execAsync(`chown 1000:105 ${userCrontabPath}`);
+                    await execAsync(`chmod 600 ${userCrontabPath}`);
+                } catch (error) {
+                    console.error(`Failed to write crontab for user ${username}:`, error);
+                    return false;
+                }
+            }
         }
 
         return true;
