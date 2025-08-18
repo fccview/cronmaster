@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">
-    <img src="public/logo.png" alt="CronMaster Logo" width="30" height="30" style="display: inline-block">
+    <img src="public/logo.png" alt="CronMaster Logo" width="40" height="40" style="display: inline-block">
     Chr*nMaster
   </h1>
 </p>
