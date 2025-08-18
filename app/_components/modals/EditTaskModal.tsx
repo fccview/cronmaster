@@ -73,14 +73,6 @@ export function EditTaskModal({
                 <Terminal className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
-
-            {/* Bash Snippets Helper */}
-            <div className="bg-muted/20 rounded-lg border border-border/30 p-3">
-              <h4 className="text-sm font-medium text-foreground mb-2">
-                💡 Useful Bash Snippets
-              </h4>
-              <BashSnippetHelper onInsertSnippet={handleInsertSnippet} />
-            </div>
           </div>
         </div>
 

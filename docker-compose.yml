@@ -20,6 +20,8 @@ services:
       - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/scripts:/app/scripts
       # Mount data directory for persistence
       - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/data:/app/data
+      # Mount snippets directory for user-defined snippets
+      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/snippets:/app/snippets
     # Run with host network to access system information
     network_mode: host
     # Run as root to access system commands (needed for cron operations)

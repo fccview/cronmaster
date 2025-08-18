@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import {
@@ -16,11 +16,11 @@ import {
   Check,
 } from "lucide-react";
 import {
-  bashSnippets,
-  bashSnippetCategories,
-  searchBashSnippets,
+  fetchSnippets,
+  fetchSnippetCategories,
+  searchSnippets,
   type BashSnippet,
-} from "../_utils/bashSnippets";
+} from "../_server/actions/snippets";
 
 interface BashSnippetHelperProps {
   onInsertSnippet: (snippet: string) => void;
@@ -32,18 +32,57 @@ const categoryIcons = {
   Conditionals: Code,
   "System Operations": Settings,
   "Database Operations": Database,
+  "User Examples": FolderOpen,
+  "Custom Scripts": Code,
 };
 
 export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [snippets, setSnippets] = useState<BashSnippet[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [filteredSnippets, setFilteredSnippets] = useState<BashSnippet[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredSnippets = searchQuery
-    ? searchBashSnippets(searchQuery)
-    : selectedCategory
-    ? bashSnippets.filter((s) => s.category === selectedCategory)
-    : bashSnippets;
+  // Load snippets and categories on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [snippetsData, categoriesData] = await Promise.all([
+          fetchSnippets(),
+          fetchSnippetCategories(),
+        ]);
+        setSnippets(snippetsData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error("Error loading snippets:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Filter snippets based on search and category
+  useEffect(() => {
+    const filterSnippets = async () => {
+      if (searchQuery) {
+        const searchResults = await searchSnippets(searchQuery);
+        setFilteredSnippets(searchResults);
+      } else if (selectedCategory) {
+        const categoryResults = snippets.filter(
+          (s) => s.category === selectedCategory
+        );
+        setFilteredSnippets(categoryResults);
+      } else {
+        setFilteredSnippets(snippets);
+      }
+    };
+
+    filterSnippets();
+  }, [searchQuery, selectedCategory, snippets]);
 
   const handleCopy = async (snippet: BashSnippet) => {
     await navigator.clipboard.writeText(snippet.template);
@@ -54,6 +93,17 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
   const handleInsert = (snippet: BashSnippet) => {
     onInsertSnippet(snippet.template);
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <div className="text-center py-8">
+          <Code className="h-8 w-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading snippets...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -80,8 +130,9 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
           >
             All
           </Button>
-          {bashSnippetCategories.map((category) => {
-            const Icon = categoryIcons[category as keyof typeof categoryIcons];
+          {categories.map((category) => {
+            const Icon =
+              categoryIcons[category as keyof typeof categoryIcons] || Code;
             return (
               <Button
                 key={category}
@@ -103,7 +154,8 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
       <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
         {filteredSnippets.map((snippet) => {
           const Icon =
-            categoryIcons[snippet.category as keyof typeof categoryIcons];
+            categoryIcons[snippet.category as keyof typeof categoryIcons] ||
+            Code;
           return (
             <div
               key={snippet.id}
@@ -116,6 +168,11 @@ export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
                     <h4 className="text-sm font-medium text-foreground truncate">
                       {snippet.title}
                     </h4>
+                    {snippet.source === "user" && (
+                      <span className="inline-block px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded border border-green-200">
+                        User
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
                     {snippet.description}
