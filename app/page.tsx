@@ -1,13 +1,16 @@
 import { SystemInfoCard } from "./_components/SystemInfo";
 import { CronJobList } from "./_components/CronJobList";
+import { ScriptsManager } from "./_components/ScriptsManager";
+import { getSystemInfo, getCronJobs } from "./_utils/system";
+import { fetchScripts } from "./_server/actions/scripts";
 import { ThemeToggle } from "./_components/ui/ThemeToggle";
-import { fetchCronJobs, fetchSystemInfo } from "./_server/actions/cronjobs";
-import { Clock, Activity, Settings } from "lucide-react";
+import { Clock, Activity } from "lucide-react";
 
 export default async function Home() {
-  const [cronJobs, systemInfo] = await Promise.all([
-    fetchCronJobs(),
-    fetchSystemInfo(),
+  const [systemInfo, cronJobs, scripts] = await Promise.all([
+    getSystemInfo(),
+    getCronJobs(),
+    fetchScripts(),
   ]);
 
   return (
@@ -52,25 +55,16 @@ export default async function Home() {
           </div>
         </header>
 
-        {/* System Info Sidebar */}
         <SystemInfoCard systemInfo={systemInfo} />
 
-        {/* Main Content */}
-        <main className="transition-all duration-300 ml-0 lg:ml-80 sidebar-collapsed:lg:ml-16">
+        <main className="lg:ml-80 transition-all duration-300 ml-0 sidebar-collapsed:lg:ml-16">
           <div className="container mx-auto px-4 py-8 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold brand-gradient-alt mb-4">
-                Master Your Scheduled Tasks
-              </h2>
-              <p className="text-muted-foreground text-responsive max-w-2xl mx-auto">
-                ChronosFlow provides an intuitive interface for managing cron
-                jobs with intelligent scheduling, real-time monitoring, and
-                powerful automation capabilities.
-              </p>
-            </div>
+            <div className="space-y-8">
+              {/* Scripts Library Section */}
+              <ScriptsManager scripts={scripts} />
 
-            <div className="max-w-6xl mx-auto">
-              <CronJobList cronJobs={cronJobs} />
+              {/* Cron Jobs Section */}
+              <CronJobList cronJobs={cronJobs} scripts={scripts} />
             </div>
           </div>
         </main>

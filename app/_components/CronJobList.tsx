@@ -2,22 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
-import { Modal } from "./ui/Modal";
-import { CronExpressionHelper } from "./CronExpressionHelper";
-import { BashEditor } from "./BashEditor";
-import {
-  Trash2,
-  Clock,
-  Terminal,
-  MessageSquare,
-  Edit,
-  Plus,
-  Play,
-  Pause,
-  Calendar,
-  AlertCircle,
-} from "lucide-react";
+import { Trash2, Clock, Edit, Plus } from "lucide-react";
 import { CronJob } from "@/app/_utils/system";
 import {
   removeCronJob,
@@ -25,12 +10,17 @@ import {
   createCronJob,
 } from "@/app/_server/actions/cronjobs";
 import { useState } from "react";
+import { CreateTaskModal } from "./modals/CreateTaskModal";
+import { EditTaskModal } from "./modals/EditTaskModal";
+import { DeleteTaskModal } from "./modals/DeleteTaskModal";
+import { type Script } from "@/app/_server/actions/scripts";
 
 interface CronJobListProps {
   cronJobs: CronJob[];
+  scripts: Script[];
 }
 
-export function CronJobList({ cronJobs }: CronJobListProps) {
+export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -46,8 +36,7 @@ export function CronJobList({ cronJobs }: CronJobListProps) {
     schedule: "",
     command: "",
     comment: "",
-    isScript: false,
-    scriptContent: "",
+    selectedScriptId: null as string | null,
   });
 
   const handleDelete = async (id: string) => {
@@ -109,14 +98,7 @@ export function CronJobList({ cronJobs }: CronJobListProps) {
     try {
       const formData = new FormData();
       formData.append("schedule", newCronForm.schedule);
-
-      if (newCronForm.isScript) {
-        formData.append("command", `/app/scripts/${Date.now()}.sh`);
-        formData.append("scriptContent", newCronForm.scriptContent);
-      } else {
-        formData.append("command", newCronForm.command);
-      }
-
+      formData.append("command", newCronForm.command);
       formData.append("comment", newCronForm.comment);
 
       const result = await createCronJob(formData);
@@ -126,8 +108,7 @@ export function CronJobList({ cronJobs }: CronJobListProps) {
           schedule: "",
           command: "",
           comment: "",
-          isScript: false,
-          scriptContent: "",
+          selectedScriptId: null,
         });
       } else {
         alert(result.message);
@@ -188,68 +169,63 @@ export function CronJobList({ cronJobs }: CronJobListProps) {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {cronJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="glass-card p-4 lg:p-6 border border-border/50 rounded-xl"
+                  className="glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                  <div className="flex items-start justify-between gap-4">
                     {/* Main Content */}
-                    <div className="flex-1 min-w-0 space-y-4">
-                      {/* Header with schedule */}
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-3 py-1 rounded-lg border border-purple-500/20 font-mono">
+                    <div className="flex-1 min-w-0">
+                      {/* Schedule and Command Row */}
+                      <div className="flex items-center gap-3 mb-2">
+                        <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
                           {job.schedule}
                         </code>
-                      </div>
-
-                      {/* Command */}
-                      <div className="bg-muted/30 rounded-lg p-4 border border-border/30">
-                        <div className="flex items-start gap-3">
-                          <Terminal className="h-4 w-4 text-cyan-500 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-foreground break-words">
-                              {job.command}
-                            </p>
-                          </div>
+                        <div className="flex-1 min-w-0">
+                          <pre
+                            className="text-sm font-medium text-foreground truncate bg-muted/30 px-2 py-1 rounded border border-border/30"
+                            title={job.command}
+                          >
+                            {job.command}
+                          </pre>
                         </div>
                       </div>
 
-                      {/* Comment */}
+                      {/* Comment (if exists) */}
                       {job.comment && (
-                        <div className="flex items-start gap-3 bg-orange-500/5 border border-orange-500/10 rounded-lg p-4">
-                          <MessageSquare className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1">
-                            <p className="text-sm text-orange-700 dark:text-orange-300 break-words">
-                              {job.comment}
-                            </p>
-                          </div>
-                        </div>
+                        <p
+                          className="text-xs text-muted-foreground italic truncate"
+                          title={job.comment}
+                        >
+                          {job.comment}
+                        </p>
                       )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(job)}
-                        className="btn-outline"
+                        className="btn-outline h-8 px-3"
                       >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
+                        <Edit className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => confirmDelete(job)}
                         disabled={deletingId === job.id}
-                        className="btn-destructive"
+                        className="btn-destructive h-8 px-3"
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {deletingId === job.id ? "Deleting..." : "Delete"}
+                        {deletingId === job.id ? (
+                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -260,252 +236,36 @@ export function CronJobList({ cronJobs }: CronJobListProps) {
         </CardContent>
       </Card>
 
-      {/* Edit Modal */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Edit Scheduled Task"
-        size="xl"
-      >
-        <form onSubmit={handleEditSubmit} className="space-y-6">
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-3">
-                Schedule (Cron Expression)
-              </label>
-              <CronExpressionHelper
-                value={editForm.schedule}
-                onChange={(value) =>
-                  setEditForm((prev) => ({ ...prev, schedule: value }))
-                }
-                placeholder="* * * * *"
-                showPatterns={true}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Command</label>
-              <Input
-                value={editForm.command}
-                onChange={(e) =>
-                  setEditForm((prev) => ({ ...prev, command: e.target.value }))
-                }
-                placeholder="/usr/bin/command"
-                className="font-mono"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Description (Optional)
-              </label>
-              <Input
-                value={editForm.comment}
-                onChange={(e) =>
-                  setEditForm((prev) => ({ ...prev, comment: e.target.value }))
-                }
-                placeholder="What does this task do?"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditModalOpen(false)}
-              className="btn-outline"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="btn-primary glow-primary">
-              Update Task
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* New Cron Modal */}
-      <Modal
+      {/* Modals */}
+      <CreateTaskModal
         isOpen={isNewCronModalOpen}
         onClose={() => setIsNewCronModalOpen(false)}
-        title="Create New Scheduled Task"
-        size="xl"
-      >
-        <form onSubmit={handleNewCronSubmit} className="space-y-6">
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-3">
-                Schedule (Cron Expression)
-              </label>
-              <CronExpressionHelper
-                value={newCronForm.schedule}
-                onChange={(value) =>
-                  setNewCronForm((prev) => ({ ...prev, schedule: value }))
-                }
-                placeholder="* * * * *"
-                showPatterns={true}
-              />
-            </div>
+        onSubmit={handleNewCronSubmit}
+        scripts={scripts}
+        form={newCronForm}
+        onFormChange={(updates) =>
+          setNewCronForm((prev) => ({ ...prev, ...updates }))
+        }
+      />
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Task Type
-              </label>
-              <div className="flex gap-4 mb-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="taskType"
-                    checked={!newCronForm.isScript}
-                    onChange={() =>
-                      setNewCronForm((prev) => ({ ...prev, isScript: false }))
-                    }
-                    className="text-primary"
-                  />
-                  <span>Command</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="taskType"
-                    checked={newCronForm.isScript}
-                    onChange={() =>
-                      setNewCronForm((prev) => ({ ...prev, isScript: true }))
-                    }
-                    className="text-primary"
-                  />
-                  <span>Bash Script</span>
-                </label>
-              </div>
-            </div>
+      <EditTaskModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleEditSubmit}
+        form={editForm}
+        onFormChange={(updates) =>
+          setEditForm((prev) => ({ ...prev, ...updates }))
+        }
+      />
 
-            {!newCronForm.isScript ? (
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Command
-                </label>
-                <Input
-                  value={newCronForm.command}
-                  onChange={(e) =>
-                    setNewCronForm((prev) => ({
-                      ...prev,
-                      command: e.target.value,
-                    }))
-                  }
-                  placeholder="/usr/bin/command"
-                  className="font-mono"
-                  required
-                />
-              </div>
-            ) : (
-              <div>
-                <BashEditor
-                  value={newCronForm.scriptContent}
-                  onChange={(value) =>
-                    setNewCronForm((prev) => ({
-                      ...prev,
-                      scriptContent: value,
-                    }))
-                  }
-                  placeholder="#!/bin/bash\n# Your bash script here\necho 'Hello World'\n# Add your commands below"
-                  label="Bash Script"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Description (Optional)
-              </label>
-              <Input
-                value={newCronForm.comment}
-                onChange={(e) =>
-                  setNewCronForm((prev) => ({
-                    ...prev,
-                    comment: e.target.value,
-                  }))
-                }
-                placeholder="What does this task do?"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsNewCronModalOpen(false)}
-              className="btn-outline"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="btn-primary">
-              Create Task
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
+      <DeleteTaskModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Scheduled Task"
-        size="sm"
-      >
-        <div className="text-center">
-          {jobToDelete && (
-            <div className="bg-muted/50 rounded-lg p-4 mb-4 text-left">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <code className="text-sm font-mono text-foreground">
-                  {jobToDelete.schedule}
-                </code>
-              </div>
-              <div className="flex items-start gap-2">
-                <Terminal className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-foreground break-words">
-                  {jobToDelete.command}
-                </p>
-              </div>
-              {jobToDelete.comment && (
-                <div className="flex items-start gap-2 mt-2">
-                  <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-muted-foreground break-words">
-                    {jobToDelete.comment}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <p className="text-sm text-muted-foreground mb-6">
-            This action cannot be undone. The scheduled task will be permanently
-            removed.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteModalOpen(false)}
-              className="btn-outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() =>
-                jobToDelete ? handleDelete(jobToDelete.id) : undefined
-              }
-              className="btn-destructive"
-            >
-              Delete Task
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        onConfirm={() =>
+          jobToDelete ? handleDelete(jobToDelete.id) : undefined
+        }
+        job={jobToDelete}
+      />
     </>
   );
 }
