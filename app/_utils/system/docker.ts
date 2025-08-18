@@ -158,22 +158,19 @@ export async function readCronFilesDocker(): Promise<string> {
 
 export async function writeCronFilesDocker(cronContent: string): Promise<boolean> {
     try {
-        // Parse the cron content and distribute to appropriate user crontabs
         const lines = cronContent.split("\n");
         const userCrontabs: { [key: string]: string[] } = {};
-        let currentUser = "root"; // Default to root user
+        let currentUser = "root";
         let currentContent: string[] = [];
 
         for (const line of lines) {
             if (line.startsWith("# User:")) {
-                // Save previous user's content
                 if (currentUser && currentContent.length > 0) {
                     userCrontabs[currentUser] = [...currentContent];
                 }
                 currentUser = line.substring(8).trim();
                 currentContent = [];
             } else if (line.startsWith("# System Crontab")) {
-                // Save previous user's content
                 if (currentUser && currentContent.length > 0) {
                     userCrontabs[currentUser] = [...currentContent];
                 }
@@ -184,12 +181,10 @@ export async function writeCronFilesDocker(cronContent: string): Promise<boolean
             }
         }
 
-        // Save the last user's content
         if (currentUser && currentContent.length > 0) {
             userCrontabs[currentUser] = [...currentContent];
         }
 
-        // Write to appropriate crontab files
         for (const [username, cronJobs] of Object.entries(userCrontabs)) {
             if (username === "system") {
                 const systemContent = cronJobs.join("\n") + "\n";
