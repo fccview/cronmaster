@@ -3,15 +3,13 @@ services:
     image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster
     user: "root"
-    network_mode: host
-    pid: "host"
+    ports:
+      # Feel free to change port, 3000 is very common so I like to map it to something else
+      - "40123:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      # Feel free to change port, as we're running this as host you won't be able to externally map it
-      - PORT=40123
-      # Enter the FULL absolute path to the project directory where this docker-compose.yml file is located (use `pwd` to find it)
       - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
     volumes:
       # Mount the host's crontab for Linux/Unix systems
@@ -29,9 +27,4 @@ services:
       # Mount snippets directory for user-defined snippets
       - ./snippets:/app/snippets
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_add:
-      - SYS_ADMIN
-      - SYS_PTRACE
     init: true
