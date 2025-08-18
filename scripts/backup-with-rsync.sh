@@ -1,8 +1,12 @@
+# @id: backup-with-rsync
+# @title: Backup with rsync
+# @description: Creates a backup using rsync
+
 #!/bin/bash
 # Backup source directory to destination
 # Change SOURCE_DIR and DEST_DIR to your paths
 SOURCE_DIR="/path/to/source"
-DEST_DIR="/path/to/backup"
+DEST_DIR="/path/to/backuppp"
 
 rsync -av --progress --delete \
   --exclude='*.tmp' \

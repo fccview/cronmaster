@@ -1,3 +1,7 @@
+# @id: clear-backups
+# @title: Clear backups
+# @description: Clears old backups after a successful job
+
 #!/bin/bash
 # Clean old backups
 # Remove backup files older than 30 days

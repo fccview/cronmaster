@@ -9,7 +9,6 @@ export interface CronExplanation {
 
 export function parseCronExpression(expression: string): CronExplanation {
   try {
-    // Clean the expression
     const cleanExpression = expression.trim();
 
     if (!cleanExpression) {
@@ -21,14 +20,11 @@ export function parseCronExpression(expression: string): CronExplanation {
       };
     }
 
-    // Get human readable description
     const humanReadable = cronstrue.toString(cleanExpression, {
       verbose: true,
       throwExceptionOnParseError: false,
     });
 
-    // For now, just return the human readable description
-    // We can add next run times later when we fix the parser
     return {
       humanReadable,
       nextRuns: [],
@@ -44,7 +40,6 @@ export function parseCronExpression(expression: string): CronExplanation {
   }
 }
 
-// Common cron patterns with explanations
 export const cronPatterns = [
   {
     category: "Common Intervals",

@@ -1,28 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { writeFile, readFile, unlink, mkdir, readdir } from "fs/promises";
+import { writeFile, readFile, unlink, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { SCRIPTS_DIR } from "@/app/_utils/scripts";
+import { loadAllScripts, type Script } from "@/app/_utils/scriptScanner";
 
 const execAsync = promisify(exec);
 
-export interface Script {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  filename: string;
-}
-
-const SCRIPTS_METADATA_FILE = join(
-  process.cwd(),
-  "data",
-  "scripts-metadata.json"
-);
+// Re-export the Script interface for components
+export type { Script } from "@/app/_utils/scriptScanner";
 
 function sanitizeScriptName(name: string): string {
   return name
@@ -35,13 +25,12 @@ function sanitizeScriptName(name: string): string {
 }
 
 async function generateUniqueFilename(baseName: string): Promise<string> {
-  const scripts = await readScriptsMetadata();
-  const sanitizedName = sanitizeScriptName(baseName);
-  let filename = `${sanitizedName}.sh`;
+  const scripts = await loadAllScripts();
+  let filename = `${sanitizeScriptName(baseName)}.sh`;
   let counter = 1;
 
   while (scripts.some((script) => script.filename === filename)) {
-    filename = `${sanitizedName}-${counter}.sh`;
+    filename = `${sanitizeScriptName(baseName)}-${counter}.sh`;
     counter++;
   }
 
@@ -52,15 +41,6 @@ async function ensureScriptsDirectory() {
   if (!existsSync(SCRIPTS_DIR)) {
     await mkdir(SCRIPTS_DIR, { recursive: true });
   }
-
-  const dataDir = join(process.cwd(), "data");
-  if (!existsSync(dataDir)) {
-    await mkdir(dataDir, { recursive: true });
-  }
-
-  if (!existsSync(SCRIPTS_METADATA_FILE)) {
-    await writeFile(SCRIPTS_METADATA_FILE, JSON.stringify([], null, 2));
-  }
 }
 
 async function ensureHostScriptsDirectory() {
@@ -70,40 +50,10 @@ async function ensureHostScriptsDirectory() {
   }
 }
 
-async function readScriptsMetadata(): Promise<Script[]> {
-  await ensureScriptsDirectory();
-  try {
-    const data = await readFile(SCRIPTS_METADATA_FILE, "utf8");
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Error reading scripts metadata:", error);
-    return [];
-  }
-}
-
-async function writeScriptsMetadata(scripts: Script[]) {
-  await ensureScriptsDirectory();
-  await writeFile(SCRIPTS_METADATA_FILE, JSON.stringify(scripts, null, 2));
-}
-
 async function saveScriptFile(filename: string, content: string) {
   await ensureScriptsDirectory();
-
-  await ensureHostScriptsDirectory();
-
   const scriptPath = join(SCRIPTS_DIR, filename);
-
-  const scriptContent = content.startsWith("#!/")
-    ? content
-    : `#!/bin/bash\n${content}`;
-
-  await writeFile(scriptPath, scriptContent, "utf8");
-
-  try {
-    await execAsync(`chmod +x "${scriptPath}"`);
-  } catch (error) {
-    console.error("Error making script executable:", error);
-  }
+  await writeFile(scriptPath, content, "utf8");
 }
 
 async function deleteScriptFile(filename: string) {
@@ -114,7 +64,7 @@ async function deleteScriptFile(filename: string) {
 }
 
 export async function fetchScripts(): Promise<Script[]> {
-  return await readScriptsMetadata();
+  return await loadAllScripts();
 }
 
 export async function createScript(
@@ -129,25 +79,31 @@ export async function createScript(
       return { success: false, message: "Name and content are required" };
     }
 
-    const scripts = await readScriptsMetadata();
     const scriptId = `script_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
     const filename = await generateUniqueFilename(name);
 
+    // Create metadata header
+    const metadataHeader = `# @id: ${scriptId}
+# @title: ${name}
+# @description: ${description || ""}
+
+`;
+
+    const fullContent = metadataHeader + content;
+
+    await saveScriptFile(filename, fullContent);
+    revalidatePath("/");
+
+    // Return the created script
     const newScript: Script = {
       id: scriptId,
       name,
       description: description || "",
-      createdAt: new Date().toISOString(),
       filename,
+      createdAt: new Date().toISOString(),
     };
-
-    await saveScriptFile(filename, content);
-
-    scripts.push(newScript);
-    await writeScriptsMetadata(scripts);
-    revalidatePath("/");
 
     return {
       success: true,
@@ -170,27 +126,26 @@ export async function updateScript(
     const content = formData.get("content") as string;
 
     if (!id || !name || !content) {
-      return { success: false, message: "ID, name, and content are required" };
+      return { success: false, message: "ID, name and content are required" };
     }
 
-    const scripts = await readScriptsMetadata();
-    const scriptIndex = scripts.findIndex((s) => s.id === id);
+    const scripts = await loadAllScripts();
+    const existingScript = scripts.find((s) => s.id === id);
 
-    if (scriptIndex === -1) {
+    if (!existingScript) {
       return { success: false, message: "Script not found" };
     }
 
-    const oldScript = scripts[scriptIndex];
+    // Update metadata header
+    const metadataHeader = `# @id: ${id}
+# @title: ${name}
+# @description: ${description || ""}
 
-    await saveScriptFile(oldScript.filename, content);
+`;
 
-    scripts[scriptIndex] = {
-      ...oldScript,
-      name,
-      description: description || "",
-    };
+    const fullContent = metadataHeader + content;
 
-    await writeScriptsMetadata(scripts);
+    await saveScriptFile(existingScript.filename, fullContent);
     revalidatePath("/");
 
     return { success: true, message: "Script updated successfully" };
@@ -204,17 +159,14 @@ export async function deleteScript(
   id: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const scripts = await readScriptsMetadata();
-    const scriptToDelete = scripts.find((s) => s.id === id);
+    const scripts = await loadAllScripts();
+    const script = scripts.find((s) => s.id === id);
 
-    if (!scriptToDelete) {
+    if (!script) {
       return { success: false, message: "Script not found" };
     }
 
-    await deleteScriptFile(scriptToDelete.filename);
-
-    const filteredScripts = scripts.filter((s) => s.id !== id);
-    await writeScriptsMetadata(filteredScripts);
+    await deleteScriptFile(script.filename);
     revalidatePath("/");
 
     return { success: true, message: "Script deleted successfully" };
@@ -229,33 +181,40 @@ export async function cloneScript(
   newName: string
 ): Promise<{ success: boolean; message: string; script?: Script }> {
   try {
-    const scripts = await readScriptsMetadata();
+    const scripts = await loadAllScripts();
     const originalScript = scripts.find((s) => s.id === id);
 
     if (!originalScript) {
       return { success: false, message: "Script not found" };
     }
 
-    const content = await getScriptContent(originalScript.filename);
-
     const scriptId = `script_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
     const filename = await generateUniqueFilename(newName);
 
+    // Get the original content
+    const originalContent = await getScriptContent(originalScript.filename);
+
+    // Create metadata header for cloned script
+    const metadataHeader = `# @id: ${scriptId}
+# @title: ${newName}
+# @description: ${originalScript.description}
+
+`;
+
+    const fullContent = metadataHeader + originalContent;
+
+    await saveScriptFile(filename, fullContent);
+    revalidatePath("/");
+
     const newScript: Script = {
       id: scriptId,
       name: newName,
       description: originalScript.description,
-      createdAt: new Date().toISOString(),
       filename,
+      createdAt: new Date().toISOString(),
     };
-
-    await saveScriptFile(filename, content);
-
-    scripts.push(newScript);
-    await writeScriptsMetadata(scripts);
-    revalidatePath("/");
 
     return {
       success: true,
@@ -272,11 +231,63 @@ export async function getScriptContent(filename: string): Promise<string> {
   try {
     const scriptPath = join(SCRIPTS_DIR, filename);
     if (existsSync(scriptPath)) {
-      return await readFile(scriptPath, "utf8");
+      const content = await readFile(scriptPath, "utf8");
+      // Extract content without metadata
+      const lines = content.split("\n");
+      const contentLines: string[] = [];
+
+      let inMetadata = true;
+      for (const line of lines) {
+        if (line.trim().startsWith("# @")) {
+          continue;
+        }
+        if (line.trim() === "" && inMetadata) {
+          continue;
+        }
+        inMetadata = false;
+        contentLines.push(line);
+      }
+
+      return contentLines.join("\n").trim();
     }
     return "";
   } catch (error) {
     console.error("Error reading script content:", error);
     return "";
+  }
+}
+
+export async function executeScript(filename: string): Promise<{
+  success: boolean;
+  output: string;
+  error: string;
+}> {
+  try {
+    await ensureHostScriptsDirectory();
+    const hostScriptPath = join(process.cwd(), "scripts", filename);
+
+    if (!existsSync(hostScriptPath)) {
+      return {
+        success: false,
+        output: "",
+        error: "Script file not found",
+      };
+    }
+
+    const { stdout, stderr } = await execAsync(`bash "${hostScriptPath}"`, {
+      timeout: 30000, // 30 second timeout
+    });
+
+    return {
+      success: true,
+      output: stdout,
+      error: stderr,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      output: "",
+      error: error.message || "Unknown error",
+    };
   }
 }
