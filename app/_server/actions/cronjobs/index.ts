@@ -41,7 +41,13 @@ export async function fetchSystemInfo(): Promise<SystemInfo> {
       },
       cpu: { model: "Unknown", cores: 0, usage: 0, status: "Unknown" },
       gpu: { model: "Unknown", status: "Unknown" },
-      network: { speed: "Unknown", latency: 0, status: "Unknown" },
+      network: {
+        speed: "Unknown",
+        latency: 0,
+        downloadSpeed: 0,
+        uploadSpeed: 0,
+        status: "Unknown",
+      },
       systemStatus: {
         overall: "Unknown",
         details: "Unable to retrieve system information",

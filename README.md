@@ -16,12 +16,14 @@ A modern, web-based interface for managing cron jobs across different operating 
 ### Using Docker (Recommended)
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd cronjob-manager
 ```
 
 2. Build and run with Docker Compose:
+
 ```bash
 docker-compose up --build
 ```
@@ -39,11 +41,13 @@ To test the Docker build without running the full application:
 ### Local Development
 
 1. Install dependencies:
+
 ```bash
 yarn install
 ```
 
 2. Run the development server:
+
 ```bash
 yarn dev
 ```
@@ -59,6 +63,20 @@ The application is configured to run in a Docker container with the following se
 - **Root User**: Required for cron operations
 - **Security**: Minimal privileges with proper security options
 
+### Environment Variables
+
+The following environment variables can be configured:
+
+| Variable                            | Default | Description                                        |
+| ----------------------------------- | ------- | -------------------------------------------------- |
+| `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds) |
+
+**Example**: To change the clock update interval to 60 seconds:
+
+```bash
+NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
+```
+
 ### Important Notes for Docker
 
 - The container runs with `network_mode: host` to access system information
@@ -71,6 +89,7 @@ The application is configured to run in a Docker container with the following se
 ### Viewing System Information
 
 The application automatically detects your operating system and displays:
+
 - Platform (Linux/macOS/Windows)
 - Hostname
 - IP Address

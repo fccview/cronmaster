@@ -2,6 +2,8 @@ import { cn } from "@/app/_utils/cn";
 import { HTMLAttributes, forwardRef } from "react";
 import { LucideIcon } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
+import { ProgressBar } from "./ProgressBar";
+import { TruncatedText } from "./TruncatedText";
 
 export interface MetricCardProps extends HTMLAttributes<HTMLDivElement> {
   icon: LucideIcon;
@@ -11,6 +13,9 @@ export interface MetricCardProps extends HTMLAttributes<HTMLDivElement> {
   status?: string;
   color?: string;
   variant?: "basic" | "performance";
+  showProgress?: boolean;
+  progressValue?: number;
+  progressMax?: number;
 }
 
 const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
@@ -24,29 +29,25 @@ const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
       status,
       color = "text-blue-500",
       variant = "basic",
+      showProgress = false,
+      progressValue = 0,
+      progressMax = 100,
       ...props
     },
     ref
   ) => {
-    const bgColor = status ? "bg-card/30" : "bg-card/30";
-    const borderColor = status ? "border-border/30" : "border-border/30";
-
     return (
       <div
         ref={ref}
         className={cn(
-          "flex items-start gap-3 p-3 border rounded-lg hover:bg-card/50 transition-colors duration-200",
-          bgColor,
-          borderColor,
+          "flex items-start gap-3 p-3 border border-border/50 rounded-lg hover:bg-accent/50 transition-colors duration-200 glass-card-hover",
           className
         )}
         {...props}
       >
         <div
           className={cn(
-            "p-2 rounded-lg border flex-shrink-0",
-            status ? "bg-card/50" : "bg-card/50",
-            status ? "border-border/50" : "border-border/50"
+            "p-2 rounded-lg border border-border/50 flex-shrink-0 bg-card/50"
           )}
         >
           <Icon className={cn("h-4 w-4", color)} />
@@ -62,12 +63,28 @@ const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
             )}
           </div>
 
-          <p className="text-sm font-medium text-foreground break-words">
-            {value}
-          </p>
+          <div className="mb-1">
+            <TruncatedText
+              text={value}
+              maxLength={40}
+              className="text-sm font-medium text-foreground"
+            />
+          </div>
 
           {detail && (
-            <p className="text-xs text-muted-foreground mt-1">{detail}</p>
+            <p className="text-xs text-muted-foreground mb-2">{detail}</p>
+          )}
+
+          {showProgress && (
+            <div className="mb-2">
+              <ProgressBar
+                value={progressValue}
+                max={progressMax}
+                size="sm"
+                showLabel={false}
+                variant="gradient"
+              />
+            </div>
           )}
 
           {status && variant === "basic" && (

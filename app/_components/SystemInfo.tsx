@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import { MetricCard } from "./ui/MetricCard";
 import { SystemStatus } from "./ui/SystemStatus";
 import { PerformanceSummary } from "./ui/PerformanceSummary";
+import { Sidebar } from "./ui/Sidebar";
 import {
   Monitor,
   Globe,
@@ -11,31 +12,67 @@ import {
   HardDrive,
   Cpu,
   Server,
-  ChevronDown,
-  ChevronUp,
   Wifi,
 } from "lucide-react";
 import { SystemInfo as SystemInfoType } from "@/app/_utils/system";
 import { useState, useEffect } from "react";
+import { fetchSystemInfo } from "@/app/_server/actions/cronjobs";
 
 interface SystemInfoCardProps {
   systemInfo: SystemInfoType;
 }
 
-export function SystemInfoCard({ systemInfo }: SystemInfoCardProps) {
+export function SystemInfoCard({
+  systemInfo: initialSystemInfo,
+}: SystemInfoCardProps) {
   const [currentTime, setCurrentTime] = useState<string>("");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [systemInfo, setSystemInfo] =
+    useState<SystemInfoType>(initialSystemInfo);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Function to fetch fresh system info using server action
+  const updateSystemInfo = async () => {
+    try {
+      setIsUpdating(true);
+      const freshData = await fetchSystemInfo();
+      setSystemInfo(freshData);
+    } catch (error) {
+      console.error("Failed to update system info:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   useEffect(() => {
     const updateTime = () => {
       setCurrentTime(new Date().toLocaleTimeString());
     };
 
+    const updateStats = () => {
+      updateSystemInfo();
+    };
+
     updateTime();
-    const interval = setInterval(updateTime, 1000);
+    updateStats(); // Initial update
+
+    // Update time and stats every 30 seconds
+    const updateInterval = parseInt(
+      process.env.NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL || "30000"
+    );
+    const interval = setInterval(() => {
+      updateTime();
+      updateStats();
+    }, updateInterval);
 
     return () => clearInterval(interval);
   }, []);
+
+  // Quick stats for collapsed sidebar
+  const quickStats = {
+    cpu: systemInfo.cpu.usage,
+    memory: systemInfo.memory.usage,
+    network: `${systemInfo.network.downloadSpeed} MB/s`,
+  };
 
   // Basic system information
   const basicInfoItems = [
@@ -65,23 +102,27 @@ export function SystemInfoCard({ systemInfo }: SystemInfoCardProps) {
     },
   ];
 
-  // Performance metrics
+  // Performance metrics with progress bars
   const performanceItems = [
     {
       icon: HardDrive,
       label: "Memory",
       value: `${systemInfo.memory.used} / ${systemInfo.memory.total}`,
-      detail: `${systemInfo.memory.usage}% used`,
+      detail: `${systemInfo.memory.free} free`,
       status: systemInfo.memory.status,
       color: "text-cyan-500",
+      showProgress: true,
+      progressValue: systemInfo.memory.usage,
     },
     {
       icon: Cpu,
       label: "CPU",
       value: systemInfo.cpu.model,
-      detail: `${systemInfo.cpu.cores} cores • ${systemInfo.cpu.usage}% usage`,
+      detail: `${systemInfo.cpu.cores} cores`,
       status: systemInfo.cpu.status,
       color: "text-pink-500",
+      showProgress: true,
+      progressValue: systemInfo.cpu.usage,
     },
     {
       icon: Monitor,
@@ -97,7 +138,7 @@ export function SystemInfoCard({ systemInfo }: SystemInfoCardProps) {
       icon: Wifi,
       label: "Network",
       value: systemInfo.network.speed,
-      detail: `${systemInfo.network.latency}ms latency`,
+      detail: `${systemInfo.network.latency}ms latency • ~${systemInfo.network.downloadSpeed} MB/s`,
       status: systemInfo.network.status,
       color: "text-teal-500",
     },
@@ -116,99 +157,83 @@ export function SystemInfoCard({ systemInfo }: SystemInfoCardProps) {
       status: systemInfo.memory.status,
     },
     {
-      label: "Network",
-      value: systemInfo.network.speed,
+      label: "Network Speed",
+      value: `${systemInfo.network.downloadSpeed} MB/s`,
       status: systemInfo.network.status,
     },
   ];
 
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full text-left"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg">
-                <Server className="h-5 w-5 text-cyan-500" />
-              </div>
-              <div>
-                <CardTitle className="text-lg brand-gradient">
-                  System Overview
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Real-time system metrics
-                </p>
-              </div>
-            </div>
+    <Sidebar
+      title="System Overview"
+      defaultCollapsed={false}
+      quickStats={quickStats}
+    >
+      {/* System Status */}
+      <SystemStatus
+        status={systemInfo.systemStatus.overall}
+        details={systemInfo.systemStatus.details}
+        timestamp={currentTime}
+        isUpdating={isUpdating}
+      />
 
-            {/* Mobile accordion toggle */}
-            <div className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors">
-              {isExpanded ? (
-                <ChevronUp className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-muted-foreground" />
-              )}
-            </div>
-          </div>
-        </button>
-      </CardHeader>
-
-      <div className={`lg:block ${isExpanded ? "block" : "hidden"}`}>
-        <CardContent className="space-y-6">
-          {/* System Status */}
-          <SystemStatus
-            status={systemInfo.systemStatus.overall}
-            details={systemInfo.systemStatus.details}
-            timestamp={currentTime}
-          />
-
-          {/* Basic System Information */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">
-              System Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {basicInfoItems.map((item) => (
-                <MetricCard
-                  key={item.label}
-                  icon={item.icon}
-                  label={item.label}
-                  value={item.value}
-                  color={item.color}
-                  variant="basic"
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Performance Metrics */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">
-              Performance Metrics
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {performanceItems.map((item) => (
-                <MetricCard
-                  key={item.label}
-                  icon={item.icon}
-                  label={item.label}
-                  value={item.value}
-                  detail={item.detail}
-                  status={item.status}
-                  color={item.color}
-                  variant="performance"
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Performance Summary */}
-          <PerformanceSummary metrics={performanceMetrics} />
-        </CardContent>
+      {/* Basic System Information */}
+      <div>
+        <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
+          System Information
+        </h3>
+        <div className="space-y-2">
+          {basicInfoItems.map((item) => (
+            <MetricCard
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              value={item.value}
+              color={item.color}
+              variant="basic"
+            />
+          ))}
+        </div>
       </div>
-    </Card>
+
+      {/* Performance Metrics */}
+      <div>
+        <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
+          Performance Metrics
+        </h3>
+        <div className="space-y-2">
+          {performanceItems.map((item) => (
+            <MetricCard
+              key={item.label}
+              icon={item.icon}
+              label={item.label}
+              value={item.value}
+              detail={item.detail}
+              status={item.status}
+              color={item.color}
+              variant="performance"
+              showProgress={item.showProgress}
+              progressValue={item.progressValue}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Performance Summary */}
+      <PerformanceSummary metrics={performanceMetrics} />
+
+      {/* Performance Note */}
+      <div className="text-xs text-muted-foreground text-center p-2 bg-muted/20 rounded-lg">
+        💡 Stats update every{" "}
+        {Math.round(
+          parseInt(process.env.NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL || "30000") /
+            1000
+        )}
+        s • Network speed estimated from latency
+        {isUpdating && (
+          <span className="ml-2 animate-pulse">🔄 Updating...</span>
+        )}
+      </div>
+    </Sidebar>
   );
 }

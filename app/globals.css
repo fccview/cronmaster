@@ -168,14 +168,6 @@
   }
 
   /* Status indicators */
-  .status-active {
-    @apply bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/30;
-  }
-
-  .status-inactive {
-    @apply bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30;
-  }
-
   .status-error {
     @apply bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30;
   }
@@ -269,5 +261,11 @@
     border: 1px solid transparent;
     background: linear-gradient(hsl(240 10% 3.9%), hsl(240 10% 3.9%)) padding-box,
                 linear-gradient(45deg, hsl(280 100% 70%), hsl(160 84% 45%), hsl(30 100% 60%)) border-box;
+  }
+}
+
+@layer utilities {
+  body.sidebar-collapsed main.lg\:ml-80 {
+    margin-left: 4rem !important; /* 64px */
   }
 }

@@ -39,7 +39,7 @@ export default async function Home() {
                   <div className="flex items-center gap-2">
                     <Activity className="h-4 w-4 text-emerald-500" />
                     <span className="hidden lg:inline">
-                      Active Jobs: {cronJobs.length}
+                      Scheduled Jobs: {cronJobs.length}
                     </span>
                   </div>
                 </div>
@@ -52,59 +52,28 @@ export default async function Home() {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold brand-gradient-alt mb-4">
-              Master Your Scheduled Tasks
-            </h2>
-            <p className="text-muted-foreground text-responsive max-w-2xl mx-auto">
-              ChronosFlow provides an intuitive interface for managing cron jobs
-              with intelligent scheduling, real-time monitoring, and powerful
-              automation capabilities.
-            </p>
-          </div>
+        {/* System Info Sidebar */}
+        <SystemInfoCard systemInfo={systemInfo} />
 
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-            <div className="xl:col-span-2">
-              <SystemInfoCard systemInfo={systemInfo} />
+        {/* Main Content */}
+        <main className="transition-all duration-300 ml-0 lg:ml-80 sidebar-collapsed:lg:ml-16">
+          <div className="container mx-auto px-4 py-8 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold brand-gradient-alt mb-4">
+                Master Your Scheduled Tasks
+              </h2>
+              <p className="text-muted-foreground text-responsive max-w-2xl mx-auto">
+                ChronosFlow provides an intuitive interface for managing cron
+                jobs with intelligent scheduling, real-time monitoring, and
+                powerful automation capabilities.
+              </p>
             </div>
 
-            <div className="xl:col-span-3">
+            <div className="max-w-6xl mx-auto">
               <CronJobList cronJobs={cronJobs} />
             </div>
           </div>
         </main>
-
-        <footer className="border-t border-border/50 bg-background/80 backdrop-blur-md mt-16">
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Clock className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="font-semibold brand-gradient">
-                    ChronosFlow
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>© 2024 ChronosFlow</span>
-                  <span className="hidden sm:inline">•</span>
-                  <span>Built with Next.js & TypeScript</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  <span>{systemInfo.platform}</span>
-                </div>
-                <span className="hidden sm:inline">•</span>
-                <span>Host: {systemInfo.hostname}</span>
-              </div>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );

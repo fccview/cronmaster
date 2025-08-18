@@ -57,17 +57,17 @@ const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
         case "poor":
         case "offline":
           return {
-            color: "text-red-500",
-            bgColor: "bg-red-500/10",
-            borderColor: "border-red-500/20",
+            color: "text-destructive",
+            bgColor: "bg-destructive/10",
+            borderColor: "border-destructive/20",
             icon: XCircle,
             label: "Critical",
           };
         default:
           return {
-            color: "text-gray-500",
-            bgColor: "bg-gray-500/10",
-            borderColor: "border-gray-500/20",
+            color: "text-muted-foreground",
+            bgColor: "bg-muted",
+            borderColor: "border-border",
             icon: Activity,
             label: "Unknown",
           };

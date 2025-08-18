@@ -20,7 +20,7 @@ const PerformanceSummary = forwardRef<HTMLDivElement, PerformanceSummaryProps>(
       <div
         ref={ref}
         className={cn(
-          "p-3 bg-gradient-to-r from-purple-500/5 to-pink-500/5 border border-purple-500/20 rounded-lg",
+          "p-3 bg-gradient-to-r from-purple-500/5 to-pink-500/5 border border-purple-500/20 rounded-lg glass-card",
           className
         )}
         {...props}

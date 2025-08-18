@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   cronjob-manager:
@@ -7,6 +7,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
     volumes:
       # Mount the host's crontab for Linux/Unix systems
       - /var/spool/cron/crontabs:/var/spool/cron/crontabs:ro

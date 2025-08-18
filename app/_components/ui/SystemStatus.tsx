@@ -7,10 +7,14 @@ export interface SystemStatusProps extends HTMLAttributes<HTMLDivElement> {
   status: string;
   details: string;
   timestamp: string;
+  isUpdating?: boolean;
 }
 
 const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
-  ({ className, status, details, timestamp, ...props }, ref) => {
+  (
+    { className, status, details, timestamp, isUpdating = false, ...props },
+    ref
+  ) => {
     const getStatusConfig = (status: string) => {
       const lowerStatus = status.toLowerCase();
 
@@ -29,15 +33,15 @@ const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
           };
         case "critical":
           return {
-            bgColor: "bg-red-500/10",
-            borderColor: "border-red-500/20",
-            dotColor: "bg-red-500",
+            bgColor: "bg-destructive/10",
+            borderColor: "border-destructive/20",
+            dotColor: "bg-destructive",
           };
         default:
           return {
-            bgColor: "bg-gray-500/10",
-            borderColor: "border-gray-500/20",
-            dotColor: "bg-gray-500",
+            bgColor: "bg-muted",
+            borderColor: "border-border",
+            dotColor: "bg-muted-foreground",
           };
       }
     };
@@ -48,7 +52,7 @@ const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
       <div
         ref={ref}
         className={cn(
-          "p-4 border rounded-lg",
+          "p-4 border border-border/50 rounded-lg glass-card",
           config.bgColor,
           config.borderColor,
           className
@@ -66,6 +70,7 @@ const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {details} • Last updated: {timestamp}
+              {isUpdating && <span className="ml-2 animate-pulse">🔄</span>}
             </p>
           </div>
         </div>
