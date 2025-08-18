@@ -41,6 +41,10 @@ RUN adduser --system --uid 1001 nextjs
 RUN mkdir -p /app/scripts /app/data /app/snippets && \
     chown -R nextjs:nodejs /app/scripts /app/data /app/snippets
 
+# Create cron directories that will be mounted (this is the key fix!)
+RUN mkdir -p /var/spool/cron/crontabs /etc/crontab && \
+    chown -R root:root /var/spool/cron/crontabs /etc/crontab
+
 # Copy public directory
 COPY --from=builder /app/public ./public
 
