@@ -1,7 +1,9 @@
 <p align="center">
   <h1 align="center">
-    <img src="public/logo.png" alt="CronMaster Logo" width="40" height="40" style="display: inline-block">
-    Chr*nMaster
+    <img src="public/logo.png" alt="CronMaster Logo" width="50" height="50" style="display: inline-block">
+    <div>
+      Chr*nMaster
+    </div>
   </h1>
 </p>
 
