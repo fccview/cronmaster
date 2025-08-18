@@ -9,6 +9,15 @@ A modern, web-based interface for managing cron jobs across different operating 
   </a>
 </p>
 
+<div style="display: flex; max-width: 100%; overflow-y: auto;">
+  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/jobs-view.png">
+  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/scripts-view.png" />
+  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-job.png" />
+  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-job-script.png" />
+  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-job-script-confirm.png" />
+  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-script.png" />
+</div>
+
 ## Features
 
 - **Modern UI**: Beautiful, responsive interface with dark/light mode.

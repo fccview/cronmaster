@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useEffect, useRef, useState } from "react";
+import { EditorView } from "@codemirror/view";
+import { EditorState } from "@codemirror/state";
+import { javascript } from "@codemirror/lang-javascript";
+import { oneDark } from "@codemirror/theme-one-dark";
 import { Button } from "./ui/Button";
 import { Terminal, Copy, Check } from "lucide-react";
 
@@ -22,29 +24,87 @@ export function BashEditor({
   label = "Bash Script",
 }: BashEditorProps) {
   const [copied, setCopied] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const editorViewRef = useRef<EditorView | null>(null);
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  useEffect(() => {
+    if (!editorRef.current) return;
 
-  const handleScroll = () => {
-    if (textareaRef.current) {
-      const scrollTop = textareaRef.current.scrollTop;
-      const scrollLeft = textareaRef.current.scrollLeft;
+    const bashLanguage = javascript({
+      typescript: false,
+      jsx: false,
+    });
 
-      const syntaxElement = textareaRef.current
-        .nextElementSibling as HTMLElement;
-      if (syntaxElement) {
-        syntaxElement.scrollTop = scrollTop;
-        syntaxElement.scrollLeft = scrollLeft;
+    const state = EditorState.create({
+      doc: value || placeholder,
+      extensions: [
+        bashLanguage,
+        oneDark,
+        EditorView.updateListener.of((update: any) => {
+          if (update.docChanged) {
+            onChange(update.state.doc.toString());
+          }
+        }),
+        EditorView.theme({
+          "&": {
+            fontSize: "14px",
+            fontFamily:
+              'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+            height: "100%",
+            maxHeight: "100%",
+          },
+          ".cm-content": {
+            padding: "12px",
+            minHeight: "200px",
+          },
+          ".cm-line": {
+            lineHeight: "1.4",
+          },
+          ".cm-scroller": {
+            fontFamily:
+              'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+            height: "100%",
+            maxHeight: "100%",
+          },
+        }),
+      ],
+    });
+
+    const view = new EditorView({
+      state,
+      parent: editorRef.current,
+    });
+
+    editorViewRef.current = view;
+
+    return () => {
+      view.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (editorViewRef.current) {
+      const currentValue = editorViewRef.current.state.doc.toString();
+      if (currentValue !== value) {
+        editorViewRef.current.dispatch({
+          changes: {
+            from: 0,
+            to: editorViewRef.current.state.doc.length,
+            insert: value,
+          },
+        });
       }
     }
-  };
+  }, [value]);
 
-  const SyntaxHighlighterComponent = SyntaxHighlighter as any;
+  const handleCopy = async () => {
+    if (editorViewRef.current) {
+      const text = editorViewRef.current.state.doc.toString();
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className={className}>
@@ -69,57 +129,8 @@ export function BashEditor({
           </Button>
         </div>
       )}
-      <div className="relative">
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onScroll={handleScroll}
-          placeholder={placeholder}
-          className="w-full h-32 p-3 border border-border rounded bg-background text-foreground font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/20 relative z-10"
-          style={{
-            fontFamily:
-              'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-            lineHeight: "1.4",
-            color: "transparent",
-            caretColor: "hsl(var(--foreground))",
-            background: "transparent",
-          }}
-        />
-        <div
-          className="absolute inset-0 p-3 pointer-events-none overflow-auto"
-          style={{
-            fontFamily:
-              'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-            fontSize: "0.875rem",
-            lineHeight: "1.4",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}
-        >
-          <SyntaxHighlighterComponent
-            language="bash"
-            style={tomorrow}
-            customStyle={{
-              margin: 0,
-              padding: 0,
-              background: "transparent",
-              fontSize: "0.875rem",
-              lineHeight: "1.4",
-              fontFamily:
-                'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-              textShadow: "none",
-            }}
-            codeTagProps={{
-              style: {
-                textShadow: "none",
-                background: "transparent",
-              },
-            }}
-          >
-            {value || placeholder}
-          </SyntaxHighlighterComponent>
-        </div>
+      <div className="border border-border overflow-hidden h-full">
+        <div ref={editorRef} className="h-full rounded-lg" />
       </div>
     </div>
   );

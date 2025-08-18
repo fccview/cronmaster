@@ -19,7 +19,7 @@ export interface SidebarProps extends HTMLAttributes<HTMLDivElement> {
   quickStats?: {
     cpu: number;
     memory: number;
-    network: string; // This will now be ping latency in ms
+    network: string;
   };
 }
 
@@ -38,7 +38,6 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-    // Update body class when sidebar is collapsed
     useEffect(() => {
       if (isCollapsed) {
         document.body.classList.add("sidebar-collapsed");
@@ -124,7 +123,7 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             className={cn(
               "overflow-y-auto custom-scrollbar",
               isCollapsed ? "lg:p-2" : "p-4",
-              "h-full lg:h-[calc(100vh-88px-80px)]" // Full viewport height minus header (88px) minus sidebar header (80px)
+              "h-full lg:h-[calc(100vh-88px-80px)]"
             )}
           >
             {isCollapsed ? (

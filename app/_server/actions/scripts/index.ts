@@ -11,7 +11,6 @@ import { loadAllScripts, type Script } from "@/app/_utils/scriptScanner";
 
 const execAsync = promisify(exec);
 
-// Re-export the Script interface for components
 export type { Script } from "@/app/_utils/scriptScanner";
 
 function sanitizeScriptName(name: string): string {
@@ -84,7 +83,6 @@ export async function createScript(
       .substr(2, 9)}`;
     const filename = await generateUniqueFilename(name);
 
-    // Create metadata header
     const metadataHeader = `# @id: ${scriptId}
 # @title: ${name}
 # @description: ${description || ""}
@@ -96,7 +94,6 @@ export async function createScript(
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
 
-    // Return the created script
     const newScript: Script = {
       id: scriptId,
       name,
@@ -136,7 +133,6 @@ export async function updateScript(
       return { success: false, message: "Script not found" };
     }
 
-    // Update metadata header
     const metadataHeader = `# @id: ${id}
 # @title: ${name}
 # @description: ${description || ""}
@@ -193,10 +189,8 @@ export async function cloneScript(
       .substr(2, 9)}`;
     const filename = await generateUniqueFilename(newName);
 
-    // Get the original content
     const originalContent = await getScriptContent(originalScript.filename);
 
-    // Create metadata header for cloned script
     const metadataHeader = `# @id: ${scriptId}
 # @title: ${newName}
 # @description: ${originalScript.description}
@@ -232,7 +226,6 @@ export async function getScriptContent(filename: string): Promise<string> {
     const scriptPath = join(SCRIPTS_DIR, filename);
     if (existsSync(scriptPath)) {
       const content = await readFile(scriptPath, "utf8");
-      // Extract content without metadata
       const lines = content.split("\n");
       const contentLines: string[] = [];
 
@@ -275,7 +268,7 @@ export async function executeScript(filename: string): Promise<{
     }
 
     const { stdout, stderr } = await execAsync(`bash "${hostScriptPath}"`, {
-      timeout: 30000, // 30 second timeout
+      timeout: 30000,
     });
 
     return {

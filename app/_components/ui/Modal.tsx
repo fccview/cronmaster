@@ -12,6 +12,7 @@ interface ModalProps {
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
   showCloseButton?: boolean;
+  preventCloseOnClickOutside?: boolean;
 }
 
 export function Modal({
@@ -21,6 +22,7 @@ export function Modal({
   children,
   size = "md",
   showCloseButton = true,
+  preventCloseOnClickOutside = false,
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -46,9 +48,17 @@ export function Modal({
     const handleClickOutside = (event: MouseEvent) => {
       if (
         modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
+        !modalRef.current.contains(event.target as Node) &&
+        !preventCloseOnClickOutside
       ) {
-        onClose();
+        const target = event.target as Element;
+        const isClickingOnModal = target.closest('[data-modal="true"]');
+        const isClickingOnBackdrop =
+          target.classList.contains("modal-backdrop");
+
+        if (isClickingOnBackdrop) {
+          onClose();
+        }
       }
     };
 
@@ -59,7 +69,7 @@ export function Modal({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, preventCloseOnClickOutside]);
 
   if (!isOpen) return null;
 
@@ -71,8 +81,11 @@ export function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4"
+      data-modal="true"
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm modal-backdrop" />
 
       <div
         ref={modalRef}
