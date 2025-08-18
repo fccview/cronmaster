@@ -33,15 +33,21 @@ async function readCronFiles(): Promise<string> {
     }
   }
 
-  // In Docker, use the host's crontab binary
+  // In Docker, read from the host crontab file created by startup script
   try {
-    const { stdout } = await execAsync(
-      '/host/usr/bin/crontab -l 2>/dev/null || echo ""'
-    );
-    return stdout;
+    const hostCrontabPath = "/app/data/host_crontab.txt";
+    const crontabContent = await fs.readFile(hostCrontabPath, "utf-8");
+    return crontabContent;
   } catch (error) {
-    console.error("Error reading crontab:", error);
-    return "";
+    console.error("Error reading host crontab file:", error);
+    // Fallback to container's crontab command
+    try {
+      const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
+      return stdout;
+    } catch (fallbackError) {
+      console.error("Fallback crontab command also failed:", fallbackError);
+      return "";
+    }
   }
 }
 
