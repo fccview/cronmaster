@@ -40,14 +40,15 @@ async function writeCronFiles(content: string): Promise<boolean> {
 }
 
 export async function getCronJobs(): Promise<CronJob[]> {
-    const jobs: CronJob[] = [];
-    console.log("getCronJobs called, isDocker:", isDocker);
-
     try {
         const cronContent = await readCronFiles();
-        console.log("Cron content length:", cronContent.length);
-        console.log("Cron content preview:", cronContent.substring(0, 200));
+
+        if (!cronContent.trim()) {
+            return [];
+        }
+
         const lines = cronContent.split("\n");
+        const jobs: CronJob[] = [];
         let currentComment = "";
         let currentUser = "";
         let jobIndex = 0;
@@ -97,11 +98,12 @@ export async function getCronJobs(): Promise<CronJob[]> {
                 jobIndex++;
             }
         });
+
+        return jobs;
     } catch (error) {
         console.error("Error getting cron jobs:", error);
+        return [];
     }
-
-    return jobs;
 }
 
 export async function addCronJob(

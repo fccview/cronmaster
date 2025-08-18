@@ -5,6 +5,7 @@ import { fetchScripts } from "./_server/actions/scripts";
 import { ThemeToggle } from "./_components/ui/ThemeToggle";
 import { ToastContainer } from "./_components/ui/Toast";
 import { Terminal, Zap } from "lucide-react";
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const [systemInfo, cronJobs, scripts] = await Promise.all([

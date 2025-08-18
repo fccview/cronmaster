@@ -16,7 +16,6 @@ export async function getHostInfo(): Promise<{ hostname: string; ip: string; upt
             try {
                 const { stdout } = await execAsync("hostname -I | awk '{print $1}'");
                 ipOutput = stdout;
-                console.log("Docker mode: Got IP from hostname -I:", ipOutput);
             } catch (error) {
                 try {
                     const fibInfo = await fs.readFile("/host/proc/net/fib_trie", "utf-8");
@@ -130,58 +129,42 @@ export async function readCronFilesDocker(): Promise<string> {
     try {
         const crontabDir = "/host/cron/crontabs";
         const files = await fs.readdir(crontabDir);
-
         let allCronContent = "";
 
         for (const file of files) {
             if (file === "." || file === "..") continue;
 
+            if (file.includes("docker") || file.includes("container") || file === "root") {
+                continue;
+            }
+
             try {
                 const filePath = path.join(crontabDir, file);
-
-                // Read the crontab file directly
                 const content = await fs.readFile(filePath, "utf-8");
-
                 allCronContent += `# User: ${file}\n`;
                 allCronContent += content;
                 allCronContent += "\n\n";
-                console.log(`Successfully read crontab for user ${file}:`, content.substring(0, 100) + "...");
             } catch (fileError) {
                 console.error(`Error reading crontab for user ${file}:`, fileError);
             }
         }
 
-        try {
-            const systemCrontab = await fs.readFile("/host/crontab", "utf-8");
-            allCronContent += "# System Crontab\n";
-            allCronContent += systemCrontab;
-            allCronContent += "\n\n";
-        } catch (systemError) {
-            console.error("Error reading system crontab:", systemError);
-        }
-
-        return allCronContent.trim();
+        return allCronContent;
     } catch (error) {
         console.error("Error reading host crontab files:", error);
-        try {
-            const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
-            return stdout;
-        } catch (fallbackError) {
-            console.error("Fallback crontab command also failed:", fallbackError);
-            return "";
-        }
+        return "";
     }
 }
 
-export async function writeCronFilesDocker(content: string): Promise<boolean> {
+export async function writeCronFilesDocker(cronContent: string): Promise<boolean> {
     try {
-        const lines = content.split("\n");
+        const lines = cronContent.split("\n");
         const userCrontabs: { [key: string]: string[] } = {};
         let currentUser = "";
         let currentContent: string[] = [];
 
         for (const line of lines) {
-            if (line.startsWith("# User: ")) {
+            if (line.startsWith("# User:")) {
                 if (currentUser && currentContent.length > 0) {
                     userCrontabs[currentUser] = [...currentContent];
                 }
@@ -205,13 +188,25 @@ export async function writeCronFilesDocker(content: string): Promise<boolean> {
         for (const [username, cronJobs] of Object.entries(userCrontabs)) {
             if (username === "system") {
                 const systemContent = cronJobs.join("\n") + "\n";
-                await fs.writeFile("/host/crontab", systemContent);
+                try {
+                    await fs.writeFile("/host/crontab", systemContent);
+                } catch (error) {
+                    console.error("Failed to write system crontab:", error);
+                    return false;
+                }
             } else {
                 const userCrontabPath = `/host/cron/crontabs/${username}`;
                 const userContent = cronJobs.join("\n") + "\n";
-                await fs.writeFile(userCrontabPath, userContent);
-                await execAsync(`chmod 600 ${userCrontabPath}`);
-                await execAsync(`chown ${username}:crontab ${userCrontabPath}`);
+                try {
+                    await execAsync(`chown root:root ${userCrontabPath}`);
+                    await execAsync(`chmod 666 ${userCrontabPath}`);
+                    await fs.writeFile(userCrontabPath, userContent);
+                    await execAsync(`chown ${username}:crontab ${userCrontabPath}`);
+                    await execAsync(`chmod 600 ${userCrontabPath}`);
+                } catch (error) {
+                    console.error(`Failed to write crontab for user ${username}:`, error);
+                    return false;
+                }
             }
         }
 
@@ -232,9 +227,9 @@ export async function getMemoryInfoDocker() {
 
         for (const line of lines) {
             if (line.startsWith("MemTotal:")) {
-                total = parseInt(line.split(/\s+/)[1]) * 1024; // Convert KB to bytes
+                total = parseInt(line.split(/\s+/)[1]) * 1024;
             } else if (line.startsWith("MemAvailable:")) {
-                available = parseInt(line.split(/\s+/)[1]) * 1024; // Convert KB to bytes
+                available = parseInt(line.split(/\s+/)[1]) * 1024;
             }
         }
 
@@ -293,35 +288,39 @@ export async function getCPUInfoDocker() {
 }
 
 export async function getGPUInfoDocker() {
-    console.log("getGPUInfo called");
     try {
         let gpuInfo = "Unknown GPU";
 
         try {
-            const { stdout } = await execAsync("find /host/sys/devices -name 'card*' -type d | head -1");
-            if (stdout.trim()) {
-                const cardPath = stdout.trim();
-                const { stdout: nameOutput } = await execAsync(`cat ${cardPath}/name 2>/dev/null || echo "Unknown GPU"`);
-                gpuInfo = nameOutput.trim();
-                console.log("Found GPU via sysfs:", gpuInfo);
+            const { stdout } = await execAsync("lspci | grep -i vga");
+            const gpuLines = stdout.split("\n").filter((line) => line.trim());
+            if (gpuLines.length > 0) {
+                gpuInfo = gpuLines[0].split(":")[2]?.trim() || "Unknown GPU";
             }
-        } catch (sysfsError) {
-            console.log("Could not read GPU info from host sysfs:", sysfsError);
+        } catch (lspciError) {
             try {
-                const pciInfo = await fs.readFile("/host/proc/bus/pci/devices", "utf-8");
-                const lines = pciInfo.split("\n");
-                for (const line of lines) {
-                    if (line.includes("0300")) { // VGA controller class
-                        const parts = line.split(/\s+/);
-                        if (parts.length > 1) {
-                            gpuInfo = `PCI Device ${parts[0]}`;
-                            console.log("Found GPU via PCI devices:", gpuInfo);
-                            break;
+                const { stdout } = await execAsync("find /host/sys/devices -name 'card*' -type d | head -1");
+                if (stdout.trim()) {
+                    const cardPath = stdout.trim();
+                    const { stdout: nameOutput } = await execAsync(`cat ${cardPath}/name 2>/dev/null || echo "Unknown GPU"`);
+                    gpuInfo = nameOutput.trim();
+                }
+            } catch (sysfsError) {
+                try {
+                    const pciInfo = await fs.readFile("/host/proc/bus/pci/devices", "utf-8");
+                    const lines = pciInfo.split("\n");
+                    for (const line of lines) {
+                        if (line.includes("0300")) {
+                            const parts = line.split(/\s+/);
+                            if (parts.length > 1) {
+                                gpuInfo = `PCI Device ${parts[0]}`;
+                                break;
+                            }
                         }
                     }
+                } catch (pciError) {
+                    console.log("Could not read GPU info from PCI devices:", pciError);
                 }
-            } catch (pciError) {
-                console.log("Could not read GPU info from PCI devices:", pciError);
             }
         }
 
@@ -345,47 +344,16 @@ export async function getGPUInfoDocker() {
 }
 
 export async function getNetworkInfoDocker() {
-    console.log("getNetworkInfo called");
     try {
-        let pingOutput = "";
         let latency = 0;
+        let pingOutput = "";
 
         try {
             const { stdout } = await execAsync(
                 'ping -c 1 -W 1 8.8.8.8 2>/dev/null || echo "timeout"'
             );
             pingOutput = stdout;
-        } catch (pingError) {
-            console.log("Ping command failed, trying curl instead");
-            try {
-                const startTime = Date.now();
-                const { stdout } = await execAsync(
-                    'curl -s --connect-timeout 1 --max-time 2 https://www.google.com > /dev/null && echo "success" || echo "timeout"'
-                );
-                const endTime = Date.now();
-                latency = endTime - startTime;
-                pingOutput = stdout;
-            } catch (curlError) {
-                console.log("Both ping and curl failed");
-                pingOutput = "timeout";
-            }
-        }
 
-        if (
-            pingOutput.includes("timeout") ||
-            pingOutput.includes("100% packet loss") ||
-            pingOutput.includes("No connection")
-        ) {
-            return {
-                speed: "No connection",
-                latency: 0,
-                downloadSpeed: 0,
-                uploadSpeed: 0,
-                status: "Offline",
-            };
-        }
-
-        if (latency === 0) {
             const lines = pingOutput.split("\n");
             const timeLine = lines.find((line) => line.includes("time="));
 
@@ -395,38 +363,62 @@ export async function getNetworkInfoDocker() {
                     latency = parseFloat(match[1]);
                 }
             }
+        } catch (pingError) {
+            console.log("Ping failed:", pingError);
+            pingOutput = "timeout";
         }
 
-        let downloadSpeed = 0;
-        let speed = "Unknown";
-        let status = "Stable";
+        if (pingOutput.includes("timeout") || pingOutput.includes("100% packet loss")) {
+            return {
+                speed: "No connection",
+                latency: 0,
+                downloadSpeed: 0,
+                uploadSpeed: 0,
+                status: "Offline",
+            };
+        }
 
-        if (latency < 10) {
-            downloadSpeed = 50;
-            speed = "Excellent";
-            status = "Optimal";
-        } else if (latency < 30) {
-            downloadSpeed = 25;
-            speed = "Good";
-            status = "Stable";
-        } else if (latency < 100) {
-            downloadSpeed = 10;
-            speed = "Fair";
-            status = "Slow";
-        } else {
-            downloadSpeed = 2;
-            speed = "Poor";
-            status = "Poor";
+        if (latency > 0) {
+            let downloadSpeed = 0;
+            let speed = "Unknown";
+            let status = "Stable";
+
+            if (latency < 10) {
+                downloadSpeed = 50;
+                speed = "Excellent";
+                status = "Optimal";
+            } else if (latency < 30) {
+                downloadSpeed = 25;
+                speed = "Good";
+                status = "Stable";
+            } else if (latency < 100) {
+                downloadSpeed = 10;
+                speed = "Fair";
+                status = "Slow";
+            } else {
+                downloadSpeed = 2;
+                speed = "Poor";
+                status = "Poor";
+            }
+
+            return {
+                speed,
+                latency: Math.round(latency),
+                downloadSpeed: Math.round(downloadSpeed * 100) / 100,
+                uploadSpeed: 0,
+                status,
+            };
         }
 
         return {
-            speed,
-            latency: Math.round(latency),
-            downloadSpeed: Math.round(downloadSpeed * 100) / 100,
+            speed: "Unknown",
+            latency: 0,
+            downloadSpeed: 0,
             uploadSpeed: 0,
-            status,
+            status: "Unknown",
         };
     } catch (error) {
+        console.error("Network error:", error);
         return {
             speed: "Unknown",
             latency: 0,

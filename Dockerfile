@@ -1,5 +1,12 @@
 FROM node:20-slim AS base
 
+# Install system utilities for system information
+RUN apt-get update && apt-get install -y \
+    pciutils \
+    curl \
+    iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app

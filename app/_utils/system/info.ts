@@ -215,7 +215,6 @@ async function getCPUInfo() {
 }
 
 async function getGPUInfo() {
-    console.log("getGPUInfo called");
     try {
         if (isDocker) {
             return await getGPUInfoDocker();
@@ -267,7 +266,6 @@ async function getGPUInfo() {
 }
 
 async function getNetworkInfo() {
-    console.log("getNetworkInfo called");
     try {
         if (isDocker) {
             return await getNetworkInfoDocker();
