@@ -45,7 +45,7 @@
 services:
   cronjob-manager:
     image: ghcr.io/fccview/cronmaster:main
-    container_name: chronmaster
+    container_name: cronmaster
     user: "root"
     ports:
       # Mapping custom port 40123 due to 3000 being very common
@@ -64,15 +64,13 @@ services:
       - /sys:/sys:ro
       - /etc:/etc:ro
       # Mount scripts directory for script execution
-      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/scripts:/app/scripts
+      - ./scripts:/app/scripts
       # Mount data directory for persistence
-      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/data:/app/data
+      - ./data:/app/data
       # Mount snippets directory for user-defined snippets
-      - ${NEXT_PUBLIC_HOST_PROJECT_DIR}/snippets:/app/snippets
+      - ./snippets:/app/snippets
     # Run with host network to access system information
     network_mode: host
-    # Run as root to access system commands (needed for cron operations)
-    user: root
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -80,6 +78,7 @@ services:
       - SYS_ADMIN
     cap_drop:
       - ALL
+    init: true
 ```
 
 2. Build and run with Docker Compose:

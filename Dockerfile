@@ -54,9 +54,6 @@ COPY --from=builder /app/yarn.lock ./yarn.lock
 # Copy node_modules for production dependencies
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Default to nextjs user, but can be overridden in docker-compose
-USER nextjs
-
 EXPOSE 3000
 
 ENV PORT=3000
