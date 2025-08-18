@@ -1,9 +1,7 @@
 <p align="center">
-  <h1 style="text-align: center">
-    <img src="public/logo.png" alt="CronMaster Logo" width="50" height="50" style="display: inline-block">
-    <p>
-      Chr*nMaster
-    </p>
+  <h1 align="center">
+    <img src="public/logo.png" alt="CronMaster Logo" width="30" height="30" style="display: inline-block">
+    Chr*nMaster
   </h1>
 </p>
 
@@ -21,13 +19,9 @@
   </a>
 </p>
 
-<div style="display: flex; max-width: 100%; overflow-y: auto;">
-  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/jobs-view.png">
-  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/scripts-view.png" />
-  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-job.png" />
-  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-job-script.png" />
-  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-job-script-confirm.png" />
-  <img style="padding-right: 1em; max-width: 70%;" src="screenshots/new-script.png" />
+<div align="center">
+  <img width="500px" src="screenshots/jobs-view.png">
+  <img width="500px" src="screenshots/scripts-view.png" />
 </div>
 
 ## Features
