@@ -4,6 +4,7 @@ services:
     container_name: cronmaster
     user: "root"
     network_mode: host
+    pid: "host"
     environment:
       - NODE_ENV=production
       - DOCKER=true

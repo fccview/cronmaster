@@ -47,12 +47,14 @@ services:
     image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster
     user: "root"
-    ports:
-      # Mapping custom port 40123 due to 3000 being very common
-      - "40123:3000"
+    network_mode: host
+    pid: "host"
     environment:
       - NODE_ENV=production
+      - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
+      # Feel free to change port, as we're running this as host you won't be able to externally map it
+      - PORT=40123
       # Enter the FULL relative path to the project directory where this docker-compose.yml file is located (use `pwd` to find it)
       - NEXT_PUBLIC_HOST_PROJECT_DIR=/absolute/path/to/project/directory
     volumes:
@@ -60,17 +62,16 @@ services:
       - /var/spool/cron/crontabs:/var/spool/cron/crontabs:ro
       - /etc/crontab:/etc/crontab:ro
       # Mount system information directories
-      - /proc:/proc:ro
-      - /sys:/sys:ro
-      - /etc:/etc:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc:/host/etc:ro
+      - /usr:/host/usr:ro
       # Mount scripts directory for script execution
       - ./scripts:/app/scripts
       # Mount data directory for persistence
       - ./data:/app/data
       # Mount snippets directory for user-defined snippets
       - ./snippets:/app/snippets
-    # Run with host network to access system information
-    network_mode: host
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -88,6 +89,8 @@ docker compose up --build
 ```
 
 3. Open your browser and navigate to `http://localhost:40123`
+
+**Note**: The Docker implementation uses direct file access to read and write crontab files, ensuring real-time synchronization with the host system's cron jobs. This approach bypasses the traditional `crontab` command limitations in containerized environments.
 
 ### Local Development
 
@@ -122,10 +125,12 @@ NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
 
 ### Important Notes for Docker
 
-- The container runs with `network_mode: host` to access system information
-- Root user is required for cron operations
+- The container runs with `network_mode: host` and `pid: "host"` to access system information
+- Root user is required for cron operations and direct file access
 - System directories are mounted as read-only for security
-- `NEXT_PUBLIC_HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly.
+- Crontab files are accessed directly via file system mounts at `/host/cron/crontabs` and `/host/crontab` for real-time reading and writing
+- `NEXT_PUBLIC_HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
+- The `DOCKER=true` environment variable enables direct file access mode for crontab operations
 
 ## Usage
 
