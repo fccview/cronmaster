@@ -16,11 +16,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CronMaster - Advanced Cron Management",
+  title: "Cr*nMaster - Cron Management made easy",
   description:
     "The ultimate cron job management platform with intelligent scheduling, real-time monitoring, and powerful automation tools",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

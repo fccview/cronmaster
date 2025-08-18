@@ -1,8 +1,20 @@
-# Cron Job Manager
+<p align="center">
+  <h1 style="text-align: center">
+    <img src="public/logo.png" alt="CronMaster Logo" width="50" height="50" style="display: inline-block">
+    <p>
+      Chr*nMaster
+    </p>
+  </h1>
+</p>
 
-A modern, web-based interface for managing cron jobs across different operating systems (Linux, macOS, Windows). Built with Next.js, TypeScript, and Tailwind CSS.
+<p align="center">
+  <strong>A modern, web-based interface for managing cron jobs.</strong>
+</p>
 
-<br />
+<p align="center">
+  Built with Next.js, TypeScript, and Tailwind CSS.
+</p>
+
 <p align="center">
   <a href="https://www.buymeacoffee.com/fccview">
     <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="150">

@@ -32,7 +32,7 @@ export default async function Home() {
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold brand-gradient brand-text">
-                    CronMaster
+                    Cr*nMaster
                   </h1>
                   <p className="text-xs text-muted-foreground font-mono tracking-wide">
                     Cron Management made easy
