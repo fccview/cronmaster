@@ -40,36 +40,40 @@ services:
     image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster
     user: "root"
-    network_mode: host
-    pid: "host"
+    ports:
+      # Feel free to change port, 3000 is very common so I like to map it to something else
+      - "40123:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      # Feel free to change port, as we're running this as host you won't be able to externally map it
-      - PORT=40123
-      # Enter the FULL relative path to the project directory where this docker-compose.yml file is located (use `pwd` to find it)
       - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
     volumes:
-      # Mount the host's crontab for Linux/Unix systems
+      # --- CRONTAB MANAGEMENT ---
+      # We're mounting /etc/crontab to /host/crontab in read-only mode.
+      # We are thenmounting /var/spool/cron/crontabs with read-write permissions to allow the application
+      # to manipulate the crontab file - docker does not have access to the crontab command, it's the only
+      # workaround I could think of.
       - /var/spool/cron/crontabs:/host/cron/crontabs
       - /etc/crontab:/host/crontab:ro
-      # Mount system information directories
+
+      # --- HOST SYSTEM STATS ---
+      # Mounting system specific folders to their /host/ equivalent folders.
+      # Similar story, we don't want to override docker system folders.
+      # These are all mounted read-only for security.
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
       - /usr:/host/usr:ro
-      # Mount scripts directory for script execution
+
+      # --- APPLICATION-SPECIFIC MOUNTS ---
+      # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
+      # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
+      # will target this foler (thanks to the NEXT_PUBLIC_HOST_PROJECT_DIR variable set above)
       - ./scripts:/app/scripts
-      # Mount data directory for persistence
       - ./data:/app/data
-      # Mount snippets directory for user-defined snippets
       - ./snippets:/app/snippets
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_add:
-      - SYS_ADMIN
     init: true
 ```
 
