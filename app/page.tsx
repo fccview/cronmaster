@@ -4,8 +4,8 @@ import { getSystemInfo, getCronJobs } from "./_utils/system";
 import { fetchScripts } from "./_server/actions/scripts";
 import { ThemeToggle } from "./_components/ui/ThemeToggle";
 import { ToastContainer } from "./_components/ui/Toast";
-import { Terminal, Zap } from "lucide-react";
-export const dynamic = 'force-dynamic';
+import { Asterisk, Terminal, Zap } from "lucide-react";
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [systemInfo, cronJobs, scripts] = await Promise.all([
@@ -23,13 +23,8 @@ export default async function Home() {
             <div className="flex items-center justify-center">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-xl shadow-lg">
-                    <div className="relative">
-                      <Terminal className="h-6 w-6 text-white" />
-                      <Zap className="h-3 w-3 text-white absolute -top-1 -right-1" />
-                    </div>
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <img src="/logo.png" alt="logo" className="w-14 h-14" />
+                  <div className="absolute top-0 right-0 w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold brand-gradient brand-text">
