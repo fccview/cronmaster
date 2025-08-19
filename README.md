@@ -1,19 +1,21 @@
 <p align="center">
-  <h1 align="center">
-    <img src="public/logo.png" alt="CronMaster Logo" width="50" height="50" style="display: inline-block">
-    <div>
-      Chr*nMaster
-    </div>
-  </h1>
+  <img src="public/heading.png" width="400px">
 </p>
 
-<p align="center">
-  <strong>A modern, web-based interface for managing cron jobs.</strong>
-</p>
+## Features
 
-<p align="center">
-  Built with Next.js, TypeScript, and Tailwind CSS.
-</p>
+- **Modern UI**: Beautiful, responsive interface with dark/light mode.
+- **System Information**: Display hostname, IP address, uptime, memory, network and CPU info.
+- **Cron Job Management**: View, create, and delete cron jobs with comments.
+- **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
+- **Docker Support**: Runs entirely from a Docker container.
+- **Easy Setup**: Quick presets for common cron schedules.
+
+## Before we start
+
+Hey there! 👋 Just a friendly heads-up: I'm a big believer in open source and love sharing my work with the community. Everything you find in my GitHub repos is and always will be 100% free. If someone tries to sell you a "premium" version of any of my projects while claiming to be me, please know that this is not legitimate. 🚫
+
+If you find my projects helpful and want to fuel my late-night coding sessions with caffeine, I'd be super grateful for any support! ☕
 
 <p align="center">
   <a href="https://www.buymeacoffee.com/fccview">
@@ -25,15 +27,6 @@
   <img width="500px" src="screenshots/jobs-view.png">
   <img width="500px" src="screenshots/scripts-view.png" />
 </div>
-
-## Features
-
-- **Modern UI**: Beautiful, responsive interface with dark/light mode.
-- **System Information**: Display hostname, IP address, uptime, memory, network and CPU info.
-- **Cron Job Management**: View, create, and delete cron jobs with comments.
-- **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
-- **Docker Support**: Runs entirely from a Docker container.
-- **Easy Setup**: Quick presets for common cron schedules.
 
 ## Quick Start
 
@@ -110,10 +103,11 @@ yarn dev
 
 The following environment variables can be configured:
 
-| Variable                            | Default | Description                                                  |
-| ----------------------------------- | ------- | ------------------------------------------------------------ |
-| `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds)           |
-| `NEXT_PUBLIC_HOST_PROJECT_DIR`      | `N/A`   | Mandatory variable to make sure cron runs on the right path. |
+| Variable                            | Default | Description                                                                                 |
+| ----------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds)                                          |
+| `NEXT_PUBLIC_HOST_PROJECT_DIR`      | `N/A`   | Mandatory variable to make sure cron runs on the right path.                                |
+| `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
 
 **Example**: To change the clock update interval to 60 seconds:
 
@@ -121,14 +115,18 @@ The following environment variables can be configured:
 NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
 ```
 
+**Example**: Your `docker-compose.yml` file or repository are in `~/homelab/cronmaster/`
+
+```bash
+NEXT_PUBLIC_HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
+```
+
 ### Important Notes for Docker
 
-- The container runs with `network_mode: host` and `pid: "host"` to access system information
-- Root user is required for cron operations and direct file access
-- System directories are mounted as read-only for security
+- Root user is required for cron operations and direct file access. There is no way around this, if you don't feel comfortable in running it as root feel free to run the app locally with `yarn install`, `yarn build` and `yarn start`
 - Crontab files are accessed directly via file system mounts at `/host/cron/crontabs` and `/host/crontab` for real-time reading and writing
 - `NEXT_PUBLIC_HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
-- The `DOCKER=true` environment variable enables direct file access mode for crontab operations
+- The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
 
 ## Usage
 
@@ -136,12 +134,13 @@ NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
 
 The application automatically detects your operating system and displays:
 
-- Platform (Linux/macOS/Windows - not supported)
+- Platform
 - Hostname
 - IP Address
 - System Uptime
 - Memory Usage
 - CPU Information
+- GPU Information (if supported)
 
 ### Managing Cron Jobs
 
@@ -166,7 +165,7 @@ The application uses standard cron format: `* * * * *`
 
 1. **View Existing Scripts**: All current user created scripts are displayed with their name and descriptions
 2. **Create New Script**: Use the editor and snippets to quickly create scripts for your cron jobs.
-3. **Quick Snippets**: Pre-set of snippets, with ability to add new ones. Check README.md in `./snippets`
+3. **Quick Snippets**: Pre-set of snippets, with ability to add new ones. Check README.md in [Snippets](snippets/README.md)
 4. **Delete Scripts**: Remove unwanted scripts (this won't delete the cronjob, you will need to manually remove these yourself)
 5. **Clone Scripts**: Clone scripts to quickly edit them in case they are similar to one another.
 
@@ -178,12 +177,6 @@ The application uses standard cron format: `* * * * *`
 - **Lucide React**: Beautiful icons
 - **next-themes**: Dark/light mode support
 - **Docker**: Containerization
-
-## Security Considerations
-
-- The application requires root access for cron operations
-- System directories are mounted as read-only
-- Input validation is implemented for all user inputs
 
 ## Contributing
 

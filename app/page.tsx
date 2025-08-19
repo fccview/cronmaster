@@ -4,7 +4,6 @@ import { getSystemInfo, getCronJobs } from "./_utils/system";
 import { fetchScripts } from "./_server/actions/scripts";
 import { ThemeToggle } from "./_components/ui/ThemeToggle";
 import { ToastContainer } from "./_components/ui/Toast";
-import { Asterisk, Terminal, Zap } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
