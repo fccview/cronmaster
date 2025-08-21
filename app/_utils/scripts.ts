@@ -1,6 +1,7 @@
 import { join } from "path";
 
-const SCRIPTS_DIR = join(process.cwd(), "scripts");
+const isDocker = process.env.DOCKER === "true";
+const SCRIPTS_DIR = isDocker ? "/app/scripts" : join(process.cwd(), "scripts");
 
 export function getScriptPath(filename: string): string {
   return join(SCRIPTS_DIR, filename);

@@ -43,7 +43,10 @@ async function ensureScriptsDirectory() {
 }
 
 async function ensureHostScriptsDirectory() {
-  const hostScriptsDir = join(process.cwd(), "scripts");
+  const isDocker = process.env.DOCKER === "true";
+  const hostScriptsDir = isDocker
+    ? "/app/scripts"
+    : join(process.cwd(), "scripts");
   if (!existsSync(hostScriptsDir)) {
     await mkdir(hostScriptsDir, { recursive: true });
   }
@@ -257,7 +260,10 @@ export async function executeScript(filename: string): Promise<{
 }> {
   try {
     await ensureHostScriptsDirectory();
-    const hostScriptPath = join(process.cwd(), "scripts", filename);
+    const isDocker = process.env.DOCKER === "true";
+    const hostScriptPath = isDocker
+      ? join("/app/scripts", filename)
+      : join(process.cwd(), "scripts", filename);
 
     if (!existsSync(hostScriptPath)) {
       return {

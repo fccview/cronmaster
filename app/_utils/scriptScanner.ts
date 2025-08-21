@@ -67,7 +67,10 @@ async function scanScriptsDirectory(dirPath: string): Promise<Script[]> {
 }
 
 export async function loadAllScripts(): Promise<Script[]> {
-  const scriptsDir = path.join(process.cwd(), "scripts");
+  const isDocker = process.env.DOCKER === "true";
+  const scriptsDir = isDocker
+    ? "/app/scripts"
+    : path.join(process.cwd(), "scripts");
   return await scanScriptsDirectory(scriptsDir);
 }
 

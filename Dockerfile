@@ -57,6 +57,9 @@ COPY --from=builder /app/public ./public
 # Copy the entire .next directory
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 
+# Copy app directory for builtin snippets and other app files
+COPY --from=builder --chown=nextjs:nodejs /app/app ./app
+
 # Copy package.json and yarn.lock for yarn start
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/yarn.lock ./yarn.lock
