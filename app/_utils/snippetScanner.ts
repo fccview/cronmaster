@@ -118,15 +118,25 @@ async function scanSnippetDirectory(
 }
 
 export async function loadAllSnippets(): Promise<BashSnippet[]> {
+  const isDocker = process.env.DOCKER === "true";
+
+  let builtinSnippetsPath: string;
+  let userSnippetsPath: string;
+
+  if (isDocker) {
+    builtinSnippetsPath = "/app/app/_utils/snippets";
+    userSnippetsPath = "/app/snippets";
+  } else {
+    builtinSnippetsPath = path.join(process.cwd(), "app", "_utils", "snippets");
+    userSnippetsPath = path.join(process.cwd(), "snippets");
+  }
+
   const builtinSnippets = await scanSnippetDirectory(
-    path.join(process.cwd(), "app", "_utils", "snippets"),
+    builtinSnippetsPath,
     "builtin"
   );
 
-  const userSnippets = await scanSnippetDirectory(
-    path.join(process.cwd(), "snippets"),
-    "user"
-  );
+  const userSnippets = await scanSnippetDirectory(userSnippetsPath, "user");
 
   return [...builtinSnippets, ...userSnippets];
 }
