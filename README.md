@@ -2,6 +2,18 @@
   <img src="public/heading.png" width="400px">
 </p>
 
+# ATTENTION BREAKING UPDATE!!
+
+> The latest `main` branch has completely changed the way this app used to run.
+> The main reason being trying to address some security concerns and make the whole application work
+> across multiple platform without too much trouble.
+>
+> If you came here due to this change trying to figure out why your app stopped working you have two options:
+>
+> 1 - Update your `docker-compose.yml` with the new one provided within this readme (or just copy [docker-compose.yml](docker-compose.yml))
+>
+> 2 - Keep your `docker-compose.yml` file as it is and use the legacy tag in the image `image: ghcr.io/fccview/cronmaster:legacy`. However bear in mind this will not be supported going forward, any issue regarding the legacy tag will be ignored and I will only support the main branch. Feel free to fork that specific branch in case you want to work on it yourself :)
+
 ## Features
 
 - **Modern UI**: Beautiful, responsive interface with dark/light mode.
@@ -37,46 +49,40 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:main
-    container_name: cronmaster
+    build: .
+    container_name: cronmaster-test
     user: "root"
     ports:
       # Feel free to change port, 3000 is very common so I like to map it to something else
-      - "40123:3000"
+      - "40124:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
+      # If docker struggles to find your crontab user, update this variable with it.
+      # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
+      # - HOST_CRONTAB_USER=fccview
     volumes:
-      # --- CRONTAB MANAGEMENT ---
-      # We're mounting /etc/crontab to /host/crontab in read-only mode.
-      # We are thenmounting /var/spool/cron/crontabs with read-write permissions to allow the application
-      # to manipulate the crontab file - docker does not have access to the crontab command, it's the only
-      # workaround I could think of.
-      - /var/spool/cron/crontabs:/host/cron/crontabs
-      - /etc/crontab:/host/crontab:ro
+      # Mount Docker socket to execute commands on host
+      - /var/run/docker.sock:/var/run/docker.sock
 
-      # --- HOST SYSTEM STATS ---
-      # Mounting system specific folders to their /host/ equivalent folders.
-      # Similar story, we don't want to override docker system folders.
-      # These are all mounted read-only for security.
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /etc:/host/etc:ro
-      - /usr:/host/usr:ro
-
-      # --- APPLICATION-SPECIFIC MOUNTS ---
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
       # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
       # will target this foler (thanks to the NEXT_PUBLIC_HOST_PROJECT_DIR variable set above)
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
+
+    # Use host PID namespace for host command execution
+    # Run in privileged mode for nsenter access
+    pid: "host"
+    privileged: true
     restart: unless-stopped
     init: true
-    # Default platform is set to amd64, can be overridden by using arm64.
-    #platform: linux/arm64
+
+    # Default platform is set to amd64, uncomment to use arm64.
+    #platform: linux/arm64    
 ```
 
 ### ARM64 Support

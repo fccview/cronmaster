@@ -10,41 +10,28 @@ services:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
+      #- NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
       - NEXT_PUBLIC_HOST_PROJECT_DIR=/home/fccview/www/projects/cronjob
+      # If docker struggles to find your crontab user, update this variable with it.
+      # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
       # - HOST_CRONTAB_USER=fccview
     volumes:
-      # --- DOCKER SOCKET ACCESS ---
       # Mount Docker socket to execute commands on host
       - /var/run/docker.sock:/var/run/docker.sock
-      
-      # --- HOST SYSTEM STATS ---
-      # Mounting system specific folders to their /host/ equivalent folders.
-      # Similar story, we don't want to override docker system folders.
-      # These are all mounted read-only for security.
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /etc:/host/etc:ro
-      - /usr:/host/usr:ro
 
-      # --- APPLICATION-SPECIFIC MOUNTS ---
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
       # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
       # will target this foler (thanks to the NEXT_PUBLIC_HOST_PROJECT_DIR variable set above)
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
-    
-    # Add required capabilities for host crontab access
-    cap_add:
-      - SYS_ADMIN
-    
+
     # Use host PID namespace for host command execution
-    pid: "host"
-    
     # Run in privileged mode for nsenter access
+    pid: "host"
     privileged: true
-    
     restart: unless-stopped
     init: true
-    # Default platform is set to amd64, can be overridden by using arm64.
-    #platform: linux/arm64
+
+    # Default platform is set to amd64, uncomment to use arm64.
+    #platform: linux/arm64    

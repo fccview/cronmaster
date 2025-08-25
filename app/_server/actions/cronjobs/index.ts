@@ -5,9 +5,7 @@ import {
   addCronJob,
   deleteCronJob,
   updateCronJob,
-  getSystemInfo,
   type CronJob,
-  type SystemInfo,
 } from "@/app/_utils/system";
 import { revalidatePath } from "next/cache";
 import { getScriptPath } from "@/app/_utils/scripts";
@@ -21,47 +19,7 @@ export async function fetchCronJobs(): Promise<CronJob[]> {
   }
 }
 
-export async function fetchSystemInfo(): Promise<SystemInfo> {
-  try {
-    return await getSystemInfo();
-  } catch (error) {
-    console.error("Error fetching system info:", error);
-    return {
-      hostname: "Unknown",
-      platform: "Unknown",
-      ip: "Unknown",
-      uptime: "Unknown",
-      memory: {
-        total: "Unknown",
-        used: "Unknown",
-        free: "Unknown",
-        usage: 0,
-        status: "Unknown",
-      },
-      cpu: {
-        model: "Unknown",
-        cores: 0,
-        usage: 0,
-        status: "Unknown",
-      },
-      gpu: {
-        model: "Unknown",
-        status: "Unknown",
-      },
-      network: {
-        latency: 0,
-        speed: "Unknown",
-        downloadSpeed: 0,
-        uploadSpeed: 0,
-        status: "Unknown",
-      },
-      systemStatus: {
-        overall: "Unknown",
-        details: "Unable to retrieve system information",
-      },
-    };
-  }
-}
+
 
 export async function createCronJob(
   formData: FormData
