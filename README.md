@@ -101,7 +101,7 @@ docker compose up --build
 
 3. Open your browser and navigate to `http://localhost:40123`
 
-**Note**: The Docker implementation uses direct file access to read and write crontab files, ensuring real-time synchronization with the host system's cron jobs. This approach bypasses the traditional `crontab` command limitations in containerized environments.
+**Note**: The Docker implementation uses direct file access to read and write crontab files, ensuring real-time synchronization with the host system's cron jobs. This approach bypasses the traditional `crontab` command limitations in containerized environments
 
 ### Local Development
 
