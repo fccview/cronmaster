@@ -79,6 +79,20 @@ services:
     #platform: linux/arm64
 ```
 
+### ARM64 Support
+
+The application supports both AMD64 and ARM64 architectures:
+
+**For AMD64 users**: No changes needed - the default configuration works out of the box.
+
+**For ARM64 users**: Uncomment the platform line in your `docker-compose.yml`:
+
+```yaml
+platform: linux/arm64
+```
+
+**Note**: Multi-platform Docker images are automatically built for both architectures. The image will automatically use the correct architecture for your platform.
+
 2. Build and run with Docker Compose:
 
 ```bash
