@@ -1,5 +1,7 @@
 services:
   cronjob-manager:
+    # Default platform, can be overridden by using arm64.
+    platform: linux/amd64
     image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster
     user: "root"

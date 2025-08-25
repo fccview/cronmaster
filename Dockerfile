@@ -1,4 +1,4 @@
-FROM node:20-slim AS base
+FROM --platform=$BUILDPLATFORM node:20-slim AS base
 
 # Install system utilities for system information
 RUN apt-get update && apt-get install -y \
