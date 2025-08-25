@@ -75,6 +75,8 @@ services:
       - ./snippets:/app/snippets
     restart: unless-stopped
     init: true
+    # Default platform is set to amd64, can be overridden by using arm64.
+    #platform: linux/arm64
 ```
 
 2. Build and run with Docker Compose:

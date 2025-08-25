@@ -1,7 +1,5 @@
 services:
   cronjob-manager:
-    # Default platform, can be overridden by using arm64.
-    platform: linux/amd64
     image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster
     user: "root"
@@ -40,3 +38,5 @@ services:
       - ./snippets:/app/snippets
     restart: unless-stopped
     init: true
+    # Default platform is set to amd64, can be overridden by using arm64.
+    #platform: linux/arm64
