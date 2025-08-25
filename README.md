@@ -75,7 +75,23 @@ services:
       - ./snippets:/app/snippets
     restart: unless-stopped
     init: true
+    # Default platform is set to amd64, can be overridden by using arm64.
+    #platform: linux/arm64
 ```
+
+### ARM64 Support
+
+The application supports both AMD64 and ARM64 architectures:
+
+**For AMD64 users**: No changes needed - the default configuration works out of the box.
+
+**For ARM64 users**: Uncomment the platform line in your `docker-compose.yml`:
+
+```yaml
+platform: linux/arm64
+```
+
+**Note**: Multi-platform Docker images are automatically built for both architectures. The image will automatically use the correct architecture for your platform.
 
 2. Build and run with Docker Compose:
 
@@ -85,7 +101,7 @@ docker compose up --build
 
 3. Open your browser and navigate to `http://localhost:40123`
 
-**Note**: The Docker implementation uses direct file access to read and write crontab files, ensuring real-time synchronization with the host system's cron jobs. This approach bypasses the traditional `crontab` command limitations in containerized environments.
+**Note**: The Docker implementation uses direct file access to read and write crontab files, ensuring real-time synchronization with the host system's cron jobs. This approach bypasses the traditional `crontab` command limitations in containerized environments
 
 ### Local Development
 
