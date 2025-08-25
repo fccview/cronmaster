@@ -125,97 +125,9 @@ export function getSystemPath(originalPath: string): string {
     return originalPath;
 }
 
-export async function readCronFilesDocker(): Promise<string> {
-    try {
-        const crontabDir = "/host/cron/crontabs";
-        const files = await fs.readdir(crontabDir);
-        let allCronContent = "";
 
-        for (const file of files) {
-            if (file === "." || file === "..") continue;
 
-            if (file.includes("docker") || file.includes("container") || file === "root") {
-                continue;
-            }
 
-            try {
-                const filePath = path.join(crontabDir, file);
-                const content = await fs.readFile(filePath, "utf-8");
-                allCronContent += `# User: ${file}\n`;
-                allCronContent += content;
-                allCronContent += "\n\n";
-            } catch (fileError) {
-                console.error(`Error reading crontab for user ${file}:`, fileError);
-            }
-        }
-
-        return allCronContent;
-    } catch (error) {
-        console.error("Error reading host crontab files:", error);
-        return "";
-    }
-}
-
-export async function writeCronFilesDocker(cronContent: string): Promise<boolean> {
-    try {
-        const lines = cronContent.split("\n");
-        const userCrontabs: { [key: string]: string[] } = {};
-        let currentUser = "root";
-        let currentContent: string[] = [];
-
-        for (const line of lines) {
-            if (line.startsWith("# User:")) {
-                if (currentUser && currentContent.length > 0) {
-                    userCrontabs[currentUser] = [...currentContent];
-                }
-                currentUser = line.substring(8).trim();
-                currentContent = [];
-            } else if (line.startsWith("# System Crontab")) {
-                if (currentUser && currentContent.length > 0) {
-                    userCrontabs[currentUser] = [...currentContent];
-                }
-                currentUser = "system";
-                currentContent = [];
-            } else if (currentUser && line.trim()) {
-                currentContent.push(line);
-            }
-        }
-
-        if (currentUser && currentContent.length > 0) {
-            userCrontabs[currentUser] = [...currentContent];
-        }
-
-        for (const [username, cronJobs] of Object.entries(userCrontabs)) {
-            if (username === "system") {
-                const systemContent = cronJobs.join("\n") + "\n";
-                try {
-                    await fs.writeFile("/host/crontab", systemContent);
-                } catch (error) {
-                    console.error("Failed to write system crontab:", error);
-                    return false;
-                }
-            } else {
-                const userCrontabPath = `/host/cron/crontabs/${username}`;
-                const userContent = cronJobs.join("\n") + "\n";
-                try {
-                    await execAsync(`chown root:root ${userCrontabPath}`);
-                    await execAsync(`chmod 666 ${userCrontabPath}`);
-                    await fs.writeFile(userCrontabPath, userContent);
-                    await execAsync(`chown 1000:105 ${userCrontabPath}`);
-                    await execAsync(`chmod 600 ${userCrontabPath}`);
-                } catch (error) {
-                    console.error(`Failed to write crontab for user ${username}:`, error);
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    } catch (error) {
-        console.error("Error writing cron files:", error);
-        return false;
-    }
-}
 
 export async function getMemoryInfoDocker() {
     try {

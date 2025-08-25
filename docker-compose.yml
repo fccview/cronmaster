@@ -1,25 +1,22 @@
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:main
-    container_name: cronmaster
+    build: .
+    container_name: cronmaster-test
     user: "root"
     ports:
       # Feel free to change port, 3000 is very common so I like to map it to something else
-      - "40123:3000"
+      - "40124:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
+      - NEXT_PUBLIC_HOST_PROJECT_DIR=/home/fccview/www/projects/cronjob
+      # - HOST_CRONTAB_USER=fccview
     volumes:
-      # --- CRONTAB MANAGEMENT ---
-      # We're mounting /etc/crontab to /host/crontab in read-only mode.
-      # We are thenmounting /var/spool/cron/crontabs with read-write permissions to allow the application
-      # to manipulate the crontab file - docker does not have access to the crontab command, it's the only
-      # workaround I could think of.
-      - /var/spool/cron/crontabs:/host/cron/crontabs
-      - /etc/crontab:/host/crontab:ro
-
+      # --- DOCKER SOCKET ACCESS ---
+      # Mount Docker socket to execute commands on host
+      - /var/run/docker.sock:/var/run/docker.sock
+      
       # --- HOST SYSTEM STATS ---
       # Mounting system specific folders to their /host/ equivalent folders.
       # Similar story, we don't want to override docker system folders.
@@ -36,6 +33,17 @@ services:
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
+    
+    # Add required capabilities for host crontab access
+    cap_add:
+      - SYS_ADMIN
+    
+    # Use host PID namespace for host command execution
+    pid: "host"
+    
+    # Run in privileged mode for nsenter access
+    privileged: true
+    
     restart: unless-stopped
     init: true
     # Default platform is set to amd64, can be overridden by using arm64.
