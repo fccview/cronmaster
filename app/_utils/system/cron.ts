@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import { isDocker, readCronFilesDocker, writeCronFilesDocker } from "./docker";
+import { readHostCrontab, writeHostCrontab } from "./hostCrontab";
 
 const execAsync = promisify(exec);
 
@@ -12,6 +12,8 @@ export interface CronJob {
 }
 
 async function readCronFiles(): Promise<string> {
+    const isDocker = process.env.DOCKER === "true";
+
     if (!isDocker) {
         try {
             const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
@@ -22,10 +24,12 @@ async function readCronFiles(): Promise<string> {
         }
     }
 
-    return await readCronFilesDocker();
+    return await readHostCrontab();
 }
 
 async function writeCronFiles(content: string): Promise<boolean> {
+    const isDocker = process.env.DOCKER === "true";
+
     if (!isDocker) {
         try {
             await execAsync('echo "' + content + '" | crontab -');
@@ -36,7 +40,7 @@ async function writeCronFiles(content: string): Promise<boolean> {
         }
     }
 
-    return await writeCronFilesDocker(content);
+    return await writeHostCrontab(content);
 }
 
 export async function getCronJobs(): Promise<CronJob[]> {
@@ -105,52 +109,19 @@ export async function addCronJob(
     try {
         const cronContent = await readCronFiles();
 
-        if (isDocker) {
-            const lines = cronContent.split("\n");
-            let hasUserSection = false;
-            let userSectionEnd = -1;
+        const newEntry = comment
+            ? `# ${comment}\n${schedule} ${command}`
+            : `${schedule} ${command}`;
 
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                if (line.startsWith("# User: ")) {
-                    hasUserSection = true;
-                    userSectionEnd = i;
-                    for (let j = i + 1; j < lines.length; j++) {
-                        if (lines[j].startsWith("# User: ") || lines[j].startsWith("# System Crontab")) {
-                            userSectionEnd = j - 1;
-                            break;
-                        }
-                        userSectionEnd = j;
-                    }
-                    break;
-                }
-            }
-
-            if (!hasUserSection) {
-                const newEntry = comment
-                    ? `# User: root\n# ${comment}\n${schedule} ${command}`
-                    : `# User: root\n${schedule} ${command}`;
-                const newCron = cronContent + "\n" + newEntry;
-                await writeCronFiles(newCron);
-            } else {
-                const newEntry = comment
-                    ? `# ${comment}\n${schedule} ${command}`
-                    : `${schedule} ${command}`;
-
-                const beforeSection = lines.slice(0, userSectionEnd + 1).join("\n");
-                const afterSection = lines.slice(userSectionEnd + 1).join("\n");
-                const newCron = beforeSection + "\n" + newEntry + "\n" + afterSection;
-                await writeCronFiles(newCron);
-            }
+        let newCron;
+        if (cronContent.trim() === "") {
+            newCron = newEntry;
         } else {
-            const newEntry = comment
-                ? `# ${comment}\n${schedule} ${command}`
-                : `${schedule} ${command}`;
-            const newCron = cronContent + "\n" + newEntry;
-            await writeCronFiles(newCron);
+            const existingContent = cronContent.endsWith('\n') ? cronContent : cronContent + '\n';
+            newCron = existingContent + newEntry;
         }
 
-        return true;
+        return await writeCronFiles(newCron);
     } catch (error) {
         console.error("Error adding cron job:", error);
         return false;

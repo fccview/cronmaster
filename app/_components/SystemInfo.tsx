@@ -1,22 +1,60 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import { MetricCard } from "./ui/MetricCard";
 import { SystemStatus } from "./ui/SystemStatus";
 import { PerformanceSummary } from "./ui/PerformanceSummary";
 import { Sidebar } from "./ui/Sidebar";
 import {
-  Monitor,
-  Globe,
   Clock,
   HardDrive,
   Cpu,
-  Server,
+  Monitor,
   Wifi,
 } from "lucide-react";
-import { SystemInfo as SystemInfoType } from "@/app/_utils/system";
+
+interface SystemInfoType {
+  hostname: string;
+  platform: string;
+  ip?: string;
+  uptime: string;
+  memory: {
+    total: string;
+    used: string;
+    free: string;
+    usage: number;
+    status: string;
+  };
+  cpu: {
+    model: string;
+    cores: number;
+    usage: number;
+    status: string;
+  };
+  gpu: {
+    model: string;
+    memory?: string;
+    status: string;
+  };
+  network?: {
+    speed: string;
+    latency: number;
+    downloadSpeed: number;
+    uploadSpeed: number;
+    status: string;
+  };
+  disk: {
+    total: string;
+    used: string;
+    free: string;
+    usage: number;
+    status: string;
+  };
+  systemStatus: {
+    overall: string;
+    details: string;
+  };
+}
 import { useState, useEffect } from "react";
-import { fetchSystemInfo } from "@/app/_server/actions/cronjobs";
 
 interface SystemInfoCardProps {
   systemInfo: SystemInfoType;
@@ -30,10 +68,16 @@ export function SystemInfoCard({
     useState<SystemInfoType>(initialSystemInfo);
   const [isUpdating, setIsUpdating] = useState(false);
 
+
+
   const updateSystemInfo = async () => {
     try {
       setIsUpdating(true);
-      const freshData = await fetchSystemInfo();
+      const response = await fetch('/api/system-stats');
+      if (!response.ok) {
+        throw new Error('Failed to fetch system stats');
+      }
+      const freshData = await response.json();
       setSystemInfo(freshData);
     } catch (error) {
       console.error("Failed to update system info:", error);
@@ -47,49 +91,39 @@ export function SystemInfoCard({
       setCurrentTime(new Date().toLocaleTimeString());
     };
 
-    const updateStats = () => {
-      updateSystemInfo();
-    };
-
     updateTime();
-    updateStats();
+    updateSystemInfo();
 
     const updateInterval = parseInt(
       process.env.NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL || "30000"
     );
-    const interval = setInterval(() => {
-      updateTime();
-      updateStats();
-    }, updateInterval);
 
-    return () => clearInterval(interval);
+    let mounted = true;
+
+    const doUpdate = () => {
+      if (!mounted) return;
+      updateTime();
+      updateSystemInfo().finally(() => {
+        if (mounted) {
+          setTimeout(doUpdate, updateInterval);
+        }
+      });
+    };
+
+    setTimeout(doUpdate, updateInterval);
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const quickStats = {
     cpu: systemInfo.cpu.usage,
     memory: systemInfo.memory.usage,
-    network: `${systemInfo.network.latency}ms`,
+    network: systemInfo.network ? `${systemInfo.network.latency}ms` : "N/A",
   };
 
   const basicInfoItems = [
-    {
-      icon: Monitor,
-      label: "Operating System",
-      value: systemInfo.platform,
-      color: "text-blue-500",
-    },
-    {
-      icon: Server,
-      label: "Hostname",
-      value: systemInfo.hostname,
-      color: "text-green-500",
-    },
-    {
-      icon: Globe,
-      label: "IP Address",
-      value: systemInfo.ip,
-      color: "text-purple-500",
-    },
     {
       icon: Clock,
       label: "Uptime",
@@ -129,14 +163,14 @@ export function SystemInfoCard({
       status: systemInfo.gpu.status,
       color: "text-indigo-500",
     },
-    {
+    ...(systemInfo.network ? [{
       icon: Wifi,
       label: "Network",
       value: `${systemInfo.network.latency}ms`,
       detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
       status: systemInfo.network.status,
       color: "text-teal-500",
-    },
+    }] : []),
   ];
 
   const performanceMetrics = [
@@ -150,11 +184,11 @@ export function SystemInfoCard({
       value: `${systemInfo.memory.usage}%`,
       status: systemInfo.memory.status,
     },
-    {
+    ...(systemInfo.network ? [{
       label: "Network Latency",
       value: `${systemInfo.network.latency}ms`,
       status: systemInfo.network.status,
-    },
+    }] : []),
   ];
 
   return (
@@ -216,7 +250,7 @@ export function SystemInfoCard({
         💡 Stats update every{" "}
         {Math.round(
           parseInt(process.env.NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL || "30000") /
-            1000
+          1000
         )}
         s • Network speed estimated from latency
         {isUpdating && (

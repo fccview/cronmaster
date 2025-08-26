@@ -1,17 +1,50 @@
 import { SystemInfoCard } from "./_components/SystemInfo";
 import { TabbedInterface } from "./_components/TabbedInterface";
-import { getSystemInfo, getCronJobs } from "./_utils/system";
+import { getCronJobs } from "./_utils/system";
 import { fetchScripts } from "./_server/actions/scripts";
 import { ThemeToggle } from "./_components/ui/ThemeToggle";
 import { ToastContainer } from "./_components/ui/Toast";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [systemInfo, cronJobs, scripts] = await Promise.all([
-    getSystemInfo(),
+  const [cronJobs, scripts] = await Promise.all([
     getCronJobs(),
     fetchScripts(),
   ]);
+
+  const initialSystemInfo = {
+    hostname: "Loading...",
+    platform: "Loading...",
+    uptime: "Loading...",
+    memory: {
+      total: "0 B",
+      used: "0 B",
+      free: "0 B",
+      usage: 0,
+      status: "Loading",
+    },
+    cpu: {
+      model: "Loading...",
+      cores: 0,
+      usage: 0,
+      status: "Loading",
+    },
+    gpu: {
+      model: "Loading...",
+      status: "Loading",
+    },
+    disk: {
+      total: "0 B",
+      used: "0 B",
+      free: "0 B",
+      usage: 0,
+      status: "Loading",
+    },
+    systemStatus: {
+      overall: "Loading",
+      details: "Fetching system information...",
+    },
+  };
 
   return (
     <div className="min-h-screen relative">
@@ -38,7 +71,7 @@ export default async function Home() {
           </div>
         </header>
 
-        <SystemInfoCard systemInfo={systemInfo} />
+        <SystemInfoCard systemInfo={initialSystemInfo} />
 
         <main className="lg:ml-80 transition-all duration-300 ml-0 sidebar-collapsed:lg:ml-16">
           <div className="container mx-auto px-4 py-8 lg:px-8">
