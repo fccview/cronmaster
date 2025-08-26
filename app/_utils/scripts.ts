@@ -1,15 +1,22 @@
+"use server";
+
 import { join } from "path";
 
 const isDocker = process.env.DOCKER === "true";
-const SCRIPTS_DIR = isDocker ? "/app/scripts" : join(process.cwd(), "scripts");
+const SCRIPTS_DIR = async () => {
+  if (isDocker && process.env.HOST_PROJECT_DIR) {
+    return `${process.env.HOST_PROJECT_DIR}/scripts`;
+  }
+  return join(process.cwd(), "scripts");
+};
 
-export function getScriptPath(filename: string): string {
-  return join(SCRIPTS_DIR, filename);
+export async function getScriptPath(filename: string): Promise<string> {
+  return join(await SCRIPTS_DIR(), filename);
 }
 
-export function getHostScriptPath(filename: string): string {
-  const hostProjectDir =
-    process.env.NEXT_PUBLIC_HOST_PROJECT_DIR || process.cwd();
+export async function getHostScriptPath(filename: string): Promise<string> {
+  const hostProjectDir = process.env.HOST_PROJECT_DIR || process.cwd();
+
   const hostScriptsDir = join(hostProjectDir, "scripts");
   return `bash ${join(hostScriptsDir, filename)}`;
 }

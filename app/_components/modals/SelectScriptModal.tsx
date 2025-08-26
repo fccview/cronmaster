@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -27,6 +27,18 @@ export function SelectScriptModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [previewScript, setPreviewScript] = useState<Script | null>(null);
   const [previewContent, setPreviewContent] = useState<string>("");
+  const [hostScriptPath, setHostScriptPath] = useState<string>("");
+
+  useEffect(() => {
+    const fetchHostScriptPath = async () => {
+      const path = await getHostScriptPath(previewScript?.filename || "");
+      setHostScriptPath(path);
+    };
+
+    if (previewScript) {
+      fetchHostScriptPath();
+    }
+  }, [previewScript]);
 
   const filteredScripts = scripts.filter(
     (script) =>
@@ -156,7 +168,7 @@ export function SelectScriptModal({
                     </div>
                     <div className="bg-muted/30 p-3 rounded border border-border/30">
                       <code className="text-sm font-mono text-foreground break-all">
-                        {getHostScriptPath(previewScript.filename)}
+                        {hostScriptPath}
                       </code>
                     </div>
                   </div>
