@@ -46,13 +46,13 @@ async function scanScriptsDirectory(dirPath: string): Promise<Script[]> {
         const content = await fs.readFile(filePath, "utf-8");
         const metadata = parseMetadata(content);
 
-        if (metadata.id && metadata.title && metadata.description) {
+        if (metadata.id && metadata.title) {
           const stats = await fs.stat(filePath);
 
           scripts.push({
             id: metadata.id,
             name: metadata.title,
-            description: metadata.description,
+            description: metadata.description || "",
             filename: file,
             createdAt: stats.birthtime.toISOString(),
           });
