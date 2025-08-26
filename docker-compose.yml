@@ -1,6 +1,5 @@
 services:
   cronjob-manager:
-    build: .
     image: ghcr.io/fccview/cronmaster:2.3.0
     container_name: cronmaster
     user: "root"

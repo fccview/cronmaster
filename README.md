@@ -49,24 +49,12 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:1.2.1
-    container_name: cronmaster
-    user: "root"
-    ports:
-      # Feel free to change port, 3000 is very common so I like to map it to something else
-      - "40124:3000"
-    environment:
-      - NODE_ENV=production
-      - DOCKER=true
-      - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      - HOST_PROJECT_DIR=/path/to/cronmaster/directoryservices:
-  cronjob-manager:
     image: ghcr.io/fccview/cronmaster:2.3.0
     container_name: cronmaster
     user: "root"
     ports:
       # Feel free to change port, 3000 is very common so I like to map it to something else
-      - "40124:3000"
+      - "40123:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
@@ -75,8 +63,8 @@ services:
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       # If docker struggles to find your crontab user, update this variable with it.
       # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
-      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,fccview,user3
-      #- HOST_CRONTAB_USER=fccview
+      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=fccview,root,user1,user2
+      # - HOST_CRONTAB_USER=fccview
     volumes:
       # Mount Docker socket to execute commands on host
       - /var/run/docker.sock:/var/run/docker.sock
@@ -97,7 +85,6 @@ services:
 
     # Default platform is set to amd64, uncomment to use arm64.
     #platform: linux/arm64
-
 ```
 
 ### ARM64 Support
