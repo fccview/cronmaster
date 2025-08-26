@@ -39,10 +39,21 @@ export function ScriptModal({
 }: ScriptModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!form.name.trim()) {
+      showToast("error", "Validation Error", "Script name is required");
+      return;
+    }
+
+    if (!form.content.trim()) {
+      showToast("error", "Validation Error", "Script content is required");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("name", form.name);
-    formData.append("description", form.description);
-    formData.append("content", form.content);
+    formData.append("name", form.name.trim());
+    formData.append("description", form.description.trim());
+    formData.append("content", form.content.trim());
 
     Object.entries(additionalFormData).forEach(([key, value]) => {
       formData.append(key, value);
@@ -66,18 +77,24 @@ export function ScriptModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Script Name
+              Script Name <span className="text-red-500">*</span>
             </label>
             <Input
               value={form.name}
               onChange={(e) => onFormChange({ name: e.target.value })}
               placeholder="My Script"
               required
+              className={
+                !form.name.trim()
+                  ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                  : ""
+              }
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Description
+              Description{" "}
+              <span className="text-muted-foreground text-xs">(optional)</span>
             </label>
             <Input
               value={form.description}
@@ -102,7 +119,7 @@ export function ScriptModal({
             <div className="flex items-center gap-2 mb-4 flex-shrink-0">
               <FileText className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-medium text-foreground">
-                Script Content
+                Script Content <span className="text-red-500">*</span>
               </h3>
             </div>
             <div className="flex-1 min-h-0">
