@@ -5,5 +5,6 @@ export {
   updateCronJob,
   pauseCronJob,
   resumeCronJob,
+  cleanupCrontab,
   type CronJob,
 } from "./system/cron";

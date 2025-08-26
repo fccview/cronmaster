@@ -7,11 +7,16 @@ import {
   updateCronJob,
   pauseCronJob,
   resumeCronJob,
+  cleanupCrontab,
   type CronJob,
 } from "@/app/_utils/system";
 import { getAllTargetUsers } from "@/app/_utils/system/hostCrontab";
 import { revalidatePath } from "next/cache";
 import { getScriptPath } from "@/app/_utils/scripts";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 export async function fetchCronJobs(): Promise<CronJob[]> {
   try {
@@ -182,5 +187,65 @@ export async function fetchAvailableUsers(): Promise<string[]> {
   } catch (error) {
     console.error("Error fetching available users:", error);
     return [];
+  }
+}
+
+export async function cleanupCrontabAction(): Promise<{ success: boolean; message: string }> {
+  try {
+    const success = await cleanupCrontab();
+    if (success) {
+      revalidatePath("/");
+      return { success: true, message: "Crontab cleaned successfully" };
+    } else {
+      return { success: false, message: "Failed to clean crontab" };
+    }
+  } catch (error) {
+    console.error("Error cleaning crontab:", error);
+    return { success: false, message: "Error cleaning crontab" };
+  }
+}
+
+export async function runCronJob(
+  id: string
+): Promise<{ success: boolean; message: string; output?: string }> {
+  try {
+    const cronJobs = await getCronJobs();
+    const job = cronJobs.find((j) => j.id === id);
+
+    if (!job) {
+      return { success: false, message: "Cron job not found" };
+    }
+
+    if (job.paused) {
+      return { success: false, message: "Cannot run paused cron job" };
+    }
+
+    const isDocker = process.env.DOCKER === "true";
+    let command = job.command;
+
+    if (isDocker) {
+      command = `nsenter -t 1 -m -u -i -n -p sh -c "${job.command}"`;
+    }
+
+    const { stdout, stderr } = await execAsync(command, {
+      timeout: 30000,
+      cwd: process.env.HOME || "/home",
+    });
+
+    const output = stdout || stderr || "Command executed successfully";
+
+    return {
+      success: true,
+      message: "Cron job executed successfully",
+      output: output.trim()
+    };
+  } catch (error: any) {
+    console.error("Error running cron job:", error);
+    const errorMessage = error.stderr || error.message || "Unknown error occurred";
+    return {
+      success: false,
+      message: "Failed to execute cron job",
+      output: errorMessage
+    };
   }
 }

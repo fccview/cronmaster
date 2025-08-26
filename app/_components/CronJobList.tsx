@@ -11,6 +11,7 @@ import {
   User,
   Play,
   Pause,
+  Code,
 } from "lucide-react";
 import { CronJob } from "@/app/_utils/system";
 import {
@@ -20,8 +21,9 @@ import {
   cloneCronJob,
   pauseCronJobAction,
   resumeCronJobAction,
+  runCronJob,
 } from "@/app/_server/actions/cronjobs";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CreateTaskModal } from "./modals/CreateTaskModal";
 import { EditTaskModal } from "./modals/EditTaskModal";
 import { DeleteTaskModal } from "./modals/DeleteTaskModal";
@@ -45,7 +47,24 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
   const [jobToDelete, setJobToDelete] = useState<CronJob | null>(null);
   const [jobToClone, setJobToClone] = useState<CronJob | null>(null);
   const [isCloning, setIsCloning] = useState(false);
+  const [runningJobId, setRunningJobId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("selectedCronUser");
+    if (savedUser) {
+      setSelectedUser(savedUser);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      localStorage.setItem("selectedCronUser", selectedUser);
+    } else {
+      localStorage.removeItem("selectedCronUser");
+    }
+  }, [selectedUser]);
+
   const [editForm, setEditForm] = useState({
     schedule: "",
     command: "",
@@ -131,6 +150,32 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
         "Failed to resume cron job",
         "Please try again later."
       );
+    }
+  };
+
+  const handleRun = async (id: string) => {
+    setRunningJobId(id);
+    try {
+      const result = await runCronJob(id);
+      if (result.success) {
+        showToast("success", "Cron job executed successfully");
+        if (result.output) {
+          console.log("Command output:", result.output);
+        }
+      } else {
+        showToast("error", "Failed to execute cron job", result.message);
+        if (result.output) {
+          console.error("Command error:", result.output);
+        }
+      }
+    } catch (error) {
+      showToast(
+        "error",
+        "Failed to execute cron job",
+        "Please try again later."
+      );
+    } finally {
+      setRunningJobId(null);
     }
   };
 
@@ -287,8 +332,8 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                   key={job.id}
                   className="glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                    <div className="flex-1 min-w-0 order-2 lg:order-1">
                       <div className="flex items-center gap-3 mb-2">
                         <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
                           {job.schedule}
@@ -325,7 +370,22 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0 order-1 lg:order-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRun(job.id)}
+                        disabled={runningJobId === job.id || job.paused}
+                        className="btn-outline h-8 px-3"
+                        title="Run cron job manually"
+                        aria-label="Run cron job manually"
+                      >
+                        {runningJobId === job.id ? (
+                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <Code className="h-3 w-3" />
+                        )}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
