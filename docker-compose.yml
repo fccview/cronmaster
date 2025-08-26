@@ -1,7 +1,7 @@
 services:
   cronjob-manager:
     image: ghcr.io/fccview/cronmaster:main
-    container_name: cronmaster-test
+    container_name: cronmaster
     user: "root"
     ports:
       # Feel free to change port, 3000 is very common so I like to map it to something else
@@ -33,4 +33,4 @@ services:
     init: true
 
     # Default platform is set to amd64, uncomment to use arm64.
-    #platform: linux/arm64    
+    #platform: linux/arm64

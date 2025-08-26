@@ -50,7 +50,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 services:
   cronjob-manager:
     image: ghcr.io/fccview/cronmaster:main
-    container_name: cronmaster-test
+    container_name: cronmaster
     user: "root"
     ports:
       # Feel free to change port, 3000 is very common so I like to map it to something else
@@ -82,7 +82,7 @@ services:
     init: true
 
     # Default platform is set to amd64, uncomment to use arm64.
-    #platform: linux/arm64    
+    #platform: linux/arm64
 ```
 
 ### ARM64 Support
@@ -214,7 +214,7 @@ The application uses standard cron format: `* * * * *`
 
 ## Community shouts
 
-I would like to thank the following members for raising issues and help test/debug them! 
+I would like to thank the following members for raising issues and help test/debug them!
 
 <table>
   <tbody>
