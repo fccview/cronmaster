@@ -60,6 +60,35 @@ async function getTargetUser(): Promise<string> {
   }
 }
 
+export async function getAllTargetUsers(): Promise<string[]> {
+  try {
+    if (process.env.HOST_CRONTAB_USER) {
+      return process.env.HOST_CRONTAB_USER.split(",").map((u) => u.trim());
+    }
+
+    const isDocker = process.env.DOCKER === "true";
+    if (isDocker) {
+      const singleUser = await getTargetUser();
+      return [singleUser];
+    } else {
+      try {
+        const { stdout } = await execAsync("ls /var/spool/cron/crontabs/");
+        const users = stdout
+          .trim()
+          .split("\n")
+          .filter((user) => user.trim());
+        return users.length > 0 ? users : ["root"];
+      } catch (error) {
+        console.error("Error detecting users from crontabs directory:", error);
+        return ["root"];
+      }
+    }
+  } catch (error) {
+    console.error("Error getting all target users:", error);
+    return ["root"];
+  }
+}
+
 export async function readHostCrontab(): Promise<string> {
   try {
     const user = await getTargetUser();
@@ -69,6 +98,32 @@ export async function readHostCrontab(): Promise<string> {
   } catch (error) {
     console.error("Error reading host crontab:", error);
     return "";
+  }
+}
+
+export async function readAllHostCrontabs(): Promise<
+  { user: string; content: string }[]
+> {
+  try {
+    const users = await getAllTargetUsers();
+    const results: { user: string; content: string }[] = [];
+
+    for (const user of users) {
+      try {
+        const content = await execHostCrontab(
+          `crontab -l -u ${user} 2>/dev/null || echo ""`
+        );
+        results.push({ user, content });
+      } catch (error) {
+        console.warn(`Error reading crontab for user ${user}:`, error);
+        results.push({ user, content: "" });
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Error reading all host crontabs:", error);
+    return [];
   }
 }
 
@@ -87,6 +142,27 @@ export async function writeHostCrontab(content: string): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("Error writing host crontab:", error);
+    return false;
+  }
+}
+
+export async function writeHostCrontabForUser(
+  user: string,
+  content: string
+): Promise<boolean> {
+  try {
+    let finalContent = content;
+    if (!finalContent.endsWith("\n")) {
+      finalContent += "\n";
+    }
+
+    const base64Content = Buffer.from(finalContent).toString("base64");
+    await execHostCrontab(
+      `echo '${base64Content}' | base64 -d | crontab -u ${user} -`
+    );
+    return true;
+  } catch (error) {
+    console.error(`Error writing host crontab for user ${user}:`, error);
     return false;
   }
 }

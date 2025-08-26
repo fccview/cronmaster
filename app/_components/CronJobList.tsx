@@ -2,19 +2,31 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import { Button } from "./ui/Button";
-import { Trash2, Clock, Edit, Plus, Files } from "lucide-react";
+import {
+  Trash2,
+  Clock,
+  Edit,
+  Plus,
+  Files,
+  User,
+  Play,
+  Pause,
+} from "lucide-react";
 import { CronJob } from "@/app/_utils/system";
 import {
   removeCronJob,
   editCronJob,
   createCronJob,
   cloneCronJob,
+  pauseCronJobAction,
+  resumeCronJobAction,
 } from "@/app/_server/actions/cronjobs";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CreateTaskModal } from "./modals/CreateTaskModal";
 import { EditTaskModal } from "./modals/EditTaskModal";
 import { DeleteTaskModal } from "./modals/DeleteTaskModal";
 import { CloneTaskModal } from "./modals/CloneTaskModal";
+import { UserFilter } from "./ui/UserFilter";
 import { type Script } from "@/app/_server/actions/scripts";
 import { showToast } from "./ui/Toast";
 
@@ -33,6 +45,7 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
   const [jobToDelete, setJobToDelete] = useState<CronJob | null>(null);
   const [jobToClone, setJobToClone] = useState<CronJob | null>(null);
   const [isCloning, setIsCloning] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     schedule: "",
     command: "",
@@ -43,7 +56,13 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
     command: "",
     comment: "",
     selectedScriptId: null as string | null,
+    user: "",
   });
+
+  const filteredJobs = useMemo(() => {
+    if (!selectedUser) return cronJobs;
+    return cronJobs.filter((job) => job.user === selectedUser);
+  }, [cronJobs, selectedUser]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -82,6 +101,36 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
       }
     } finally {
       setIsCloning(false);
+    }
+  };
+
+  const handlePause = async (id: string) => {
+    try {
+      const result = await pauseCronJobAction(id);
+      if (result.success) {
+        showToast("success", "Cron job paused successfully");
+      } else {
+        showToast("error", "Failed to pause cron job", result.message);
+      }
+    } catch (error) {
+      showToast("error", "Failed to pause cron job", "Please try again later.");
+    }
+  };
+
+  const handleResume = async (id: string) => {
+    try {
+      const result = await resumeCronJobAction(id);
+      if (result.success) {
+        showToast("success", "Cron job resumed successfully");
+      } else {
+        showToast("error", "Failed to resume cron job", result.message);
+      }
+    } catch (error) {
+      showToast(
+        "error",
+        "Failed to resume cron job",
+        "Please try again later."
+      );
     }
   };
 
@@ -135,11 +184,13 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
 
   const handleNewCronSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
       const formData = new FormData();
       formData.append("schedule", newCronForm.schedule);
       formData.append("command", newCronForm.command);
       formData.append("comment", newCronForm.comment);
+      formData.append("user", newCronForm.user);
       if (newCronForm.selectedScriptId) {
         formData.append("selectedScriptId", newCronForm.selectedScriptId);
       }
@@ -152,6 +203,7 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
           command: "",
           comment: "",
           selectedScriptId: null,
+          user: "",
         });
         showToast("success", "Cron job created successfully");
       } else {
@@ -180,8 +232,9 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                   Scheduled Tasks
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {cronJobs.length} scheduled job
-                  {cronJobs.length !== 1 ? "s" : ""}
+                  {filteredJobs.length} of {cronJobs.length} scheduled job
+                  {filteredJobs.length !== 1 ? "s" : ""}
+                  {selectedUser && ` for ${selectedUser}`}
                 </p>
               </div>
             </div>
@@ -195,17 +248,28 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
           </div>
         </CardHeader>
         <CardContent>
-          {cronJobs.length === 0 ? (
+          <div className="mb-4">
+            <UserFilter
+              selectedUser={selectedUser}
+              onUserChange={setSelectedUser}
+              className="w-full sm:w-64"
+            />
+          </div>
+
+          {filteredJobs.length === 0 ? (
             <div className="text-center py-16">
               <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-blue-500/20 rounded-full flex items-center justify-center mb-6">
                 <Clock className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-3 brand-gradient">
-                No scheduled tasks yet
+                {selectedUser
+                  ? `No tasks for user ${selectedUser}`
+                  : "No scheduled tasks yet"}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Create your first scheduled task to automate your system
-                operations and boost productivity.
+                {selectedUser
+                  ? `No scheduled tasks found for user ${selectedUser}. Try selecting a different user or create a new task.`
+                  : "Create your first scheduled task to automate your system operations and boost productivity."}
               </p>
               <Button
                 onClick={() => setIsNewCronModalOpen(true)}
@@ -218,7 +282,7 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {cronJobs.map((job) => (
+              {filteredJobs.map((job) => (
                 <div
                   key={job.id}
                   className="glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
@@ -237,6 +301,18 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                             {job.command}
                           </pre>
                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <User className="h-3 w-3" />
+                          <span>{job.user}</span>
+                        </div>
+                        {job.paused && (
+                          <span className="text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/20">
+                            Paused
+                          </span>
+                        )}
                       </div>
 
                       {job.comment && (
@@ -270,6 +346,29 @@ export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
                       >
                         <Files className="h-3 w-3" />
                       </Button>
+                      {job.paused ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleResume(job.id)}
+                          className="btn-outline h-8 px-3"
+                          title="Resume cron job"
+                          aria-label="Resume cron job"
+                        >
+                          <Play className="h-3 w-3" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePause(job.id)}
+                          className="btn-outline h-8 px-3"
+                          title="Pause cron job"
+                          aria-label="Pause cron job"
+                        >
+                          <Pause className="h-3 w-3" />
+                        </Button>
+                      )}
                       <Button
                         variant="destructive"
                         size="sm"

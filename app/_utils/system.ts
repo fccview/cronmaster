@@ -3,5 +3,7 @@ export {
   addCronJob,
   deleteCronJob,
   updateCronJob,
-  type CronJob
+  pauseCronJob,
+  resumeCronJob,
+  type CronJob,
 } from "./system/cron";

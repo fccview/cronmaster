@@ -5,8 +5,11 @@ import {
   addCronJob,
   deleteCronJob,
   updateCronJob,
+  pauseCronJob,
+  resumeCronJob,
   type CronJob,
 } from "@/app/_utils/system";
+import { getAllTargetUsers } from "@/app/_utils/system/hostCrontab";
 import { revalidatePath } from "next/cache";
 import { getScriptPath } from "@/app/_utils/scripts";
 
@@ -27,6 +30,7 @@ export async function createCronJob(
     const command = formData.get("command") as string;
     const comment = formData.get("comment") as string;
     const selectedScriptId = formData.get("selectedScriptId") as string;
+    const user = formData.get("user") as string;
 
     if (!schedule) {
       return { success: false, message: "Schedule is required" };
@@ -51,7 +55,7 @@ export async function createCronJob(
       };
     }
 
-    const success = await addCronJob(schedule, finalCommand, comment);
+    const success = await addCronJob(schedule, finalCommand, comment, user);
     if (success) {
       revalidatePath("/");
       return { success: true, message: "Cron job created successfully" };
@@ -122,7 +126,8 @@ export async function cloneCronJob(
     const success = await addCronJob(
       originalJob.schedule,
       originalJob.command,
-      newComment
+      newComment,
+      originalJob.user
     );
 
     if (success) {
@@ -134,5 +139,48 @@ export async function cloneCronJob(
   } catch (error) {
     console.error("Error cloning cron job:", error);
     return { success: false, message: "Error cloning cron job" };
+  }
+}
+
+export async function pauseCronJobAction(
+  id: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const success = await pauseCronJob(id);
+    if (success) {
+      revalidatePath("/");
+      return { success: true, message: "Cron job paused successfully" };
+    } else {
+      return { success: false, message: "Failed to pause cron job" };
+    }
+  } catch (error) {
+    console.error("Error pausing cron job:", error);
+    return { success: false, message: "Error pausing cron job" };
+  }
+}
+
+export async function resumeCronJobAction(
+  id: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const success = await resumeCronJob(id);
+    if (success) {
+      revalidatePath("/");
+      return { success: true, message: "Cron job resumed successfully" };
+    } else {
+      return { success: false, message: "Failed to resume cron job" };
+    }
+  } catch (error) {
+    console.error("Error resuming cron job:", error);
+    return { success: false, message: "Error resuming cron job" };
+  }
+}
+
+export async function fetchAvailableUsers(): Promise<string[]> {
+  try {
+    return await getAllTargetUsers();
+  } catch (error) {
+    console.error("Error fetching available users:", error);
+    return [];
   }
 }

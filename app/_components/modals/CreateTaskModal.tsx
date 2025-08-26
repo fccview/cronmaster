@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { CronExpressionHelper } from "../CronExpressionHelper";
 import { SelectScriptModal } from "./SelectScriptModal";
+import { UserSwitcher } from "../ui/UserSwitcher";
 import { Plus, Terminal, FileText, X } from "lucide-react";
 import { getScriptContent } from "@/app/_server/actions/scripts";
 import { getHostScriptPath } from "@/app/_utils/scripts";
@@ -28,6 +29,7 @@ interface CreateTaskModalProps {
     command: string;
     comment: string;
     selectedScriptId: string | null;
+    user: string;
   };
   onFormChange: (updates: Partial<CreateTaskModalProps["form"]>) => void;
 }
@@ -88,6 +90,16 @@ export function CreateTaskModal({
         size="lg"
       >
         <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              User
+            </label>
+            <UserSwitcher
+              selectedUser={form.user}
+              onUserChange={(user) => onFormChange({ user })}
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               Schedule
