@@ -19,8 +19,6 @@ export async function fetchCronJobs(): Promise<CronJob[]> {
   }
 }
 
-
-
 export async function createCronJob(
   formData: FormData
 ): Promise<{ success: boolean; message: string }> {
@@ -42,7 +40,7 @@ export async function createCronJob(
       const selectedScript = scripts.find((s) => s.id === selectedScriptId);
 
       if (selectedScript) {
-        finalCommand = getScriptPath(selectedScript.filename);
+        finalCommand = await getScriptPath(selectedScript.filename);
       } else {
         return { success: false, message: "Selected script not found" };
       }

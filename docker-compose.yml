@@ -5,12 +5,13 @@ services:
     user: "root"
     ports:
       # Feel free to change port, 3000 is very common so I like to map it to something else
-      - "40124:3000"
+      - "40123:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
+      # Legacy used to be NEXT_PUBLIC_HOST_PROJECT_DIR, this was causing issues on runtime.
+      - HOST_PROJECT_DIR=/path/to/cronmaster/directory
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
       # If docker struggles to find your crontab user, update this variable with it.
       # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
       # - HOST_CRONTAB_USER=fccview
@@ -20,7 +21,7 @@ services:
 
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
       # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
-      # will target this foler (thanks to the NEXT_PUBLIC_HOST_PROJECT_DIR variable set above)
+      # will target this folder (thanks to the HOST_PROJECT_DIR variable set above)
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets

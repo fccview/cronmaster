@@ -37,29 +37,32 @@ async function generateUniqueFilename(baseName: string): Promise<string> {
 }
 
 async function ensureScriptsDirectory() {
-  if (!existsSync(SCRIPTS_DIR)) {
-    await mkdir(SCRIPTS_DIR, { recursive: true });
+  const scriptsDir = await SCRIPTS_DIR();
+  if (!existsSync(scriptsDir)) {
+    await mkdir(scriptsDir, { recursive: true });
   }
 }
 
 async function ensureHostScriptsDirectory() {
-  const isDocker = process.env.DOCKER === "true";
-  const hostScriptsDir = isDocker
-    ? "/app/scripts"
-    : join(process.cwd(), "scripts");
+  const hostProjectDir = process.env.HOST_PROJECT_DIR || process.cwd();
+
+  const hostScriptsDir = join(hostProjectDir, "scripts");
   if (!existsSync(hostScriptsDir)) {
     await mkdir(hostScriptsDir, { recursive: true });
   }
 }
 
 async function saveScriptFile(filename: string, content: string) {
+  const isDocker = process.env.DOCKER === "true";
+  const scriptsDir = isDocker ? "/app/scripts" : await SCRIPTS_DIR();
   await ensureScriptsDirectory();
-  const scriptPath = join(SCRIPTS_DIR, filename);
+
+  const scriptPath = join(scriptsDir, filename);
   await writeFile(scriptPath, content, "utf8");
 }
 
 async function deleteScriptFile(filename: string) {
-  const scriptPath = join(SCRIPTS_DIR, filename);
+  const scriptPath = join(await SCRIPTS_DIR(), filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
   }
@@ -226,7 +229,11 @@ export async function cloneScript(
 
 export async function getScriptContent(filename: string): Promise<string> {
   try {
-    const scriptPath = join(SCRIPTS_DIR, filename);
+    const isDocker = process.env.DOCKER === "true";
+    const scriptPath = isDocker
+      ? join("/app/scripts", filename)
+      : join(process.cwd(), "scripts", filename);
+
     if (existsSync(scriptPath)) {
       const content = await readFile(scriptPath, "utf8");
       const lines = content.split("\n");

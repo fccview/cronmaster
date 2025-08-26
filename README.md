@@ -49,7 +49,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:main
+    image: ghcr.io/fccview/cronmaster:1.2.1
     container_name: cronmaster
     user: "root"
     ports:
@@ -59,7 +59,7 @@ services:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
+      - HOST_PROJECT_DIR=/path/to/cronmaster/directory
       # If docker struggles to find your crontab user, update this variable with it.
       # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
       # - HOST_CRONTAB_USER=fccview
@@ -69,7 +69,7 @@ services:
 
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
       # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
-      # will target this foler (thanks to the NEXT_PUBLIC_HOST_PROJECT_DIR variable set above)
+      # will target this foler (thanks to the HOST_PROJECT_DIR variable set above)
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
@@ -132,7 +132,7 @@ The following environment variables can be configured:
 | Variable                            | Default | Description                                                                                 |
 | ----------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds)                                          |
-| `NEXT_PUBLIC_HOST_PROJECT_DIR`      | `N/A`   | Mandatory variable to make sure cron runs on the right path.                                |
+| `HOST_PROJECT_DIR`                  | `N/A`   | Mandatory variable to make sure cron runs on the right path.                                |
 | `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
 
 **Example**: To change the clock update interval to 60 seconds:
@@ -144,14 +144,14 @@ NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
 **Example**: Your `docker-compose.yml` file or repository are in `~/homelab/cronmaster/`
 
 ```bash
-NEXT_PUBLIC_HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
+HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 ```
 
 ### Important Notes for Docker
 
 - Root user is required for cron operations and direct file access. There is no way around this, if you don't feel comfortable in running it as root feel free to run the app locally with `yarn install`, `yarn build` and `yarn start`
 - Crontab files are accessed directly via file system mounts at `/host/cron/crontabs` and `/host/crontab` for real-time reading and writing
-- `NEXT_PUBLIC_HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
+- `HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
 - The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
 
 ## Usage

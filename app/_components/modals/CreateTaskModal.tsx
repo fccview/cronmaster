@@ -58,10 +58,10 @@ export function CreateTaskModal({
     loadScriptContent();
   }, [selectedScript]);
 
-  const handleScriptSelect = (script: Script) => {
+  const handleScriptSelect = async (script: Script) => {
     onFormChange({
       selectedScriptId: script.id,
-      command: getHostScriptPath(script.filename),
+      command: await getHostScriptPath(script.filename),
     });
   };
 
