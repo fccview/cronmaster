@@ -8,7 +8,7 @@ export interface TruncatedTextProps extends HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
-const TruncatedText = forwardRef<HTMLDivElement, TruncatedTextProps>(
+export const TruncatedText = forwardRef<HTMLDivElement, TruncatedTextProps>(
   ({ className, text, maxLength = 50, showTooltip = true, ...props }, ref) => {
     const [showTooltipState, setShowTooltipState] = useState(false);
     const shouldTruncate = text.length > maxLength;
@@ -42,5 +42,3 @@ const TruncatedText = forwardRef<HTMLDivElement, TruncatedTextProps>(
 );
 
 TruncatedText.displayName = "TruncatedText";
-
-export { TruncatedText };

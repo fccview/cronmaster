@@ -34,7 +34,7 @@ const categoryIcons = {
   "Custom Scripts": Code,
 };
 
-export function BashSnippetHelper({ onInsertSnippet }: BashSnippetHelperProps) {
+export const BashSnippetHelper = ({ onInsertSnippet }: BashSnippetHelperProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);

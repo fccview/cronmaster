@@ -3,7 +3,7 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-async function execHostCrontab(command: string): Promise<string> {
+const execHostCrontab = async (command: string): Promise<string> => {
   try {
     const { stdout } = await execAsync(
       `nsenter -t 1 -m -u -i -n -p sh -c "${command}"`
@@ -15,7 +15,7 @@ async function execHostCrontab(command: string): Promise<string> {
   }
 }
 
-async function getTargetUser(): Promise<string> {
+const getTargetUser = async (): Promise<string> => {
   try {
     if (process.env.HOST_CRONTAB_USER) {
       return process.env.HOST_CRONTAB_USER;
@@ -60,7 +60,7 @@ async function getTargetUser(): Promise<string> {
   }
 }
 
-export async function getAllTargetUsers(): Promise<string[]> {
+export const getAllTargetUsers = async (): Promise<string[]> => {
   try {
     if (process.env.HOST_CRONTAB_USER) {
       return process.env.HOST_CRONTAB_USER.split(",").map((u) => u.trim());
@@ -89,7 +89,7 @@ export async function getAllTargetUsers(): Promise<string[]> {
   }
 }
 
-export async function readHostCrontab(): Promise<string> {
+export const readHostCrontab = async (): Promise<string> => {
   try {
     const user = await getTargetUser();
     return await execHostCrontab(
@@ -101,9 +101,9 @@ export async function readHostCrontab(): Promise<string> {
   }
 }
 
-export async function readAllHostCrontabs(): Promise<
+export const readAllHostCrontabs = async (): Promise<
   { user: string; content: string }[]
-> {
+> => {
   try {
     const users = await getAllTargetUsers();
     const results: { user: string; content: string }[] = [];
@@ -127,7 +127,7 @@ export async function readAllHostCrontabs(): Promise<
   }
 }
 
-export async function writeHostCrontab(content: string): Promise<boolean> {
+export const writeHostCrontab = async (content: string): Promise<boolean> => {
   try {
     const user = await getTargetUser();
     let finalContent = content;
@@ -146,10 +146,10 @@ export async function writeHostCrontab(content: string): Promise<boolean> {
   }
 }
 
-export async function writeHostCrontabForUser(
+export const writeHostCrontabForUser = async (
   user: string,
   content: string
-): Promise<boolean> {
+): Promise<boolean> => {
   try {
     let finalContent = content;
     if (!finalContent.endsWith("\n")) {

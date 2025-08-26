@@ -22,7 +22,7 @@ interface Script {
 interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   scripts: Script[];
   form: {
     schedule: string;
@@ -34,14 +34,14 @@ interface CreateTaskModalProps {
   onFormChange: (updates: Partial<CreateTaskModalProps["form"]>) => void;
 }
 
-export function CreateTaskModal({
+export const CreateTaskModal = ({
   isOpen,
   onClose,
   onSubmit,
   scripts,
   form,
   onFormChange,
-}: CreateTaskModalProps) {
+}: CreateTaskModalProps) => {
   const [selectedScriptContent, setSelectedScriptContent] =
     useState<string>("");
   const [isSelectScriptModalOpen, setIsSelectScriptModalOpen] = useState(false);
@@ -120,11 +120,10 @@ export function CreateTaskModal({
               <button
                 type="button"
                 onClick={handleCustomCommand}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  !form.selectedScriptId
+                className={`p-4 rounded-lg border-2 transition-all ${!form.selectedScriptId
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <Terminal className="h-5 w-5" />
@@ -138,11 +137,10 @@ export function CreateTaskModal({
               <button
                 type="button"
                 onClick={() => setIsSelectScriptModalOpen(true)}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  form.selectedScriptId
+                className={`p-4 rounded-lg border-2 transition-all ${form.selectedScriptId
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5" />

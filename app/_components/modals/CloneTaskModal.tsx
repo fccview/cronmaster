@@ -15,18 +15,18 @@ interface CloneTaskModalProps {
   isCloning: boolean;
 }
 
-export function CloneTaskModal({
+export const CloneTaskModal = ({
   cronJob,
   isOpen,
   onClose,
   onConfirm,
   isCloning,
-}: CloneTaskModalProps) {
+}: CloneTaskModalProps) => {
   const [newComment, setNewComment] = useState("");
 
   if (!isOpen || !cronJob) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newComment.trim()) {
       onConfirm(newComment.trim());

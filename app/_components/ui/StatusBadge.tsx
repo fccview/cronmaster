@@ -9,7 +9,7 @@ export interface StatusBadgeProps extends HTMLAttributes<HTMLDivElement> {
   showText?: boolean;
 }
 
-const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
+export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
   (
     {
       className,
@@ -105,5 +105,3 @@ const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
 );
 
 StatusBadge.displayName = "StatusBadge";
-
-export { StatusBadge };

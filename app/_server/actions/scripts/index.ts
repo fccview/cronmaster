@@ -13,7 +13,7 @@ const execAsync = promisify(exec);
 
 export type { Script } from "@/app/_utils/scriptScanner";
 
-function sanitizeScriptName(name: string): string {
+const sanitizeScriptName = (name: string): string => {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
@@ -23,7 +23,7 @@ function sanitizeScriptName(name: string): string {
     .substring(0, 50);
 }
 
-async function generateUniqueFilename(baseName: string): Promise<string> {
+const generateUniqueFilename = async (baseName: string): Promise<string> => {
   const scripts = await loadAllScripts();
   let filename = `${sanitizeScriptName(baseName)}.sh`;
   let counter = 1;
@@ -36,14 +36,14 @@ async function generateUniqueFilename(baseName: string): Promise<string> {
   return filename;
 }
 
-async function ensureScriptsDirectory() {
+const ensureScriptsDirectory = async () => {
   const scriptsDir = await SCRIPTS_DIR();
   if (!existsSync(scriptsDir)) {
     await mkdir(scriptsDir, { recursive: true });
   }
 }
 
-async function ensureHostScriptsDirectory() {
+const ensureHostScriptsDirectory = async () => {
   const hostProjectDir = process.env.HOST_PROJECT_DIR || process.cwd();
 
   const hostScriptsDir = join(hostProjectDir, "scripts");
@@ -52,7 +52,7 @@ async function ensureHostScriptsDirectory() {
   }
 }
 
-async function saveScriptFile(filename: string, content: string) {
+const saveScriptFile = async (filename: string, content: string) => {
   const isDocker = process.env.DOCKER === "true";
   const scriptsDir = isDocker ? "/app/scripts" : await SCRIPTS_DIR();
   await ensureScriptsDirectory();
@@ -61,20 +61,20 @@ async function saveScriptFile(filename: string, content: string) {
   await writeFile(scriptPath, content, "utf8");
 }
 
-async function deleteScriptFile(filename: string) {
+const deleteScriptFile = async (filename: string) => {
   const scriptPath = join(await SCRIPTS_DIR(), filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
   }
 }
 
-export async function fetchScripts(): Promise<Script[]> {
+export const fetchScripts = async (): Promise<Script[]> => {
   return await loadAllScripts();
 }
 
-export async function createScript(
+export const createScript = async (
   formData: FormData
-): Promise<{ success: boolean; message: string; script?: Script }> {
+): Promise<{ success: boolean; message: string; script?: Script }> => {
   try {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
@@ -119,9 +119,9 @@ export async function createScript(
   }
 }
 
-export async function updateScript(
+export const updateScript = async (
   formData: FormData
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const id = formData.get("id") as string;
     const name = formData.get("name") as string;
@@ -157,9 +157,9 @@ export async function updateScript(
   }
 }
 
-export async function deleteScript(
+export const deleteScript = async (
   id: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const scripts = await loadAllScripts();
     const script = scripts.find((s) => s.id === id);
@@ -178,10 +178,10 @@ export async function deleteScript(
   }
 }
 
-export async function cloneScript(
+export const cloneScript = async (
   id: string,
   newName: string
-): Promise<{ success: boolean; message: string; script?: Script }> {
+): Promise<{ success: boolean; message: string; script?: Script }> => {
   try {
     const scripts = await loadAllScripts();
     const originalScript = scripts.find((s) => s.id === id);
@@ -227,7 +227,7 @@ export async function cloneScript(
   }
 }
 
-export async function getScriptContent(filename: string): Promise<string> {
+export const getScriptContent = async (filename: string): Promise<string> => {
   try {
     const isDocker = process.env.DOCKER === "true";
     const scriptPath = isDocker
@@ -260,11 +260,11 @@ export async function getScriptContent(filename: string): Promise<string> {
   }
 }
 
-export async function executeScript(filename: string): Promise<{
+export const executeScript = async (filename: string): Promise<{
   success: boolean;
   output: string;
   error: string;
-}> {
+}> => {
   try {
     await ensureHostScriptsDirectory();
     const isDocker = process.env.DOCKER === "true";

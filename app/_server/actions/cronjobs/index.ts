@@ -18,7 +18,7 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-export async function fetchCronJobs(): Promise<CronJob[]> {
+export const fetchCronJobs = async (): Promise<CronJob[]> => {
   try {
     return await getCronJobs();
   } catch (error) {
@@ -27,9 +27,9 @@ export async function fetchCronJobs(): Promise<CronJob[]> {
   }
 }
 
-export async function createCronJob(
+export const createCronJob = async (
   formData: FormData
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const schedule = formData.get("schedule") as string;
     const command = formData.get("command") as string;
@@ -73,9 +73,9 @@ export async function createCronJob(
   }
 }
 
-export async function removeCronJob(
+export const removeCronJob = async (
   id: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const success = await deleteCronJob(id);
     if (success) {
@@ -90,9 +90,9 @@ export async function removeCronJob(
   }
 }
 
-export async function editCronJob(
+export const editCronJob = async (
   formData: FormData
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const id = formData.get("id") as string;
     const schedule = formData.get("schedule") as string;
@@ -116,10 +116,10 @@ export async function editCronJob(
   }
 }
 
-export async function cloneCronJob(
+export const cloneCronJob = async (
   id: string,
   newComment: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const cronJobs = await getCronJobs();
     const originalJob = cronJobs.find((job) => job.id === id);
@@ -147,9 +147,9 @@ export async function cloneCronJob(
   }
 }
 
-export async function pauseCronJobAction(
+export const pauseCronJobAction = async (
   id: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const success = await pauseCronJob(id);
     if (success) {
@@ -164,9 +164,9 @@ export async function pauseCronJobAction(
   }
 }
 
-export async function resumeCronJobAction(
+export const resumeCronJobAction = async (
   id: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string }> => {
   try {
     const success = await resumeCronJob(id);
     if (success) {
@@ -181,7 +181,7 @@ export async function resumeCronJobAction(
   }
 }
 
-export async function fetchAvailableUsers(): Promise<string[]> {
+export const fetchAvailableUsers = async (): Promise<string[]> => {
   try {
     return await getAllTargetUsers();
   } catch (error) {
@@ -190,7 +190,7 @@ export async function fetchAvailableUsers(): Promise<string[]> {
   }
 }
 
-export async function cleanupCrontabAction(): Promise<{ success: boolean; message: string }> {
+export const cleanupCrontabAction = async (): Promise<{ success: boolean; message: string }> => {
   try {
     const success = await cleanupCrontab();
     if (success) {
@@ -205,9 +205,9 @@ export async function cleanupCrontabAction(): Promise<{ success: boolean; messag
   }
 }
 
-export async function runCronJob(
+export const runCronJob = async (
   id: string
-): Promise<{ success: boolean; message: string; output?: string }> {
+): Promise<{ success: boolean; message: string; output?: string }> => {
   try {
     const cronJobs = await getCronJobs();
     const job = cronJobs.find((j) => j.id === id);

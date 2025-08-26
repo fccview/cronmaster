@@ -33,7 +33,7 @@ const toastStyles = {
     "border-yellow-500/20 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
 };
 
-export function Toast({ toast, onRemove }: ToastProps) {
+export const Toast = ({ toast, onRemove }: ToastProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const Icon = toastIcons[toast.type];
 
@@ -75,7 +75,7 @@ export function Toast({ toast, onRemove }: ToastProps) {
   );
 }
 
-export function ToastContainer() {
+export const ToastContainer = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = (toast: Omit<Toast, "id">) => {
@@ -103,12 +103,12 @@ export function ToastContainer() {
   );
 }
 
-export function showToast(
+export const showToast = (
   type: Toast["type"],
   title: string,
   message?: string,
   duration?: number
-) {
+) => {
   if (typeof window !== "undefined" && (window as any).showToast) {
     (window as any).showToast({ type, title, message, duration });
   }

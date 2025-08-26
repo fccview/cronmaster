@@ -11,11 +11,11 @@ interface UserFilterProps {
   className?: string;
 }
 
-export function UserFilter({
+export const UserFilter = ({
   selectedUser,
   onUserChange,
   className = "",
-}: UserFilterProps) {
+}: UserFilterProps) => {
   const [users, setUsers] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,9 +82,8 @@ export function UserFilter({
               onUserChange(null);
               setIsOpen(false);
             }}
-            className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-              !selectedUser ? "bg-accent text-accent-foreground" : ""
-            }`}
+            className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${!selectedUser ? "bg-accent text-accent-foreground" : ""
+              }`}
           >
             All users
           </button>
@@ -95,9 +94,8 @@ export function UserFilter({
                 onUserChange(user);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                selectedUser === user ? "bg-accent text-accent-foreground" : ""
-              }`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${selectedUser === user ? "bg-accent text-accent-foreground" : ""
+                }`}
             >
               {user}
             </button>

@@ -18,7 +18,7 @@ export interface MetricCardProps extends HTMLAttributes<HTMLDivElement> {
   progressMax?: number;
 }
 
-const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
+export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
   (
     {
       className,
@@ -99,5 +99,3 @@ const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
 );
 
 MetricCard.displayName = "MetricCard";
-
-export { MetricCard };

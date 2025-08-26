@@ -18,12 +18,12 @@ interface DeleteTaskModalProps {
   job: CronJob | null;
 }
 
-export function DeleteTaskModal({
+export const DeleteTaskModal = ({
   isOpen,
   onClose,
   onConfirm,
   job,
-}: DeleteTaskModalProps) {
+}: DeleteTaskModalProps) => {
   if (!job) return null;
 
   return (

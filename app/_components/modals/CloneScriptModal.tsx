@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, FileText } from "lucide-react";
+import { Copy } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { Input } from "../ui/Input";
@@ -15,18 +15,18 @@ interface CloneScriptModalProps {
   isCloning: boolean;
 }
 
-export function CloneScriptModal({
+export const CloneScriptModal = ({
   script,
   isOpen,
   onClose,
   onConfirm,
   isCloning,
-}: CloneScriptModalProps) {
+}: CloneScriptModalProps) => {
   const [newName, setNewName] = useState("");
 
   if (!isOpen || !script) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newName.trim()) {
       onConfirm(newName.trim());

@@ -16,13 +16,13 @@ interface BashEditorProps {
   label?: string;
 }
 
-export function BashEditor({
+export const BashEditor = ({
   value,
   onChange,
   placeholder = "#!/bin/bash\n# Your bash script here\necho 'Hello World'",
   className = "",
   label = "Bash Script",
-}: BashEditorProps) {
+}: BashEditorProps) => {
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);

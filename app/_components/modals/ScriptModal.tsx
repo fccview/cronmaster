@@ -5,7 +5,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { BashEditor } from "../BashEditor";
 import { BashSnippetHelper } from "../BashSnippetHelper";
-import { FileText, Code, Plus, Edit } from "lucide-react";
+import { FileText, Code } from "lucide-react";
 import { showToast } from "../ui/Toast";
 
 interface ScriptModalProps {
@@ -26,7 +26,7 @@ interface ScriptModalProps {
   additionalFormData?: Record<string, string>;
 }
 
-export function ScriptModal({
+export const ScriptModal = ({
   isOpen,
   onClose,
   onSubmit,
@@ -36,8 +36,8 @@ export function ScriptModal({
   form,
   onFormChange,
   additionalFormData = {},
-}: ScriptModalProps) {
-  const handleSubmit = async (e: React.FormEvent) => {
+}: ScriptModalProps) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!form.name.trim()) {

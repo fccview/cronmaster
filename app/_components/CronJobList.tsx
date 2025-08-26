@@ -37,7 +37,7 @@ interface CronJobListProps {
   scripts: Script[];
 }
 
-export function CronJobList({ cronJobs, scripts }: CronJobListProps) {
+export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

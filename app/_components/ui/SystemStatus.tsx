@@ -1,7 +1,6 @@
 import { cn } from "@/app/_utils/cn";
 import { HTMLAttributes, forwardRef } from "react";
 import { Activity } from "lucide-react";
-import { StatusBadge } from "./StatusBadge";
 
 export interface SystemStatusProps extends HTMLAttributes<HTMLDivElement> {
   status: string;
@@ -10,7 +9,7 @@ export interface SystemStatusProps extends HTMLAttributes<HTMLDivElement> {
   isUpdating?: boolean;
 }
 
-const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
+export const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
   (
     { className, status, details, timestamp, isUpdating = false, ...props },
     ref
@@ -80,5 +79,3 @@ const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
 );
 
 SystemStatus.displayName = "SystemStatus";
-
-export { SystemStatus };

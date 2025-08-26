@@ -15,7 +15,7 @@ interface ScriptMetadata {
   description?: string;
 }
 
-function parseMetadata(content: string): ScriptMetadata {
+const parseMetadata = (content: string): ScriptMetadata => {
   const metadata: ScriptMetadata = {};
   const lines = content.split("\n");
 
@@ -34,7 +34,7 @@ function parseMetadata(content: string): ScriptMetadata {
   return metadata;
 }
 
-async function scanScriptsDirectory(dirPath: string): Promise<Script[]> {
+const scanScriptsDirectory = async (dirPath: string): Promise<Script[]> => {
   const scripts: Script[] = [];
 
   try {
@@ -66,7 +66,7 @@ async function scanScriptsDirectory(dirPath: string): Promise<Script[]> {
   return scripts;
 }
 
-export async function loadAllScripts(): Promise<Script[]> {
+export const loadAllScripts = async (): Promise<Script[]> => {
   const isDocker = process.env.DOCKER === "true";
   const scriptsDir = isDocker
     ? "/app/scripts"
@@ -74,7 +74,7 @@ export async function loadAllScripts(): Promise<Script[]> {
   return await scanScriptsDirectory(scriptsDir);
 }
 
-export function searchScripts(scripts: Script[], query: string): Script[] {
+export const searchScripts = (scripts: Script[], query: string): Script[] => {
   const lowercaseQuery = query.toLowerCase();
   return scripts.filter(
     (script) =>
@@ -83,9 +83,9 @@ export function searchScripts(scripts: Script[], query: string): Script[] {
   );
 }
 
-export function getScriptById(
+export const getScriptById = (
   scripts: Script[],
   id: string
-): Script | undefined {
+): Script | undefined => {
   return scripts.find((script) => script.id === id);
 }

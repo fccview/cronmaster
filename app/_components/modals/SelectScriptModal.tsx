@@ -17,13 +17,13 @@ interface SelectScriptModalProps {
   selectedScriptId: string | null;
 }
 
-export function SelectScriptModal({
+export const SelectScriptModal = ({
   isOpen,
   onClose,
   scripts,
   onScriptSelect,
   selectedScriptId,
-}: SelectScriptModalProps) {
+}: SelectScriptModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [previewScript, setPreviewScript] = useState<Script | null>(null);
   const [previewContent, setPreviewContent] = useState<string>("");
@@ -109,11 +109,10 @@ export function SelectScriptModal({
                     <button
                       key={script.id}
                       onClick={() => handleScriptClick(script)}
-                      className={`w-full p-4 text-left hover:bg-accent/30 transition-colors ${
-                        previewScript?.id === script.id
+                      className={`w-full p-4 text-left hover:bg-accent/30 transition-colors ${previewScript?.id === script.id
                           ? "bg-primary/5 border-r-2 border-primary"
                           : ""
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
