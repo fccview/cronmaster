@@ -1,6 +1,6 @@
 services:
   cronjob-manager:
-    build: .
+    image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster-test
     user: "root"
     ports:
@@ -10,8 +10,7 @@ services:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      #- NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
-      - NEXT_PUBLIC_HOST_PROJECT_DIR=/home/fccview/www/projects/cronjob
+      - NEXT_PUBLIC_HOST_PROJECT_DIR=/path/to/cronmaster/directory
       # If docker struggles to find your crontab user, update this variable with it.
       # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
       # - HOST_CRONTAB_USER=fccview

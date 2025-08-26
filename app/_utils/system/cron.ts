@@ -24,7 +24,6 @@ async function readCronFiles(): Promise<string> {
         }
     }
 
-    // Use the new host crontab utility for Docker
     return await readHostCrontab();
 }
 
@@ -41,7 +40,6 @@ async function writeCronFiles(content: string): Promise<boolean> {
         }
     }
 
-    // Use the new host crontab utility for Docker
     return await writeHostCrontab(content);
 }
 
@@ -115,12 +113,10 @@ export async function addCronJob(
             ? `# ${comment}\n${schedule} ${command}`
             : `${schedule} ${command}`;
 
-        // Handle empty crontab vs existing content properly
         let newCron;
         if (cronContent.trim() === "") {
             newCron = newEntry;
         } else {
-            // Ensure existing content ends with newline before adding new entry
             const existingContent = cronContent.endsWith('\n') ? cronContent : cronContent + '\n';
             newCron = existingContent + newEntry;
         }

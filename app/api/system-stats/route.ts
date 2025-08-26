@@ -43,7 +43,6 @@ export async function GET(request: NextRequest) {
             }
         };
 
-        // Calculate memory usage properly - use active memory, not just used
         const actualUsed = memInfo.active || memInfo.used;
         const actualFree = memInfo.available || memInfo.free;
         const memUsage = ((actualUsed / memInfo.total) * 100);
@@ -88,7 +87,6 @@ export async function GET(request: NextRequest) {
             ? `${Math.round(((mainInterface.rx_sec || 0) + (mainInterface.tx_sec || 0)) / 1024 / 1024)} Mbps`
             : "Unknown";
 
-        // Get network latency via ping
         let latency = 0;
         try {
             const { exec } = require('child_process');

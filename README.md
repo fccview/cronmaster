@@ -49,7 +49,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    build: .
+    image: ghcr.io/fccview/cronmaster:main
     container_name: cronmaster-test
     user: "root"
     ports:
@@ -211,6 +211,32 @@ The application uses standard cron format: `* * * * *`
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request
+
+## Community shouts
+
+I would like to thank the following members for raising issues and help test/debug them! 
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/hermannx5"><img width="100" height="100" alt="hermannx5" src="https://avatars.githubusercontent.com/u/46320338?v=4&s=100"><br/>hermannx5</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/edersong"><img width="100" height="100"  src="https://avatars.githubusercontent.com/u/64137913?v=4&s=100"><br />edersong</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/corasaniti"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/5001932?u=2e8bc25b74eb11f7675d38c8e312374794a7b6e0&v=4&s=100"><br />corasaniti</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/abhisheknair"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/5221047?u=313beaabbb4a8e82fe07a2523076b4dafdc0bfec&v=4&s=100"><br />abhisheknair</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/mariushosting"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/37554361?u=9007d0600680ac2b267bde2d8c19b05c06285a34&v=4&s=100"><br />mariushosting</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## License
 
