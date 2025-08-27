@@ -3,6 +3,12 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+export interface UserInfo {
+  username: string;
+  uid: number;
+  gid: number;
+}
+
 const execHostCrontab = async (command: string): Promise<string> => {
   try {
     const { stdout } = await execAsync(
@@ -164,5 +170,44 @@ export const writeHostCrontabForUser = async (
   } catch (error) {
     console.error(`Error writing host crontab for user ${user}:`, error);
     return false;
+  }
+}
+
+export async function getUserInfo(username: string): Promise<UserInfo | null> {
+  try {
+    const isDocker = process.env.DOCKER === "true";
+
+    if (isDocker) {
+      // Get user info from host system
+      const uidResult = await execHostCrontab(`id -u ${username}`);
+      const gidResult = await execHostCrontab(`id -g ${username}`);
+
+      const uid = parseInt(uidResult.trim());
+      const gid = parseInt(gidResult.trim());
+
+      if (isNaN(uid) || isNaN(gid)) {
+        console.error(`Invalid UID/GID for user ${username}`);
+        return null;
+      }
+
+      return { username, uid, gid };
+    } else {
+      // Get user info from local system
+      const { stdout } = await execAsync(`id -u ${username}`);
+      const uid = parseInt(stdout.trim());
+
+      const { stdout: gidStdout } = await execAsync(`id -g ${username}`);
+      const gid = parseInt(gidStdout.trim());
+
+      if (isNaN(uid) || isNaN(gid)) {
+        console.error(`Invalid UID/GID for user ${username}`);
+        return null;
+      }
+
+      return { username, uid, gid };
+    }
+  } catch (error) {
+    console.error(`Error getting user info for ${username}:`, error);
+    return null;
   }
 }

@@ -10,7 +10,7 @@ import {
   cleanupCrontab,
   type CronJob,
 } from "@/app/_utils/system";
-import { getAllTargetUsers } from "@/app/_utils/system/hostCrontab";
+import { getAllTargetUsers, getUserInfo } from "@/app/_utils/system/hostCrontab";
 import { revalidatePath } from "next/cache";
 import { getScriptPath } from "@/app/_utils/scripts";
 import { exec } from "child_process";
@@ -224,7 +224,13 @@ export const runCronJob = async (
     let command = job.command;
 
     if (isDocker) {
-      command = `nsenter -t 1 -m -u -i -n -p sh -c "${job.command}"`;
+      const userInfo = await getUserInfo(job.user);
+
+      if (userInfo && userInfo.username !== "root") {
+        command = `nsenter -t 1 -m -u -i -n -p --setuid=${userInfo.uid} --setgid=${userInfo.gid} sh -c "${job.command}"`;
+      } else {
+        command = `nsenter -t 1 -m -u -i -n -p sh -c "${job.command}"`;
+      }
     }
 
     const { stdout, stderr } = await execAsync(command, {
