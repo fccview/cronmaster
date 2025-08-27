@@ -178,7 +178,6 @@ export async function getUserInfo(username: string): Promise<UserInfo | null> {
     const isDocker = process.env.DOCKER === "true";
 
     if (isDocker) {
-      // Get user info from host system
       const uidResult = await execHostCrontab(`id -u ${username}`);
       const gidResult = await execHostCrontab(`id -g ${username}`);
 
@@ -192,7 +191,6 @@ export async function getUserInfo(username: string): Promise<UserInfo | null> {
 
       return { username, uid, gid };
     } else {
-      // Get user info from local system
       const { stdout } = await execAsync(`id -u ${username}`);
       const uid = parseInt(stdout.trim());
 
@@ -210,4 +208,4 @@ export async function getUserInfo(username: string): Promise<UserInfo | null> {
     console.error(`Error getting user info for ${username}:`, error);
     return null;
   }
-}
+};
