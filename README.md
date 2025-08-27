@@ -49,7 +49,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:2.3.0
+    image: ghcr.io/fccview/cronmaster:1.3.0
     container_name: cronmaster
     user: "root"
     ports:
