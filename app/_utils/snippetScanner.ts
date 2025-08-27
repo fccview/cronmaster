@@ -20,7 +20,7 @@ interface SnippetMetadata {
   tags?: string[];
 }
 
-function parseMetadata(content: string): SnippetMetadata {
+const parseMetadata = (content: string): SnippetMetadata => {
   const metadata: SnippetMetadata = {};
   const lines = content.split("\n");
 
@@ -53,7 +53,7 @@ function parseMetadata(content: string): SnippetMetadata {
   return metadata;
 }
 
-function extractTemplate(content: string): string {
+const extractTemplate = (content: string): string => {
   const lines = content.split("\n");
   const templateLines: string[] = [];
   let inTemplate = false;
@@ -75,10 +75,10 @@ function extractTemplate(content: string): string {
   return templateLines.join("\n").trim();
 }
 
-async function scanSnippetDirectory(
+const scanSnippetDirectory = async (
   dirPath: string,
   source: "builtin" | "user"
-): Promise<BashSnippet[]> {
+): Promise<BashSnippet[]> => {
   const snippets: BashSnippet[] = [];
 
   try {
@@ -117,7 +117,7 @@ async function scanSnippetDirectory(
   return snippets;
 }
 
-export async function loadAllSnippets(): Promise<BashSnippet[]> {
+export const loadAllSnippets = async (): Promise<BashSnippet[]> => {
   const isDocker = process.env.DOCKER === "true";
 
   let builtinSnippetsPath: string;
@@ -141,10 +141,10 @@ export async function loadAllSnippets(): Promise<BashSnippet[]> {
   return [...builtinSnippets, ...userSnippets];
 }
 
-export function searchBashSnippets(
+export const searchBashSnippets = (
   snippets: BashSnippet[],
   query: string
-): BashSnippet[] {
+): BashSnippet[] => {
   const lowercaseQuery = query.toLowerCase();
   return snippets.filter(
     (snippet) =>
@@ -155,14 +155,14 @@ export function searchBashSnippets(
   );
 }
 
-export function getSnippetCategories(snippets: BashSnippet[]): string[] {
+export const getSnippetCategories = (snippets: BashSnippet[]): string[] => {
   const categories = new Set(snippets.map((snippet) => snippet.category));
   return Array.from(categories).sort();
 }
 
-export function getSnippetById(
+export const getSnippetById = (
   snippets: BashSnippet[],
   id: string
-): BashSnippet | undefined {
+): BashSnippet | undefined => {
   return snippets.find((snippet) => snippet.id === id);
 }

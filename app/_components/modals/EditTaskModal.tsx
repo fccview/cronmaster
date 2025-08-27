@@ -9,7 +9,7 @@ import { Edit, Terminal } from "lucide-react";
 interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   form: {
     schedule: string;
     command: string;
@@ -18,13 +18,13 @@ interface EditTaskModalProps {
   onFormChange: (updates: Partial<EditTaskModalProps["form"]>) => void;
 }
 
-export function EditTaskModal({
+export const EditTaskModal = ({
   isOpen,
   onClose,
   onSubmit,
   form,
   onFormChange,
-}: EditTaskModalProps) {
+}: EditTaskModalProps) => {
   return (
     <Modal
       isOpen={isOpen}

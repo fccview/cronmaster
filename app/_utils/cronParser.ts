@@ -7,7 +7,7 @@ export interface CronExplanation {
   error?: string;
 }
 
-export function parseCronExpression(expression: string): CronExplanation {
+export const parseCronExpression = (expression: string): CronExplanation => {
   try {
     const cleanExpression = expression.trim();
 

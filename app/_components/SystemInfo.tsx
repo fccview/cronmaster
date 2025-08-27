@@ -60,9 +60,9 @@ interface SystemInfoCardProps {
   systemInfo: SystemInfoType;
 }
 
-export function SystemInfoCard({
+export const SystemInfoCard = ({
   systemInfo: initialSystemInfo,
-}: SystemInfoCardProps) {
+}: SystemInfoCardProps) => {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [systemInfo, setSystemInfo] =
     useState<SystemInfoType>(initialSystemInfo);

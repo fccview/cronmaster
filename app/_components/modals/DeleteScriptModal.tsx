@@ -13,13 +13,13 @@ interface DeleteScriptModalProps {
   isDeleting: boolean;
 }
 
-export function DeleteScriptModal({
+export const DeleteScriptModal = ({
   script,
   isOpen,
   onClose,
   onConfirm,
   isDeleting,
-}: DeleteScriptModalProps) {
+}: DeleteScriptModalProps) => {
   if (!isOpen || !script) return null;
 
   return (

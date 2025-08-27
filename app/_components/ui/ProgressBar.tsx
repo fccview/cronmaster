@@ -9,7 +9,7 @@ export interface ProgressBarProps extends HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "gradient";
 }
 
-const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
+export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
   (
     {
       className,
@@ -75,5 +75,3 @@ const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
 );
 
 ProgressBar.displayName = "ProgressBar";
-
-export { ProgressBar };

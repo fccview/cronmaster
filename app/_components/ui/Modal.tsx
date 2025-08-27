@@ -15,7 +15,7 @@ interface ModalProps {
   preventCloseOnClickOutside?: boolean;
 }
 
-export function Modal({
+export const Modal = ({
   isOpen,
   onClose,
   title,
@@ -23,7 +23,7 @@ export function Modal({
   size = "md",
   showCloseButton = true,
   preventCloseOnClickOutside = false,
-}: ModalProps) {
+}: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

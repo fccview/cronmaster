@@ -14,7 +14,7 @@ export interface PerformanceSummaryProps
   metrics: PerformanceMetric[];
 }
 
-const PerformanceSummary = forwardRef<HTMLDivElement, PerformanceSummaryProps>(
+export const PerformanceSummary = forwardRef<HTMLDivElement, PerformanceSummaryProps>(
   ({ className, metrics, ...props }, ref) => {
     return (
       <div
@@ -58,5 +58,3 @@ const PerformanceSummary = forwardRef<HTMLDivElement, PerformanceSummaryProps>(
 );
 
 PerformanceSummary.displayName = "PerformanceSummary";
-
-export { PerformanceSummary };

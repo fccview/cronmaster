@@ -31,9 +31,9 @@ interface ScriptsManagerProps {
   scripts: Script[];
 }
 
-export function ScriptsManager({
+export const ScriptsManager = ({
   scripts: initialScripts,
-}: ScriptsManagerProps) {
+}: ScriptsManagerProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

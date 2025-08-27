@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { CronExpressionHelper } from "../CronExpressionHelper";
 import { SelectScriptModal } from "./SelectScriptModal";
+import { UserSwitcher } from "../ui/UserSwitcher";
 import { Plus, Terminal, FileText, X } from "lucide-react";
 import { getScriptContent } from "@/app/_server/actions/scripts";
 import { getHostScriptPath } from "@/app/_utils/scripts";
@@ -21,25 +22,26 @@ interface Script {
 interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   scripts: Script[];
   form: {
     schedule: string;
     command: string;
     comment: string;
     selectedScriptId: string | null;
+    user: string;
   };
   onFormChange: (updates: Partial<CreateTaskModalProps["form"]>) => void;
 }
 
-export function CreateTaskModal({
+export const CreateTaskModal = ({
   isOpen,
   onClose,
   onSubmit,
   scripts,
   form,
   onFormChange,
-}: CreateTaskModalProps) {
+}: CreateTaskModalProps) => {
   const [selectedScriptContent, setSelectedScriptContent] =
     useState<string>("");
   const [isSelectScriptModalOpen, setIsSelectScriptModalOpen] = useState(false);
@@ -90,6 +92,16 @@ export function CreateTaskModal({
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
+              User
+            </label>
+            <UserSwitcher
+              selectedUser={form.user}
+              onUserChange={(user) => onFormChange({ user })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
               Schedule
             </label>
             <CronExpressionHelper
@@ -108,11 +120,10 @@ export function CreateTaskModal({
               <button
                 type="button"
                 onClick={handleCustomCommand}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  !form.selectedScriptId
+                className={`p-4 rounded-lg border-2 transition-all ${!form.selectedScriptId
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <Terminal className="h-5 w-5" />
@@ -126,11 +137,10 @@ export function CreateTaskModal({
               <button
                 type="button"
                 onClick={() => setIsSelectScriptModalOpen(true)}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  form.selectedScriptId
+                className={`p-4 rounded-lg border-2 transition-all ${form.selectedScriptId
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5" />

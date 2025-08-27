@@ -19,14 +19,14 @@ interface EditScriptModalProps {
   onFormChange: (updates: Partial<EditScriptModalProps["form"]>) => void;
 }
 
-export function EditScriptModal({
+export const EditScriptModal = ({
   isOpen,
   onClose,
   onSubmit,
   script,
   form,
   onFormChange,
-}: EditScriptModalProps) {
+}: EditScriptModalProps) => {
   if (!script) return null;
 
   return (

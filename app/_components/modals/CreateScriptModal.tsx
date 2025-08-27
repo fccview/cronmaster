@@ -17,13 +17,13 @@ interface CreateScriptModalProps {
   onFormChange: (updates: Partial<CreateScriptModalProps["form"]>) => void;
 }
 
-export function CreateScriptModal({
+export const CreateScriptModal = ({
   isOpen,
   onClose,
   onSubmit,
   form,
   onFormChange,
-}: CreateScriptModalProps) {
+}: CreateScriptModalProps) => {
   return (
     <ScriptModal
       isOpen={isOpen}

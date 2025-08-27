@@ -3,7 +3,13 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-async function execHostCrontab(command: string): Promise<string> {
+export interface UserInfo {
+  username: string;
+  uid: number;
+  gid: number;
+}
+
+const execHostCrontab = async (command: string): Promise<string> => {
   try {
     const { stdout } = await execAsync(
       `nsenter -t 1 -m -u -i -n -p sh -c "${command}"`
@@ -15,7 +21,7 @@ async function execHostCrontab(command: string): Promise<string> {
   }
 }
 
-async function getTargetUser(): Promise<string> {
+const getTargetUser = async (): Promise<string> => {
   try {
     if (process.env.HOST_CRONTAB_USER) {
       return process.env.HOST_CRONTAB_USER;
@@ -60,7 +66,36 @@ async function getTargetUser(): Promise<string> {
   }
 }
 
-export async function readHostCrontab(): Promise<string> {
+export const getAllTargetUsers = async (): Promise<string[]> => {
+  try {
+    if (process.env.HOST_CRONTAB_USER) {
+      return process.env.HOST_CRONTAB_USER.split(",").map((u) => u.trim());
+    }
+
+    const isDocker = process.env.DOCKER === "true";
+    if (isDocker) {
+      const singleUser = await getTargetUser();
+      return [singleUser];
+    } else {
+      try {
+        const { stdout } = await execAsync("ls /var/spool/cron/crontabs/");
+        const users = stdout
+          .trim()
+          .split("\n")
+          .filter((user) => user.trim());
+        return users.length > 0 ? users : ["root"];
+      } catch (error) {
+        console.error("Error detecting users from crontabs directory:", error);
+        return ["root"];
+      }
+    }
+  } catch (error) {
+    console.error("Error getting all target users:", error);
+    return ["root"];
+  }
+}
+
+export const readHostCrontab = async (): Promise<string> => {
   try {
     const user = await getTargetUser();
     return await execHostCrontab(
@@ -72,7 +107,33 @@ export async function readHostCrontab(): Promise<string> {
   }
 }
 
-export async function writeHostCrontab(content: string): Promise<boolean> {
+export const readAllHostCrontabs = async (): Promise<
+  { user: string; content: string }[]
+> => {
+  try {
+    const users = await getAllTargetUsers();
+    const results: { user: string; content: string }[] = [];
+
+    for (const user of users) {
+      try {
+        const content = await execHostCrontab(
+          `crontab -l -u ${user} 2>/dev/null || echo ""`
+        );
+        results.push({ user, content });
+      } catch (error) {
+        console.warn(`Error reading crontab for user ${user}:`, error);
+        results.push({ user, content: "" });
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Error reading all host crontabs:", error);
+    return [];
+  }
+}
+
+export const writeHostCrontab = async (content: string): Promise<boolean> => {
   try {
     const user = await getTargetUser();
     let finalContent = content;
@@ -90,3 +151,61 @@ export async function writeHostCrontab(content: string): Promise<boolean> {
     return false;
   }
 }
+
+export const writeHostCrontabForUser = async (
+  user: string,
+  content: string
+): Promise<boolean> => {
+  try {
+    let finalContent = content;
+    if (!finalContent.endsWith("\n")) {
+      finalContent += "\n";
+    }
+
+    const base64Content = Buffer.from(finalContent).toString("base64");
+    await execHostCrontab(
+      `echo '${base64Content}' | base64 -d | crontab -u ${user} -`
+    );
+    return true;
+  } catch (error) {
+    console.error(`Error writing host crontab for user ${user}:`, error);
+    return false;
+  }
+}
+
+export async function getUserInfo(username: string): Promise<UserInfo | null> {
+  try {
+    const isDocker = process.env.DOCKER === "true";
+
+    if (isDocker) {
+      const uidResult = await execHostCrontab(`id -u ${username}`);
+      const gidResult = await execHostCrontab(`id -g ${username}`);
+
+      const uid = parseInt(uidResult.trim());
+      const gid = parseInt(gidResult.trim());
+
+      if (isNaN(uid) || isNaN(gid)) {
+        console.error(`Invalid UID/GID for user ${username}`);
+        return null;
+      }
+
+      return { username, uid, gid };
+    } else {
+      const { stdout } = await execAsync(`id -u ${username}`);
+      const uid = parseInt(stdout.trim());
+
+      const { stdout: gidStdout } = await execAsync(`id -g ${username}`);
+      const gid = parseInt(gidStdout.trim());
+
+      if (isNaN(uid) || isNaN(gid)) {
+        console.error(`Invalid UID/GID for user ${username}`);
+        return null;
+      }
+
+      return { username, uid, gid };
+    }
+  } catch (error) {
+    console.error(`Error getting user info for ${username}:`, error);
+    return null;
+  }
+};

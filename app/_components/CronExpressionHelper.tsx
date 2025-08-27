@@ -27,13 +27,13 @@ interface CronExpressionHelperProps {
   showPatterns?: boolean;
 }
 
-export function CronExpressionHelper({
+export const CronExpressionHelper = ({
   value,
   onChange,
   placeholder = "* * * * *",
   className = "",
   showPatterns = true,
-}: CronExpressionHelperProps) {
+}: CronExpressionHelperProps) => {
   const [explanation, setExplanation] = useState<CronExplanation | null>(null);
   const [showPatternsPanel, setShowPatternsPanel] = useState(false);
   const [debouncedValue, setDebouncedValue] = useState(value);

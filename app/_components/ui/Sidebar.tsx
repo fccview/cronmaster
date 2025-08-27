@@ -23,7 +23,7 @@ export interface SidebarProps extends HTMLAttributes<HTMLDivElement> {
   };
 }
 
-const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
+export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
   (
     {
       className,
@@ -185,5 +185,3 @@ const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 );
 
 Sidebar.displayName = "Sidebar";
-
-export { Sidebar };

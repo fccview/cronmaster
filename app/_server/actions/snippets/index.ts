@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import {
   loadAllSnippets,
   searchBashSnippets,
@@ -11,7 +10,7 @@ import {
 
 export { type BashSnippet } from "@/app/_utils/snippetScanner";
 
-export async function fetchSnippets(): Promise<BashSnippet[]> {
+export const fetchSnippets = async (): Promise<BashSnippet[]> => {
   try {
     return await loadAllSnippets();
   } catch (error) {
@@ -20,7 +19,7 @@ export async function fetchSnippets(): Promise<BashSnippet[]> {
   }
 }
 
-export async function searchSnippets(query: string): Promise<BashSnippet[]> {
+export const searchSnippets = async (query: string): Promise<BashSnippet[]> => {
   try {
     const snippets = await loadAllSnippets();
     return searchBashSnippets(snippets, query);
@@ -30,7 +29,7 @@ export async function searchSnippets(query: string): Promise<BashSnippet[]> {
   }
 }
 
-export async function fetchSnippetCategories(): Promise<string[]> {
+export const fetchSnippetCategories = async (): Promise<string[]> => {
   try {
     const snippets = await loadAllSnippets();
     return getSnippetCategories(snippets);
@@ -40,9 +39,9 @@ export async function fetchSnippetCategories(): Promise<string[]> {
   }
 }
 
-export async function fetchSnippetById(
+export const fetchSnippetById = async (
   id: string
-): Promise<BashSnippet | undefined> {
+): Promise<BashSnippet | undefined> => {
   try {
     const snippets = await loadAllSnippets();
     return getSnippetById(snippets, id);
@@ -52,9 +51,9 @@ export async function fetchSnippetById(
   }
 }
 
-export async function fetchSnippetsByCategory(
+export const fetchSnippetsByCategory = async (
   category: string
-): Promise<BashSnippet[]> {
+): Promise<BashSnippet[]> => {
   try {
     const snippets = await loadAllSnippets();
     return snippets.filter((snippet) => snippet.category === category);
@@ -64,9 +63,9 @@ export async function fetchSnippetsByCategory(
   }
 }
 
-export async function fetchSnippetsBySource(
+export const fetchSnippetsBySource = async (
   source: "builtin" | "user"
-): Promise<BashSnippet[]> {
+): Promise<BashSnippet[]> => {
   try {
     const snippets = await loadAllSnippets();
     return snippets.filter((snippet) => snippet.source === source);

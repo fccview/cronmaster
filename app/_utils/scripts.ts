@@ -10,11 +10,11 @@ const SCRIPTS_DIR = async () => {
   return join(process.cwd(), "scripts");
 };
 
-export async function getScriptPath(filename: string): Promise<string> {
+export const getScriptPath = async (filename: string): Promise<string> => {
   return join(await SCRIPTS_DIR(), filename);
 }
 
-export async function getHostScriptPath(filename: string): Promise<string> {
+export const getHostScriptPath = async (filename: string): Promise<string> => {
   const hostProjectDir = process.env.HOST_PROJECT_DIR || process.cwd();
 
   const hostScriptsDir = join(hostProjectDir, "scripts");

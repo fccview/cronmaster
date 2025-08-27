@@ -1,6 +1,6 @@
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:main
+    image: ghcr.io/fccview/cronmaster:1.3.0
     container_name: cronmaster
     user: "root"
     ports:
@@ -14,6 +14,7 @@ services:
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       # If docker struggles to find your crontab user, update this variable with it.
       # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
+      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=fccview,root,user1,user2
       # - HOST_CRONTAB_USER=fccview
     volumes:
       # Mount Docker socket to execute commands on host

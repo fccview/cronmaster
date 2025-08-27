@@ -82,7 +82,7 @@ export default async function Home() {
 
       <ToastContainer />
 
-      <div className="flex items-center gap-2 fixed bottom-4 left-4 lg:right-4 lg:left-auto">
+      <div className="flex items-center gap-2 fixed bottom-4 left-4 lg:right-4 lg:left-auto z-10 bg-background rounded-lg">
         <ThemeToggle />
       </div>
     </div>

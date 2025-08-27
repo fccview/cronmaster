@@ -49,19 +49,21 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:1.2.1
+    image: ghcr.io/fccview/cronmaster:2.3.0
     container_name: cronmaster
     user: "root"
     ports:
       # Feel free to change port, 3000 is very common so I like to map it to something else
-      - "40124:3000"
+      - "40123:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
-      - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
+      # Legacy used to be NEXT_PUBLIC_HOST_PROJECT_DIR, this was causing issues on runtime.
       - HOST_PROJECT_DIR=/path/to/cronmaster/directory
+      - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       # If docker struggles to find your crontab user, update this variable with it.
       # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
+      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=fccview,root,user1,user2
       # - HOST_CRONTAB_USER=fccview
     volumes:
       # Mount Docker socket to execute commands on host
@@ -69,7 +71,7 @@ services:
 
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
       # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
-      # will target this foler (thanks to the HOST_PROJECT_DIR variable set above)
+      # will target this folder (thanks to the HOST_PROJECT_DIR variable set above)
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
@@ -233,6 +235,11 @@ I would like to thank the following members for raising issues and help test/deb
       </td>
       <td align="center" valign="top" width="20%">
         <a href="https://github.com/mariushosting"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/37554361?u=9007d0600680ac2b267bde2d8c19b05c06285a34&v=4&s=100"><br />mariushosting</a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/DVDAndroid"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/6277172?u=78aa9b049a0c1a7ae5408d22219a8a91cfe45095&v=4&size=100"><br />DVDAndroid</a>
       </td>
     </tr>
   </tbody>
