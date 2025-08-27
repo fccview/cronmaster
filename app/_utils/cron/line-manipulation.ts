@@ -209,11 +209,20 @@ export const parseJobsFromLines = (lines: string[], user: string): CronJob[] => 
             }
         }
 
-        const parts = trimmedLine.split(/\s+/);
-        if (parts.length >= 6) {
-            const schedule = parts.slice(0, 5).join(" ");
-            const command = parts.slice(5).join(" ");
+        let schedule, command;
+        const parts = trimmedLine.split(/(?:\s|\t)+/);
 
+        if (parts[0].startsWith("@")) {
+            if (parts.length >= 2) {
+                schedule = parts[0];
+                command = trimmedLine.slice(trimmedLine.indexOf(parts[1]))
+            }
+        } else if (parts.length >= 6) {
+            schedule = parts.slice(0, 5).join(" ");
+            command = trimmedLine.slice(trimmedLine.indexOf(parts[5]))
+        }
+
+        if (schedule && command) {
             jobs.push({
                 id: `${user}-${jobIndex}`,
                 schedule,
