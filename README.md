@@ -241,6 +241,9 @@ I would like to thank the following members for raising issues and help test/deb
       <td align="center" valign="top" width="20%">
         <a href="https://github.com/DVDAndroid"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/6277172?u=78aa9b049a0c1a7ae5408d22219a8a91cfe45095&v=4&size=100"><br />DVDAndroid</a>
       </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/ActxLeToucan"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/56509120?u=b0a684dfa1fcf8f3f41c2ead37f6441716d8bd62&v=4&size=100"><br />ActxLeToucan</a>
+      </td>
     </tr>
   </tbody>
 </table>
