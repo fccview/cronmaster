@@ -12,3 +12,4 @@ node_modules
 .DS_Store
 .cursorignore
 tsconfig.tsbuildinfo
+docker-compose.test.yml
