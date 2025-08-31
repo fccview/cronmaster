@@ -49,7 +49,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:1.3.1
+    image: ghcr.io/fccview/cronmaster:1.4.0
     container_name: cronmaster
     user: "root"
     ports:
@@ -58,17 +58,26 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER=true
-      # Legacy used to be NEXT_PUBLIC_HOST_PROJECT_DIR, this was causing issues on runtime.
+
+      # --- MAP HOST PROJECT DIRECTORY, THIS IS MANDATORY FOR SCRIPTS TO WORK
       - HOST_PROJECT_DIR=/path/to/cronmaster/directory
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      # If docker struggles to find your crontab user, update this variable with it.
-      # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
+
+      # --- PASSWORD PROTECTION
+      # Uncomment to enable password protection (replace "password" with your own)
+      #- AUTH_PASSWORD=password
+
+      # --- CRONTAB USERS
+      # This is used to read the crontabs for the specific user.
+      # replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
       # For multiple users, use comma-separated values: HOST_CRONTAB_USER=fccview,root,user1,user2
       # - HOST_CRONTAB_USER=fccview
     volumes:
+      # --- MOUNT DOCKER SOCKET
       # Mount Docker socket to execute commands on host
       - /var/run/docker.sock:/var/run/docker.sock
 
+      # --- MOUNT DATA
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
       # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
       # will target this folder (thanks to the HOST_PROJECT_DIR variable set above)
@@ -76,14 +85,14 @@ services:
       - ./data:/app/data
       - ./snippets:/app/snippets
 
-    # Use host PID namespace for host command execution
-    # Run in privileged mode for nsenter access
+    # --- USE HOST PID NAMESPACE FOR HOST COMMAND EXECUTION
+    # --- RUN IN PRIVILEGED MODE FOR NSENTER ACCESS
     pid: "host"
     privileged: true
     restart: unless-stopped
     init: true
 
-    # Default platform is set to amd64, uncomment to use arm64.
+    # --- DEFAULT PLATFORM IS SET TO AMD64, UNCOMMENT TO USE ARM64.
     #platform: linux/arm64
 ```
 
@@ -243,6 +252,9 @@ I would like to thank the following members for raising issues and help test/deb
       </td>
       <td align="center" valign="top" width="20%">
         <a href="https://github.com/ActxLeToucan"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/56509120?u=b0a684dfa1fcf8f3f41c2ead37f6441716d8bd62&v=4&size=100"><br />ActxLeToucan</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/mrtimothyduong"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/34667840?u=b54354da56681c17ca58366a68a6a94c80f77a1d&v=4&size=100"><br />mrtimothyduong</a>
       </td>
     </tr>
   </tbody>

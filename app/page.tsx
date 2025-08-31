@@ -3,6 +3,7 @@ import { TabbedInterface } from "./_components/TabbedInterface";
 import { getCronJobs } from "./_utils/system";
 import { fetchScripts } from "./_server/actions/scripts";
 import { ThemeToggle } from "./_components/ui/ThemeToggle";
+import { LogoutButton } from "./_components/ui/LogoutButton";
 import { ToastContainer } from "./_components/ui/Toast";
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function Home() {
       <div className="relative z-10">
         <header className="border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-20 shadow-sm lg:h-[90px]">
           <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-between lg:justify-center">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <img src="/logo.png" alt="logo" className="w-14 h-14" />
@@ -67,6 +68,11 @@ export default async function Home() {
                   </p>
                 </div>
               </div>
+              {process.env.AUTH_PASSWORD && (
+                <div className="lg:absolute lg:right-10">
+                  <LogoutButton />
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -82,7 +88,7 @@ export default async function Home() {
 
       <ToastContainer />
 
-      <div className="flex items-center gap-2 fixed bottom-4 left-4 lg:right-4 lg:left-auto z-10 bg-background rounded-lg">
+      <div className="flex items-center gap-2 fixed bottom-4 left-4 lg:right-4 lg:left-auto z-10 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg p-1">
         <ThemeToggle />
       </div>
     </div>

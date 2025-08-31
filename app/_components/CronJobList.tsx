@@ -159,14 +159,8 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
       const result = await runCronJob(id);
       if (result.success) {
         showToast("success", "Cron job executed successfully");
-        if (result.output) {
-          console.log("Command output:", result.output);
-        }
       } else {
         showToast("error", "Failed to execute cron job", result.message);
-        if (result.output) {
-          console.error("Command error:", result.output);
-        }
       }
     } catch (error) {
       showToast(
