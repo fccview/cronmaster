@@ -53,7 +53,9 @@ export const pauseJobInLines = (lines: string[], targetJobIndex: number): string
                     currentJobIndex++;
                 } else {
                     newCronEntries.push(line);
-                    i++;
+                    newCronEntries.push(lines[i + 1]);
+                    i += 2;
+                    currentJobIndex++;
                 }
             } else {
                 newCronEntries.push(line);
@@ -295,8 +297,10 @@ export const deleteJobInLines = (lines: string[], targetJobIndex: number): strin
             ) {
                 if (currentJobIndex !== targetJobIndex) {
                     newCronEntries.push(line);
+                    newCronEntries.push(lines[i + 1]);
                 }
-                i++;
+                i += 2;
+                currentJobIndex++;
             } else {
                 newCronEntries.push(line);
                 i++;
@@ -385,8 +389,10 @@ export const updateJobInLines = (
                     i += 2;
                 } else {
                     newCronEntries.push(line);
-                    i++;
+                    newCronEntries.push(lines[i + 1]);
+                    i += 2;
                 }
+                currentJobIndex++;
             } else {
                 newCronEntries.push(line);
                 i++;
