@@ -49,7 +49,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:1.4.0
+    image: ghcr.io/fccview/cronmaster:latest
     container_name: cronmaster
     user: "root"
     ports:
@@ -64,14 +64,14 @@ services:
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
 
       # --- PASSWORD PROTECTION
-      # Uncomment to enable password protection (replace "password" with your own)
-      #- AUTH_PASSWORD=password
+      # Uncomment to enable password protection (replace "very_strong_password" with your own)
+      - AUTH_PASSWORD=very_strong_password
 
       # --- CRONTAB USERS
       # This is used to read the crontabs for the specific user.
-      # replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
-      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=fccview,root,user1,user2
-      # - HOST_CRONTAB_USER=fccview
+      # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
+      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,user1,user2
+      - HOST_CRONTAB_USER=root
     volumes:
       # --- MOUNT DOCKER SOCKET
       # Mount Docker socket to execute commands on host
@@ -89,7 +89,7 @@ services:
     # --- RUN IN PRIVILEGED MODE FOR NSENTER ACCESS
     pid: "host"
     privileged: true
-    restart: unless-stopped
+    restart: always
     init: true
 
     # --- DEFAULT PLATFORM IS SET TO AMD64, UNCOMMENT TO USE ARM64.
@@ -163,7 +163,6 @@ HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 ### Important Notes for Docker
 
 - Root user is required for cron operations and direct file access. There is no way around this, if you don't feel comfortable in running it as root feel free to run the app locally with `yarn install`, `yarn build` and `yarn start`
-- Crontab files are accessed directly via file system mounts at `/host/cron/crontabs` and `/host/crontab` for real-time reading and writing
 - `HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
 - The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
 
@@ -173,9 +172,6 @@ HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 
 The application automatically detects your operating system and displays:
 
-- Platform
-- Hostname
-- IP Address
 - System Uptime
 - Memory Usage
 - CPU Information
@@ -272,3 +268,7 @@ This project is licensed under the MIT License.
 ## Support
 
 For issues and questions, please open an issue on the GitHub repository.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=fccview/cronmaster&type=Date)](https://www.star-history.com/#fccview/cronmaster&Date)

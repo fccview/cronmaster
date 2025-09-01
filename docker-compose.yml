@@ -1,6 +1,6 @@
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:1.4.0
+    image: ghcr.io/fccview/cronmaster:latest
     container_name: cronmaster
     user: "root"
     ports:
@@ -16,13 +16,13 @@ services:
 
       # --- PASSWORD PROTECTION
       # Uncomment to enable password protection (replace "password" with your own)
-      #- AUTH_PASSWORD=password
+      - AUTH_PASSWORD=very_strong_password
 
       # --- CRONTAB USERS
       # This is used to read the crontabs for the specific user.
-      # replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
-      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=fccview,root,user1,user2
-      # - HOST_CRONTAB_USER=fccview
+      # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
+      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,user1,user2
+      - HOST_CRONTAB_USER=root
     volumes:
       # --- MOUNT DOCKER SOCKET
       # Mount Docker socket to execute commands on host
@@ -40,7 +40,7 @@ services:
     # --- RUN IN PRIVILEGED MODE FOR NSENTER ACCESS
     pid: "host"
     privileged: true
-    restart: unless-stopped
+    restart: always
     init: true
 
     # --- DEFAULT PLATFORM IS SET TO AMD64, UNCOMMENT TO USE ARM64.
