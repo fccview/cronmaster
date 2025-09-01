@@ -49,7 +49,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 ```bash
 services:
   cronjob-manager:
-    image: ghcr.io/fccview/cronmaster:1.3.1
+    image: ghcr.io/fccview/cronmaster:latest
     container_name: cronmaster
     user: "root"
     ports:
@@ -58,17 +58,26 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER=true
-      # Legacy used to be NEXT_PUBLIC_HOST_PROJECT_DIR, this was causing issues on runtime.
+
+      # --- MAP HOST PROJECT DIRECTORY, THIS IS MANDATORY FOR SCRIPTS TO WORK
       - HOST_PROJECT_DIR=/path/to/cronmaster/directory
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-      # If docker struggles to find your crontab user, update this variable with it.
-      # Obviously replace fccview with your user - find it with: ls -asl /var/spool/cron/crontabs/
-      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=fccview,root,user1,user2
-      # - HOST_CRONTAB_USER=fccview
+
+      # --- PASSWORD PROTECTION
+      # Uncomment to enable password protection (replace "very_strong_password" with your own)
+      - AUTH_PASSWORD=very_strong_password
+
+      # --- CRONTAB USERS
+      # This is used to read the crontabs for the specific user.
+      # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
+      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,user1,user2
+      - HOST_CRONTAB_USER=root
     volumes:
+      # --- MOUNT DOCKER SOCKET
       # Mount Docker socket to execute commands on host
       - /var/run/docker.sock:/var/run/docker.sock
 
+      # --- MOUNT DATA
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
       # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
       # will target this folder (thanks to the HOST_PROJECT_DIR variable set above)
@@ -76,14 +85,14 @@ services:
       - ./data:/app/data
       - ./snippets:/app/snippets
 
-    # Use host PID namespace for host command execution
-    # Run in privileged mode for nsenter access
+    # --- USE HOST PID NAMESPACE FOR HOST COMMAND EXECUTION
+    # --- RUN IN PRIVILEGED MODE FOR NSENTER ACCESS
     pid: "host"
     privileged: true
-    restart: unless-stopped
+    restart: always
     init: true
 
-    # Default platform is set to amd64, uncomment to use arm64.
+    # --- DEFAULT PLATFORM IS SET TO AMD64, UNCOMMENT TO USE ARM64.
     #platform: linux/arm64
 ```
 
@@ -136,6 +145,8 @@ The following environment variables can be configured:
 | `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds)                                          |
 | `HOST_PROJECT_DIR`                  | `N/A`   | Mandatory variable to make sure cron runs on the right path.                                |
 | `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
+| `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
+| `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
 
 **Example**: To change the clock update interval to 60 seconds:
 
@@ -152,7 +163,6 @@ HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 ### Important Notes for Docker
 
 - Root user is required for cron operations and direct file access. There is no way around this, if you don't feel comfortable in running it as root feel free to run the app locally with `yarn install`, `yarn build` and `yarn start`
-- Crontab files are accessed directly via file system mounts at `/host/cron/crontabs` and `/host/crontab` for real-time reading and writing
 - `HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
 - The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
 
@@ -162,9 +172,6 @@ HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 
 The application automatically detects your operating system and displays:
 
-- Platform
-- Hostname
-- IP Address
 - System Uptime
 - Memory Usage
 - CPU Information
@@ -244,6 +251,12 @@ I would like to thank the following members for raising issues and help test/deb
       <td align="center" valign="top" width="20%">
         <a href="https://github.com/ActxLeToucan"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/56509120?u=b0a684dfa1fcf8f3f41c2ead37f6441716d8bd62&v=4&size=100"><br />ActxLeToucan</a>
       </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/mrtimothyduong"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/34667840?u=b54354da56681c17ca58366a68a6a94c80f77a1d&v=4&size=100"><br />mrtimothyduong</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/cerede2000"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/38144752?v=4&size=100"><br />cerede2000</a>
+      </td>
     </tr>
   </tbody>
 </table>
@@ -255,3 +268,7 @@ This project is licensed under the MIT License.
 ## Support
 
 For issues and questions, please open an issue on the GitHub repository.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=fccview/cronmaster&type=Date)](https://www.star-history.com/#fccview/cronmaster&Date)

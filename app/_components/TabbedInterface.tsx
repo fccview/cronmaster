@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CronJobList } from "./CronJobList";
+import { CronJobList } from "./features/Cronjobs/CronJobList";
 import { ScriptsManager } from "./ScriptsManager";
 import { CronJob } from "@/app/_utils/system";
 import { type Script } from "@/app/_server/actions/scripts";
@@ -12,7 +12,10 @@ interface TabbedInterfaceProps {
   scripts: Script[];
 }
 
-export const TabbedInterface = ({ cronJobs, scripts }: TabbedInterfaceProps) => {
+export const TabbedInterface = ({
+  cronJobs,
+  scripts,
+}: TabbedInterfaceProps) => {
   const [activeTab, setActiveTab] = useState<"cronjobs" | "scripts">(
     "cronjobs"
   );
@@ -23,10 +26,11 @@ export const TabbedInterface = ({ cronJobs, scripts }: TabbedInterfaceProps) => 
         <div className="flex">
           <button
             onClick={() => setActiveTab("cronjobs")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${activeTab === "cronjobs"
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${
+              activeTab === "cronjobs"
                 ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+            }`}
           >
             <Clock className="h-4 w-4" />
             Cron Jobs
@@ -36,10 +40,11 @@ export const TabbedInterface = ({ cronJobs, scripts }: TabbedInterfaceProps) => 
           </button>
           <button
             onClick={() => setActiveTab("scripts")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${activeTab === "scripts"
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${
+              activeTab === "scripts"
                 ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+            }`}
           >
             <FileText className="h-4 w-4" />
             Scripts
@@ -59,4 +64,4 @@ export const TabbedInterface = ({ cronJobs, scripts }: TabbedInterfaceProps) => 
       </div>
     </div>
   );
-}
+};

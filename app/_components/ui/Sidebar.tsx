@@ -92,7 +92,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         >
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -right-3 top-6 w-6 h-6 bg-background border border-border rounded-full items-center justify-center hover:bg-accent transition-colors z-40 hidden lg:flex"
+            className="absolute -right-3 top-[21.5vh] w-6 h-6 bg-background border border-border rounded-full items-center justify-center hover:bg-accent transition-colors z-40 hidden lg:flex"
           >
             {isCollapsed ? (
               <ChevronRight className="h-3 w-3" />

@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
             statusDetails = "Moderate resource usage - monitoring recommended";
         }
 
-        let mainInterface = null;
+        let mainInterface: any = null;
         if (Array.isArray(networkInfo) && networkInfo.length > 0) {
             mainInterface = networkInfo.find(net =>
                 net.iface && !net.iface.includes('lo') && net.operstate === 'up'
