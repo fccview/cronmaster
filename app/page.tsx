@@ -5,6 +5,7 @@ import { fetchScripts } from "./_server/actions/scripts";
 import { ThemeToggle } from "./_components/ui/ThemeToggle";
 import { LogoutButton } from "./_components/ui/LogoutButton";
 import { ToastContainer } from "./_components/ui/Toast";
+import { PWAInstallPrompt } from "./_components/ui/PWAInstallPrompt";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
@@ -90,6 +91,7 @@ export default async function Home() {
 
       <div className="flex items-center gap-2 fixed bottom-4 left-4 lg:right-4 lg:left-auto z-10 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg p-1">
         <ThemeToggle />
+        <PWAInstallPrompt />
       </div>
     </div>
   );
