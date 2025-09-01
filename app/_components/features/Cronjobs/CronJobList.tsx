@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
-import { Button } from "./ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/Card";
+import { Button } from "../../ui/Button";
 import {
   Trash2,
   Clock,
@@ -24,13 +24,31 @@ import {
   runCronJob,
 } from "@/app/_server/actions/cronjobs";
 import { useState, useMemo, useEffect } from "react";
-import { CreateTaskModal } from "./modals/CreateTaskModal";
-import { EditTaskModal } from "./modals/EditTaskModal";
-import { DeleteTaskModal } from "./modals/DeleteTaskModal";
-import { CloneTaskModal } from "./modals/CloneTaskModal";
-import { UserFilter } from "./ui/UserFilter";
+import { CreateTaskModal } from "../../modals/CreateTaskModal";
+import { EditTaskModal } from "../../modals/EditTaskModal";
+import { DeleteTaskModal } from "../../modals/DeleteTaskModal";
+import { CloneTaskModal } from "../../modals/CloneTaskModal";
+import { UserFilter } from "../../ui/UserFilter";
+import { ErrorBadge } from "../../ui/ErrorBadge";
+import { ErrorDetailsModal } from "../../modals/ErrorDetailsModal";
 import { type Script } from "@/app/_server/actions/scripts";
-import { showToast } from "./ui/Toast";
+import { showToast } from "../../ui/Toast";
+import {
+  getJobErrorsByJobId,
+  setJobError,
+  JobError,
+} from "@/app/_utils/errorState";
+import {
+  handleErrorClick,
+  refreshJobErrors,
+  handleDelete,
+  handleClone,
+  handlePause,
+  handleResume,
+  handleRun,
+  handleEditSubmit,
+  handleNewCronSubmit,
+} from "./helpers";
 
 interface CronJobListProps {
   cronJobs: CronJob[];
@@ -49,6 +67,9 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
   const [isCloning, setIsCloning] = useState(false);
   const [runningJobId, setRunningJobId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [jobErrors, setJobErrors] = useState<Record<string, JobError[]>>({});
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [selectedError, setSelectedError] = useState<JobError | null>(null);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("selectedCronUser");
@@ -83,94 +104,95 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     return cronJobs.filter((job) => job.user === selectedUser);
   }, [cronJobs, selectedUser]);
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
-    try {
-      const result = await removeCronJob(id);
-      if (result.success) {
-        showToast("success", "Cron job deleted successfully");
-      } else {
-        showToast("error", "Failed to delete cron job", result.message);
-      }
-    } catch (error) {
-      showToast(
-        "error",
-        "Failed to delete cron job",
-        "Please try again later."
-      );
-    } finally {
-      setDeletingId(null);
-      setIsDeleteModalOpen(false);
-      setJobToDelete(null);
-    }
+  useEffect(() => {
+    const errors: Record<string, JobError[]> = {};
+    filteredJobs.forEach((job) => {
+      errors[job.id] = getJobErrorsByJobId(job.id);
+    });
+    setJobErrors(errors);
+  }, [filteredJobs]);
+
+  const handleErrorClickLocal = (error: JobError) => {
+    handleErrorClick(error, setSelectedError, setErrorModalOpen);
   };
 
-  const handleClone = async (newComment: string) => {
-    if (!jobToClone) return;
-
-    setIsCloning(true);
-    try {
-      const result = await cloneCronJob(jobToClone.id, newComment);
-      if (result.success) {
-        setIsCloneModalOpen(false);
-        setJobToClone(null);
-        showToast("success", "Cron job cloned successfully");
-      } else {
-        showToast("error", "Failed to clone cron job", result.message);
-      }
-    } finally {
-      setIsCloning(false);
-    }
+  const refreshJobErrorsLocal = () => {
+    const errors: Record<string, JobError[]> = {};
+    filteredJobs.forEach((job) => {
+      errors[job.id] = getJobErrorsByJobId(job.id);
+    });
+    setJobErrors(errors);
   };
 
-  const handlePause = async (id: string) => {
-    try {
-      const result = await pauseCronJobAction(id);
-      if (result.success) {
-        showToast("success", "Cron job paused successfully");
-      } else {
-        showToast("error", "Failed to pause cron job", result.message);
-      }
-    } catch (error) {
-      showToast("error", "Failed to pause cron job", "Please try again later.");
-    }
+  const handleDeleteLocal = async (id: string) => {
+    await handleDelete(id, {
+      setDeletingId,
+      setIsDeleteModalOpen,
+      setJobToDelete,
+      setIsCloneModalOpen,
+      setJobToClone,
+      setIsCloning,
+      setIsEditModalOpen,
+      setEditingJob,
+      setIsNewCronModalOpen,
+      setNewCronForm,
+      setRunningJobId,
+      refreshJobErrors: refreshJobErrorsLocal,
+      jobToClone,
+      editingJob,
+      editForm,
+      newCronForm,
+    });
   };
 
-  const handleResume = async (id: string) => {
-    try {
-      const result = await resumeCronJobAction(id);
-      if (result.success) {
-        showToast("success", "Cron job resumed successfully");
-      } else {
-        showToast("error", "Failed to resume cron job", result.message);
-      }
-    } catch (error) {
-      showToast(
-        "error",
-        "Failed to resume cron job",
-        "Please try again later."
-      );
-    }
+  const handleCloneLocal = async (newComment: string) => {
+    await handleClone(newComment, {
+      setDeletingId,
+      setIsDeleteModalOpen,
+      setJobToDelete,
+      setIsCloneModalOpen,
+      setJobToClone,
+      setIsCloning,
+      setIsEditModalOpen,
+      setEditingJob,
+      setIsNewCronModalOpen,
+      setNewCronForm,
+      setRunningJobId,
+      refreshJobErrors: refreshJobErrorsLocal,
+      jobToClone,
+      editingJob,
+      editForm,
+      newCronForm,
+    });
   };
 
-  const handleRun = async (id: string) => {
-    setRunningJobId(id);
-    try {
-      const result = await runCronJob(id);
-      if (result.success) {
-        showToast("success", "Cron job executed successfully");
-      } else {
-        showToast("error", "Failed to execute cron job", result.message);
-      }
-    } catch (error) {
-      showToast(
-        "error",
-        "Failed to execute cron job",
-        "Please try again later."
-      );
-    } finally {
-      setRunningJobId(null);
-    }
+  const handlePauseLocal = async (id: string) => {
+    await handlePause(id);
+  };
+
+  const handleResumeLocal = async (id: string) => {
+    await handleResume(id);
+  };
+
+  const handleRunLocal = async (id: string) => {
+    await handleRun(id, {
+      setDeletingId,
+      setIsDeleteModalOpen,
+      setJobToDelete,
+      setIsCloneModalOpen,
+      setJobToClone,
+      setIsCloning,
+      setIsEditModalOpen,
+      setEditingJob,
+      setIsNewCronModalOpen,
+      setNewCronForm,
+      setRunningJobId,
+      refreshJobErrors: refreshJobErrorsLocal,
+      jobToClone,
+      editingJob,
+      editForm,
+      newCronForm,
+    });
   };
 
   const confirmDelete = (job: CronJob) => {
@@ -193,68 +215,46 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     setIsEditModalOpen(true);
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingJob) return;
-
-    try {
-      const formData = new FormData();
-      formData.append("id", editingJob.id);
-      formData.append("schedule", editForm.schedule);
-      formData.append("command", editForm.command);
-      formData.append("comment", editForm.comment);
-
-      const result = await editCronJob(formData);
-      if (result.success) {
-        setIsEditModalOpen(false);
-        setEditingJob(null);
-        showToast("success", "Cron job updated successfully");
-      } else {
-        showToast("error", "Failed to update cron job", result.message);
-      }
-    } catch (error) {
-      showToast(
-        "error",
-        "Failed to update cron job",
-        "Please try again later."
-      );
-    }
+  const handleEditSubmitLocal = async (e: React.FormEvent) => {
+    await handleEditSubmit(e, {
+      setDeletingId,
+      setIsDeleteModalOpen,
+      setJobToDelete,
+      setIsCloneModalOpen,
+      setJobToClone,
+      setIsCloning,
+      setIsEditModalOpen,
+      setEditingJob,
+      setIsNewCronModalOpen,
+      setNewCronForm,
+      setRunningJobId,
+      refreshJobErrors: refreshJobErrorsLocal,
+      jobToClone,
+      editingJob,
+      editForm,
+      newCronForm,
+    });
   };
 
-  const handleNewCronSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const formData = new FormData();
-      formData.append("schedule", newCronForm.schedule);
-      formData.append("command", newCronForm.command);
-      formData.append("comment", newCronForm.comment);
-      formData.append("user", newCronForm.user);
-      if (newCronForm.selectedScriptId) {
-        formData.append("selectedScriptId", newCronForm.selectedScriptId);
-      }
-
-      const result = await createCronJob(formData);
-      if (result.success) {
-        setIsNewCronModalOpen(false);
-        setNewCronForm({
-          schedule: "",
-          command: "",
-          comment: "",
-          selectedScriptId: null,
-          user: "",
-        });
-        showToast("success", "Cron job created successfully");
-      } else {
-        showToast("error", "Failed to create cron job", result.message);
-      }
-    } catch (error) {
-      showToast(
-        "error",
-        "Failed to create cron job",
-        "Please try again later."
-      );
-    }
+  const handleNewCronSubmitLocal = async (e: React.FormEvent) => {
+    await handleNewCronSubmit(e, {
+      setDeletingId,
+      setIsDeleteModalOpen,
+      setJobToDelete,
+      setIsCloneModalOpen,
+      setJobToClone,
+      setIsCloning,
+      setIsEditModalOpen,
+      setEditingJob,
+      setIsNewCronModalOpen,
+      setNewCronForm,
+      setRunningJobId,
+      refreshJobErrors: refreshJobErrorsLocal,
+      jobToClone,
+      editingJob,
+      editForm,
+      newCronForm,
+    });
   };
 
   return (
@@ -352,6 +352,11 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                             Paused
                           </span>
                         )}
+                        <ErrorBadge
+                          errors={jobErrors[job.id] || []}
+                          onErrorClick={handleErrorClickLocal}
+                          onErrorDismiss={refreshJobErrorsLocal}
+                        />
                       </div>
 
                       {job.comment && (
@@ -368,7 +373,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRun(job.id)}
+                        onClick={() => handleRunLocal(job.id)}
                         disabled={runningJobId === job.id || job.paused}
                         className="btn-outline h-8 px-3"
                         title="Run cron job manually"
@@ -404,7 +409,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleResume(job.id)}
+                          onClick={() => handleResumeLocal(job.id)}
                           className="btn-outline h-8 px-3"
                           title="Resume cron job"
                           aria-label="Resume cron job"
@@ -415,7 +420,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handlePause(job.id)}
+                          onClick={() => handlePauseLocal(job.id)}
                           className="btn-outline h-8 px-3"
                           title="Pause cron job"
                           aria-label="Pause cron job"
@@ -450,7 +455,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
       <CreateTaskModal
         isOpen={isNewCronModalOpen}
         onClose={() => setIsNewCronModalOpen(false)}
-        onSubmit={handleNewCronSubmit}
+        onSubmit={handleNewCronSubmitLocal}
         scripts={scripts}
         form={newCronForm}
         onFormChange={(updates) =>
@@ -461,7 +466,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
       <EditTaskModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onSubmit={handleEditSubmit}
+        onSubmit={handleEditSubmitLocal}
         form={editForm}
         onFormChange={(updates) =>
           setEditForm((prev) => ({ ...prev, ...updates }))
@@ -472,7 +477,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={() =>
-          jobToDelete ? handleDelete(jobToDelete.id) : undefined
+          jobToDelete ? handleDeleteLocal(jobToDelete.id) : undefined
         }
         job={jobToDelete}
       />
@@ -481,9 +486,29 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         cronJob={jobToClone}
         isOpen={isCloneModalOpen}
         onClose={() => setIsCloneModalOpen(false)}
-        onConfirm={handleClone}
+        onConfirm={handleCloneLocal}
         isCloning={isCloning}
       />
+
+      {errorModalOpen && selectedError && (
+        <ErrorDetailsModal
+          isOpen={errorModalOpen}
+          onClose={() => {
+            setErrorModalOpen(false);
+            setSelectedError(null);
+          }}
+          error={{
+            title: selectedError.title,
+            message: selectedError.message,
+            details: selectedError.details,
+            command: selectedError.command,
+            output: selectedError.output,
+            stderr: selectedError.stderr,
+            timestamp: selectedError.timestamp,
+            jobId: selectedError.jobId,
+          }}
+        />
+      )}
     </>
   );
-}
+};

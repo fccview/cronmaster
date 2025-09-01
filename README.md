@@ -145,6 +145,8 @@ The following environment variables can be configured:
 | `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds)                                          |
 | `HOST_PROJECT_DIR`                  | `N/A`   | Mandatory variable to make sure cron runs on the right path.                                |
 | `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
+| `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
+| `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
 
 **Example**: To change the clock update interval to 60 seconds:
 
@@ -255,6 +257,9 @@ I would like to thank the following members for raising issues and help test/deb
       </td>
       <td align="center" valign="top" width="20%">
         <a href="https://github.com/mrtimothyduong"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/34667840?u=b54354da56681c17ca58366a68a6a94c80f77a1d&v=4&size=100"><br />mrtimothyduong</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/cerede2000"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/38144752?v=4&size=100"><br />cerede2000</a>
       </td>
     </tr>
   </tbody>

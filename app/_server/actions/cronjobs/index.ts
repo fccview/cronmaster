@@ -10,7 +10,10 @@ import {
   cleanupCrontab,
   type CronJob,
 } from "@/app/_utils/system";
-import { getAllTargetUsers, getUserInfo } from "@/app/_utils/system/hostCrontab";
+import {
+  getAllTargetUsers,
+  getUserInfo,
+} from "@/app/_utils/system/hostCrontab";
 import { revalidatePath } from "next/cache";
 import { getScriptPath } from "@/app/_utils/scripts";
 import { exec } from "child_process";
@@ -25,11 +28,11 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
     console.error("Error fetching cron jobs:", error);
     return [];
   }
-}
+};
 
 export const createCronJob = async (
   formData: FormData
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const schedule = formData.get("schedule") as string;
     const command = formData.get("command") as string;
@@ -67,15 +70,19 @@ export const createCronJob = async (
     } else {
       return { success: false, message: "Failed to create cron job" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating cron job:", error);
-    return { success: false, message: "Error creating cron job" };
+    return {
+      success: false,
+      message: error.message || "Error creating cron job",
+      details: error.stack,
+    };
   }
-}
+};
 
 export const removeCronJob = async (
   id: string
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const success = await deleteCronJob(id);
     if (success) {
@@ -84,15 +91,19 @@ export const removeCronJob = async (
     } else {
       return { success: false, message: "Failed to delete cron job" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting cron job:", error);
-    return { success: false, message: "Error deleting cron job" };
+    return {
+      success: false,
+      message: error.message || "Error deleting cron job",
+      details: error.stack,
+    };
   }
-}
+};
 
 export const editCronJob = async (
   formData: FormData
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const id = formData.get("id") as string;
     const schedule = formData.get("schedule") as string;
@@ -110,16 +121,20 @@ export const editCronJob = async (
     } else {
       return { success: false, message: "Failed to update cron job" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating cron job:", error);
-    return { success: false, message: "Error updating cron job" };
+    return {
+      success: false,
+      message: error.message || "Error updating cron job",
+      details: error.stack,
+    };
   }
-}
+};
 
 export const cloneCronJob = async (
   id: string,
   newComment: string
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const cronJobs = await getCronJobs();
     const originalJob = cronJobs.find((job) => job.id === id);
@@ -141,15 +156,19 @@ export const cloneCronJob = async (
     } else {
       return { success: false, message: "Failed to clone cron job" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error cloning cron job:", error);
-    return { success: false, message: "Error cloning cron job" };
+    return {
+      success: false,
+      message: error.message || "Error cloning cron job",
+      details: error.stack,
+    };
   }
-}
+};
 
 export const pauseCronJobAction = async (
   id: string
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const success = await pauseCronJob(id);
     if (success) {
@@ -158,15 +177,19 @@ export const pauseCronJobAction = async (
     } else {
       return { success: false, message: "Failed to pause cron job" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error pausing cron job:", error);
-    return { success: false, message: "Error pausing cron job" };
+    return {
+      success: false,
+      message: error.message || "Error pausing cron job",
+      details: error.stack,
+    };
   }
-}
+};
 
 export const resumeCronJobAction = async (
   id: string
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const success = await resumeCronJob(id);
     if (success) {
@@ -175,11 +198,15 @@ export const resumeCronJobAction = async (
     } else {
       return { success: false, message: "Failed to resume cron job" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error resuming cron job:", error);
-    return { success: false, message: "Error resuming cron job" };
+    return {
+      success: false,
+      message: error.message || "Error resuming cron job",
+      details: error.stack,
+    };
   }
-}
+};
 
 export const fetchAvailableUsers = async (): Promise<string[]> => {
   try {
@@ -188,9 +215,13 @@ export const fetchAvailableUsers = async (): Promise<string[]> => {
     console.error("Error fetching available users:", error);
     return [];
   }
-}
+};
 
-export const cleanupCrontabAction = async (): Promise<{ success: boolean; message: string }> => {
+export const cleanupCrontabAction = async (): Promise<{
+  success: boolean;
+  message: string;
+  details?: string;
+}> => {
   try {
     const success = await cleanupCrontab();
     if (success) {
@@ -199,15 +230,24 @@ export const cleanupCrontabAction = async (): Promise<{ success: boolean; messag
     } else {
       return { success: false, message: "Failed to clean crontab" };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error cleaning crontab:", error);
-    return { success: false, message: "Error cleaning crontab" };
+    return {
+      success: false,
+      message: error.message || "Error cleaning crontab",
+      details: error.stack,
+    };
   }
-}
+};
 
 export const runCronJob = async (
   id: string
-): Promise<{ success: boolean; message: string; output?: string }> => {
+): Promise<{
+  success: boolean;
+  message: string;
+  output?: string;
+  details?: string;
+}> => {
   try {
     const cronJobs = await getCronJobs();
     const job = cronJobs.find((j) => j.id === id);
@@ -243,15 +283,17 @@ export const runCronJob = async (
     return {
       success: true,
       message: "Cron job executed successfully",
-      output: output.trim()
+      output: output.trim(),
     };
   } catch (error: any) {
     console.error("Error running cron job:", error);
-    const errorMessage = error.stderr || error.message || "Unknown error occurred";
+    const errorMessage =
+      error.stderr || error.message || "Unknown error occurred";
     return {
       success: false,
       message: "Failed to execute cron job",
-      output: errorMessage
+      output: errorMessage,
+      details: error.stack,
     };
   }
-}
+};
