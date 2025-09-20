@@ -6,7 +6,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { SCRIPTS_DIR } from "@/app/_utils/scripts";
+import { SCRIPTS_DIR, normalizeLineEndings } from "@/app/_utils/scripts";
 import { loadAllScripts, type Script } from "@/app/_utils/scriptScanner";
 
 const execAsync = promisify(exec);
@@ -62,7 +62,9 @@ const saveScriptFile = async (filename: string, content: string) => {
 }
 
 const deleteScriptFile = async (filename: string) => {
-  const scriptPath = join(await SCRIPTS_DIR(), filename);
+  const isDocker = process.env.DOCKER === "true";
+  const scriptsDir = isDocker ? "/app/scripts" : await SCRIPTS_DIR();
+  const scriptPath = join(scriptsDir, filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
   }
@@ -95,7 +97,8 @@ export const createScript = async (
 
 `;
 
-    const fullContent = metadataHeader + content;
+    const normalizedContent = normalizeLineEndings(content);
+    const fullContent = metadataHeader + normalizedContent;
 
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
@@ -145,7 +148,8 @@ export const updateScript = async (
 
 `;
 
-    const fullContent = metadataHeader + content;
+    const normalizedContent = normalizeLineEndings(content);
+    const fullContent = metadataHeader + normalizedContent;
 
     await saveScriptFile(existingScript.filename, fullContent);
     revalidatePath("/");
@@ -203,7 +207,8 @@ export const cloneScript = async (
 
 `;
 
-    const fullContent = metadataHeader + originalContent;
+    const normalizedContent = normalizeLineEndings(originalContent);
+    const fullContent = metadataHeader + normalizedContent;
 
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
