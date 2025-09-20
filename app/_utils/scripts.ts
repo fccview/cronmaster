@@ -21,4 +21,8 @@ export const getHostScriptPath = async (filename: string): Promise<string> => {
   return `bash ${join(hostScriptsDir, filename)}`;
 }
 
+export const normalizeLineEndings = (content: string): string => {
+  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+};
+
 export { SCRIPTS_DIR };
