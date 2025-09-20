@@ -2,7 +2,7 @@ name: Docker
 
 on:
   push:
-    branches: ["main", "legacy", "feature/*", "bugfix/*"]
+    branches: ["main", "legacy", "feature/*"]
     tags: ["*"]
   pull_request:
     branches: ["main"]
