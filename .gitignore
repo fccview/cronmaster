@@ -11,5 +11,6 @@ node_modules
 .vscode
 .DS_Store
 .cursorignore
+.idea
 tsconfig.tsbuildinfo
 docker-compose.test.yml

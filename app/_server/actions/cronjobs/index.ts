@@ -267,7 +267,7 @@ export const runCronJob = async (
       const userInfo = await getUserInfo(job.user);
 
       if (userInfo && userInfo.username !== "root") {
-        command = `nsenter -t 1 -m -u -i -n -p --setuid=${userInfo.uid} --setgid=${userInfo.gid} sh -c "${job.command}"`;
+        command = `nsenter -t 1 -m -u -i -n -p sh -c "setpriv --reuid=${userInfo.uid} --regid=${userInfo.gid} --init-groups -- sh -c \\"${job.command}\\""`
       } else {
         command = `nsenter -t 1 -m -u -i -n -p sh -c "${job.command}"`;
       }
