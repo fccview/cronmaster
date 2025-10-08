@@ -153,7 +153,7 @@ The following environment variables can be configured:
 | `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
 | `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
 | `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
-| `DOCKER_EXEC_USER`                  | `N/A`   | If you don't set this user you won't be able to run docker commands as root.                |
+| `DOCKER_EXEC_USER`                  | `N/A`   | If you don't set this user you won't be able to run docker commands as root                 |
 
 **Example**: To change the clock update interval to 60 seconds:
 
