@@ -270,9 +270,6 @@ export const runCronJob = async (
       let executionUser = userInfo ? userInfo.username : "root";
 
       if (dockerExecUser && executionUser === "root") {
-        console.log(
-          `Overriding root execution. Running command as user: ${dockerExecUser}`
-        );
         executionUser = dockerExecUser;
       }
 
