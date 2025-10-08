@@ -171,7 +171,7 @@ HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 - `HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
 - The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
 
-**Please Note**: If you want to run `docker compose` commands as `root` within your cron jobs (highly discouraged btw), you will need to install Docker with root privileges. Otherwise, `docker compose` won't be found when executing commands.
+**Important Note on Root Commands**: When running commands as `root` within Cronmaster, ensure that these commands also function correctly as `root` on your host machine. If a command works as `root` on your host but fails within Cronmaster, please open an issue with detailed information.
 
 ## Usage
 
