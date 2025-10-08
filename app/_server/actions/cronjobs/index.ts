@@ -265,12 +265,19 @@ export const runCronJob = async (
 
     if (isDocker) {
       const userInfo = await getUserInfo(job.user);
+      const dockerExecUser = process.env.DOCKER_EXEC_USER;
 
-      if (userInfo && userInfo.username !== "root") {
-        command = `nsenter -t 1 -m -u -i -n -p sh -c "setpriv --reuid=${userInfo.uid} --regid=${userInfo.gid} --init-groups -- sh -c \\"${job.command}\\""`
-      } else {
-        command = `nsenter -t 1 -m -u -i -n -p sh -c "${job.command}"`;
+      let executionUser = userInfo ? userInfo.username : "root";
+
+      if (dockerExecUser && executionUser === "root") {
+        console.log(
+          `Overriding root execution. Running command as user: ${dockerExecUser}`
+        );
+        executionUser = dockerExecUser;
       }
+
+      const escapedCommand = job.command.replace(/'/g, "'\\''");
+      command = `nsenter -t 1 -m -u -i -n -p su - ${executionUser} -c '${escapedCommand}'`;
     }
 
     const { stdout, stderr } = await execAsync(command, {

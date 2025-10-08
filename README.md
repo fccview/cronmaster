@@ -72,6 +72,12 @@ services:
       # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
       # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,user1,user2
       - HOST_CRONTAB_USER=root
+
+      # --- !! IMPORTANT !!DOCKER EXEC USER
+      # If you do not specify this user to be a valid user on your system,
+      # any cronjob containing a docker command will fail. IDEALLY you should not be running
+      # docker commands as root, so this is only a fallback. ONLY ONE USER IS ALLOWED.
+      - DOCKER_EXEC_USER=fccview
     volumes:
       # --- MOUNT DOCKER SOCKET
       # Mount Docker socket to execute commands on host
@@ -147,6 +153,7 @@ The following environment variables can be configured:
 | `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
 | `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
 | `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
+| `DOCKER_EXEC_USER`                  | `N/A`   | If you don't set this user you won't be able to run docker commands as root.                |
 
 **Example**: To change the clock update interval to 60 seconds:
 
