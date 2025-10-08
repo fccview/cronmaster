@@ -264,6 +264,9 @@ I would like to thank the following members for raising issues and help test/deb
       <td align="center" valign="top" width="20%">
         <a href="https://github.com/cerede2000"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/38144752?v=4&size=100"><br />cerede2000</a>
       </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/Navino16"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/22234867?v=4&size=100"><br />Navino16</a>
+      </td>
     </tr>
   </tbody>
 </table>
