@@ -21,7 +21,7 @@ const sanitizeScriptName = (name: string): string => {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .substring(0, 50);
-}
+};
 
 const generateUniqueFilename = async (baseName: string): Promise<string> => {
   const scripts = await loadAllScripts();
@@ -34,14 +34,14 @@ const generateUniqueFilename = async (baseName: string): Promise<string> => {
   }
 
   return filename;
-}
+};
 
 const ensureScriptsDirectory = async () => {
   const scriptsDir = await SCRIPTS_DIR();
   if (!existsSync(scriptsDir)) {
     await mkdir(scriptsDir, { recursive: true });
   }
-}
+};
 
 const ensureHostScriptsDirectory = async () => {
   const hostProjectDir = process.env.HOST_PROJECT_DIR || process.cwd();
@@ -50,7 +50,7 @@ const ensureHostScriptsDirectory = async () => {
   if (!existsSync(hostScriptsDir)) {
     await mkdir(hostScriptsDir, { recursive: true });
   }
-}
+};
 
 const saveScriptFile = async (filename: string, content: string) => {
   const isDocker = process.env.DOCKER === "true";
@@ -59,7 +59,13 @@ const saveScriptFile = async (filename: string, content: string) => {
 
   const scriptPath = join(scriptsDir, filename);
   await writeFile(scriptPath, content, "utf8");
-}
+
+  try {
+    await execAsync(`chmod +x "${scriptPath}"`);
+  } catch (error) {
+    console.error(`Failed to set execute permissions on ${scriptPath}:`, error);
+  }
+};
 
 const deleteScriptFile = async (filename: string) => {
   const isDocker = process.env.DOCKER === "true";
@@ -68,11 +74,11 @@ const deleteScriptFile = async (filename: string) => {
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
   }
-}
+};
 
 export const fetchScripts = async (): Promise<Script[]> => {
   return await loadAllScripts();
-}
+};
 
 export const createScript = async (
   formData: FormData
@@ -120,7 +126,7 @@ export const createScript = async (
     console.error("Error creating script:", error);
     return { success: false, message: "Error creating script" };
   }
-}
+};
 
 export const updateScript = async (
   formData: FormData
@@ -159,7 +165,7 @@ export const updateScript = async (
     console.error("Error updating script:", error);
     return { success: false, message: "Error updating script" };
   }
-}
+};
 
 export const deleteScript = async (
   id: string
@@ -180,7 +186,7 @@ export const deleteScript = async (
     console.error("Error deleting script:", error);
     return { success: false, message: "Error deleting script" };
   }
-}
+};
 
 export const cloneScript = async (
   id: string,
@@ -230,7 +236,7 @@ export const cloneScript = async (
     console.error("Error cloning script:", error);
     return { success: false, message: "Error cloning script" };
   }
-}
+};
 
 export const getScriptContent = async (filename: string): Promise<string> => {
   try {
@@ -263,9 +269,11 @@ export const getScriptContent = async (filename: string): Promise<string> => {
     console.error("Error reading script content:", error);
     return "";
   }
-}
+};
 
-export const executeScript = async (filename: string): Promise<{
+export const executeScript = async (
+  filename: string
+): Promise<{
   success: boolean;
   output: string;
   error: string;
@@ -301,4 +309,4 @@ export const executeScript = async (filename: string): Promise<{
       error: error.message || "Unknown error",
     };
   }
-}
+};

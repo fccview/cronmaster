@@ -265,12 +265,10 @@ export const runCronJob = async (
 
     if (isDocker) {
       const userInfo = await getUserInfo(job.user);
+      const executionUser = userInfo ? userInfo.username : "root";
+      const escapedCommand = job.command.replace(/'/g, "'\\''");
 
-      if (userInfo && userInfo.username !== "root") {
-        command = `nsenter -t 1 -m -u -i -n -p --setuid=${userInfo.uid} --setgid=${userInfo.gid} sh -c "${job.command}"`;
-      } else {
-        command = `nsenter -t 1 -m -u -i -n -p sh -c "${job.command}"`;
-      }
+      command = `nsenter -t 1 -m -u -i -n -p su - ${executionUser} -c '${escapedCommand}'`;
     }
 
     const { stdout, stderr } = await execAsync(command, {

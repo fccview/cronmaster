@@ -2,18 +2,6 @@
   <img src="public/heading.png" width="400px">
 </p>
 
-# ATTENTION BREAKING UPDATE!!
-
-> The latest `main` branch has completely changed the way this app used to run.
-> The main reason being trying to address some security concerns and make the whole application work
-> across multiple platform without too much trouble.
->
-> If you came here due to this change trying to figure out why your app stopped working you have two options:
->
-> 1 - Update your `docker-compose.yml` with the new one provided within this readme (or just copy [docker-compose.yml](docker-compose.yml))
->
-> 2 - Keep your `docker-compose.yml` file as it is and use the legacy tag in the image `image: ghcr.io/fccview/cronmaster:legacy`. However bear in mind this will not be supported going forward, any issue regarding the legacy tag will be ignored and I will only support the main branch. Feel free to fork that specific branch in case you want to work on it yourself :)
-
 ## Features
 
 - **Modern UI**: Beautiful, responsive interface with dark/light mode.
@@ -22,6 +10,23 @@
 - **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
 - **Docker Support**: Runs entirely from a Docker container.
 - **Easy Setup**: Quick presets for common cron schedules.
+
+<br />
+
+---
+
+<p align="center">
+  <a href="http://discord.gg/invite/mMuk2WzVZu">
+    <img width="40" src="public/repo-images/discord_icon.webp">
+  </a>
+  <br />
+  <i>Join the discord server for more info</i>
+  <br />
+</p>
+
+---
+
+<br />
 
 ## Before we start
 
@@ -166,6 +171,8 @@ HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 - `HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
 - The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
 
+**Important Note on Root Commands**: When running commands as `root` within Cronmaster, ensure that these commands also function correctly as `root` on your host machine. If a command works as `root` on your host but fails within Cronmaster, please open an issue with detailed information.
+
 ## Usage
 
 ### Viewing System Information
@@ -256,6 +263,9 @@ I would like to thank the following members for raising issues and help test/deb
       </td>
       <td align="center" valign="top" width="20%">
         <a href="https://github.com/cerede2000"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/38144752?v=4&size=100"><br />cerede2000</a>
+      </td>
+      <td align="center" valign="top" width="20%">
+        <a href="https://github.com/Navino16"><img width="100" height="100" src="https://avatars.githubusercontent.com/u/22234867?v=4&size=100"><br />Navino16</a>
       </td>
     </tr>
   </tbody>
