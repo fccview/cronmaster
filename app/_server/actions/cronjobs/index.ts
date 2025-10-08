@@ -265,15 +265,9 @@ export const runCronJob = async (
 
     if (isDocker) {
       const userInfo = await getUserInfo(job.user);
-      const dockerExecUser = process.env.DOCKER_EXEC_USER;
-
-      let executionUser = userInfo ? userInfo.username : "root";
-
-      if (dockerExecUser && executionUser === "root") {
-        executionUser = dockerExecUser;
-      }
-
+      const executionUser = userInfo ? userInfo.username : "root";
       const escapedCommand = job.command.replace(/'/g, "'\\''");
+
       command = `nsenter -t 1 -m -u -i -n -p su - ${executionUser} -c '${escapedCommand}'`;
     }
 

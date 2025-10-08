@@ -2,18 +2,6 @@
   <img src="public/heading.png" width="400px">
 </p>
 
-# ATTENTION BREAKING UPDATE!!
-
-> The latest `main` branch has completely changed the way this app used to run.
-> The main reason being trying to address some security concerns and make the whole application work
-> across multiple platform without too much trouble.
->
-> If you came here due to this change trying to figure out why your app stopped working you have two options:
->
-> 1 - Update your `docker-compose.yml` with the new one provided within this readme (or just copy [docker-compose.yml](docker-compose.yml))
->
-> 2 - Keep your `docker-compose.yml` file as it is and use the legacy tag in the image `image: ghcr.io/fccview/cronmaster:legacy`. However bear in mind this will not be supported going forward, any issue regarding the legacy tag will be ignored and I will only support the main branch. Feel free to fork that specific branch in case you want to work on it yourself :)
-
 ## Features
 
 - **Modern UI**: Beautiful, responsive interface with dark/light mode.
@@ -22,6 +10,23 @@
 - **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
 - **Docker Support**: Runs entirely from a Docker container.
 - **Easy Setup**: Quick presets for common cron schedules.
+
+<br />
+
+---
+
+<p align="center">
+  <a href="http://discord.gg/invite/mMuk2WzVZu">
+    <img width="40" src="public/repo-images/discord_icon.webp">
+  </a>
+  <br />
+  <i>Join the discord server for more info</i>
+  <br />
+</p>
+
+---
+
+<br />
 
 ## Before we start
 
@@ -72,12 +77,6 @@ services:
       # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
       # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,user1,user2
       - HOST_CRONTAB_USER=root
-
-      # --- !! IMPORTANT !!DOCKER EXEC USER
-      # If you do not specify this user to be a valid user on your system,
-      # any cronjob containing a docker command will fail. IDEALLY you should not be running
-      # docker commands as root, so this is only a fallback. ONLY ONE USER IS ALLOWED.
-      - DOCKER_EXEC_USER=fccview
     volumes:
       # --- MOUNT DOCKER SOCKET
       # Mount Docker socket to execute commands on host
@@ -153,7 +152,6 @@ The following environment variables can be configured:
 | `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
 | `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
 | `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
-| `DOCKER_EXEC_USER`                  | `N/A`   | If you don't set this user you won't be able to run docker commands as root.                |
 
 **Example**: To change the clock update interval to 60 seconds:
 
@@ -172,6 +170,8 @@ HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
 - Root user is required for cron operations and direct file access. There is no way around this, if you don't feel comfortable in running it as root feel free to run the app locally with `yarn install`, `yarn build` and `yarn start`
 - `HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
 - The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
+
+**Please Note**: If you want to run `docker compose` commands as `root` within your cron jobs (highly discouraged btw), you will need to install Docker with root privileges. Otherwise, `docker compose` won't be found when executing commands.
 
 ## Usage
 
