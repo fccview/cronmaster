@@ -1,7 +1,7 @@
 "use client";
 
 import { Edit } from "lucide-react";
-import { Script } from "@/app/_utils/scriptScanner";
+import { Script } from "@/app/_utils/scripts-utils";
 import { ScriptModal } from "@/app/_components/FeatureComponents/Modals/ScriptModal";
 
 interface EditScriptModalProps {

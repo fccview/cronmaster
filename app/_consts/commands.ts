@@ -15,3 +15,9 @@ export const ID_G = (username: string) => `id -g ${username}`;
 export const MAKE_SCRIPT_EXECUTABLE = (scriptPath: string) => `chmod +x "${scriptPath}"`;
 
 export const RUN_SCRIPT = (scriptPath: string) => `bash "${scriptPath}"`;
+
+export const GET_TARGET_USER = `getent passwd | grep ":/home/" | head -1 | cut -d: -f1`
+
+export const GET_DOCKER_SOCKET_OWNER = 'stat -c "%U" /var/run/docker.sock'
+
+export const READ_CRONTABS_DIRECTORY = `ls /var/spool/cron/crontabs/ 2>/dev/null || echo ''`;

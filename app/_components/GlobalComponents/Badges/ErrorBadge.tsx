@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, X } from "lucide-react";
-import { JobError, removeJobError } from "@/app/_utils/errorState";
+import { JobError, removeJobError } from "@/app/_utils/error-utils";
 
 interface ErrorBadgeProps {
   errors: JobError[];

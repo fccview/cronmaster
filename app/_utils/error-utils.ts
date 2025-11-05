@@ -37,7 +37,7 @@ export const setJobError = (error: JobError) => {
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(errors));
-  } catch {}
+  } catch { }
 };
 
 export const removeJobError = (errorId: string) => {
@@ -47,7 +47,7 @@ export const removeJobError = (errorId: string) => {
     const errors = getJobErrors();
     const filtered = errors.filter((e) => e.id !== errorId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-  } catch {}
+  } catch { }
 };
 
 export const getJobErrorsByJobId = (jobId: string): JobError[] => {
@@ -59,5 +59,5 @@ export const clearAllJobErrors = () => {
 
   try {
     localStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  } catch { }
 };

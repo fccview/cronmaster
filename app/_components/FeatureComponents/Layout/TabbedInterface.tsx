@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { CronJobList } from "@/app/_components/FeatureComponents/Cronjobs/CronJobList";
 import { ScriptsManager } from "@/app/_components/FeatureComponents/Scripts/ScriptsManager";
-import { CronJob } from "@/app/_utils/system";
-import { Script } from "@/app/_utils/scriptScanner";
+import { CronJob } from "@/app/_utils/cronjob-utils";
+import { Script } from "@/app/_utils/scripts-utils";
 import { Clock, FileText } from "lucide-react";
 
 interface TabbedInterfaceProps {

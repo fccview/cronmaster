@@ -1,6 +1,6 @@
 import { SystemInfoCard } from "@/app/_components/FeatureComponents/System/SystemInfo";
 import { TabbedInterface } from "@/app/_components/FeatureComponents/Layout/TabbedInterface";
-import { getCronJobs } from "@/app/_utils/system";
+import { getCronJobs } from "@/app/_utils/cronjob-utils";
 import { fetchScripts } from "@/app/_server/actions/scripts";
 import { ThemeToggle } from "@/app/_components/FeatureComponents/Theme/ThemeToggle";
 import { LogoutButton } from "@/app/_components/FeatureComponents/LoginForm/LogoutButton";

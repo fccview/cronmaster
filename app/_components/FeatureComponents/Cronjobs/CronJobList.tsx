@@ -13,7 +13,7 @@ import {
   Pause,
   Code,
 } from "lucide-react";
-import { CronJob } from "@/app/_utils/system";
+import { CronJob } from "@/app/_utils/cronjob-utils";
 import { useState, useMemo, useEffect } from "react";
 import { CreateTaskModal } from "@/app/_components/FeatureComponents/Modals/CreateTaskModal";
 import { EditTaskModal } from "@/app/_components/FeatureComponents/Modals/EditTaskModal";
@@ -22,12 +22,12 @@ import { CloneTaskModal } from "@/app/_components/FeatureComponents/Modals/Clone
 import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
 import { ErrorBadge } from "@/app/_components/GlobalComponents/Badges/ErrorBadge";
 import { ErrorDetailsModal } from "@/app/_components/FeatureComponents/Modals/ErrorDetailsModal";
-import { Script } from "@/app/_utils/scriptScanner";
+import { Script } from "@/app/_utils/scripts-utils";
 
 import {
   getJobErrorsByJobId,
   JobError,
-} from "@/app/_utils/errorState";
+} from "@/app/_utils/error-utils";
 import {
   handleErrorClick,
   handleDelete,

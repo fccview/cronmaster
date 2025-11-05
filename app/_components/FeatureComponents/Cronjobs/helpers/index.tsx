@@ -1,4 +1,4 @@
-import { JobError, setJobError } from "@/app/_utils/errorState";
+import { JobError, setJobError } from "@/app/_utils/error-utils";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import {
   removeCronJob,
@@ -9,7 +9,7 @@ import {
   resumeCronJobAction,
   runCronJob,
 } from "@/app/_server/actions/cronjobs";
-import { CronJob } from "@/app/_utils/system";
+import { CronJob } from "@/app/_utils/cronjob-utils";
 
 interface HandlerProps {
   setDeletingId: (id: string | null) => void;

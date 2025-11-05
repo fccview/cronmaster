@@ -6,13 +6,24 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { getHostScriptPath, getScriptPath, normalizeLineEndings } from "@/app/_utils/scripts";
 import { SCRIPTS_DIR } from "@/app/_consts/file";
-import { loadAllScripts, Script } from "@/app/_utils/scriptScanner";
-import { isDocker } from "@/app/_server/actions/global";
+import { loadAllScripts, Script } from "@/app/_utils/scripts-utils";
 import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
 
 const execAsync = promisify(exec);
+
+export const getScriptPath = (filename: string): string => {
+  return join(process.cwd(), SCRIPTS_DIR, filename);
+};
+
+export const getHostScriptPath = (filename: string): string => {
+  return `bash ${join(process.cwd(), SCRIPTS_DIR, filename)}`;
+};
+
+export const normalizeLineEndings = (content: string): string => {
+  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+};
+
 
 const sanitizeScriptName = (name: string): string => {
   return name

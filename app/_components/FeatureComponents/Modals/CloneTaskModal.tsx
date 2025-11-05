@@ -5,7 +5,7 @@ import { Copy } from "lucide-react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
-import { type CronJob } from "@/app/_utils/system";
+import { type CronJob } from "@/app/_utils/cronjob-utils";
 
 interface CloneTaskModalProps {
   cronJob: CronJob | null;

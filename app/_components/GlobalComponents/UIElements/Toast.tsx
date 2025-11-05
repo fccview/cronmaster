@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
-import { cn } from "@/app/_utils/cn";
+import { cn } from "@/app/_utils/global-utils";
 import { ErrorDetailsModal } from "@/app/_components/FeatureComponents/Modals/ErrorDetailsModal";
 
 export interface Toast {

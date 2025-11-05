@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/app/_utils/cn";
+import { cn } from "@/app/_utils/global-utils";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 
 interface ModalProps {

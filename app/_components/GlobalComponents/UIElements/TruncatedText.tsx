@@ -1,4 +1,4 @@
-import { cn } from "@/app/_utils/cn";
+import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef, useState } from "react";
 
 export interface TruncatedTextProps extends HTMLAttributes<HTMLDivElement> {

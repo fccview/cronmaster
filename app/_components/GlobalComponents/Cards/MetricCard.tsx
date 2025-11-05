@@ -1,4 +1,4 @@
-import { cn } from "@/app/_utils/cn";
+import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
 import { LucideIcon } from "lucide-react";
 import { StatusBadge } from "@/app/_components/GlobalComponents/Badges/StatusBadge";

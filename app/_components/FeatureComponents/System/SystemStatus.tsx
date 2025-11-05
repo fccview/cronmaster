@@ -1,4 +1,4 @@
-import { cn } from "@/app/_utils/cn";
+import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
 import { Activity } from "lucide-react";
 

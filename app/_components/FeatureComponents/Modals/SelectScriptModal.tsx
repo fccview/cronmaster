@@ -5,9 +5,9 @@ import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { FileText, Search, Check, Terminal } from "lucide-react";
-import { Script } from "@/app/_utils/scriptScanner";
+import { Script } from "@/app/_utils/scripts-utils";
 import { getScriptContent } from "@/app/_server/actions/scripts";
-import { getHostScriptPath } from "@/app/_utils/scripts";
+import { getHostScriptPath } from "@/app/_server/actions/scripts";
 
 interface SelectScriptModalProps {
   isOpen: boolean;

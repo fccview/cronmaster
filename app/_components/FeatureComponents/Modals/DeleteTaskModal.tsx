@@ -9,7 +9,7 @@ import {
   AlertCircle,
   Trash2,
 } from "lucide-react";
-import { CronJob } from "@/app/_utils/system";
+import { CronJob } from "@/app/_utils/cronjob-utils";
 
 interface DeleteTaskModalProps {
   isOpen: boolean;

@@ -1,4 +1,4 @@
-import { ID_G, ID_U, READ_CRONTAB, WRITE_HOST_CRONTAB } from "@/app/_consts/commands";
+import { GET_DOCKER_SOCKET_OWNER, GET_TARGET_USER, ID_G, ID_U, READ_CRONTAB, READ_CRONTABS_DIRECTORY, WRITE_HOST_CRONTAB } from "@/app/_consts/commands";
 import { NSENTER_HOST_CRONTAB } from "@/app/_consts/nsenter";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -27,17 +27,14 @@ const getTargetUser = async (): Promise<string> => {
       return process.env.HOST_CRONTAB_USER;
     }
 
-    const { stdout } = await execAsync('stat -c "%U" /var/run/docker.sock');
+    const { stdout } = await execAsync(GET_DOCKER_SOCKET_OWNER);
     const dockerSocketOwner = stdout.trim();
 
     if (dockerSocketOwner === "root") {
       try {
-        const users = await execHostCrontab(
-          'getent passwd | grep ":/home/" | head -1 | cut -d: -f1'
-        );
-        const firstUser = users.trim();
-        if (firstUser) {
-          return firstUser;
+        const targetUser = await execHostCrontab(GET_TARGET_USER);
+        if (targetUser) {
+          return targetUser.trim();
         }
       } catch (error) {
         console.warn("Could not detect user from passwd:", error);
@@ -60,9 +57,7 @@ export const getAllTargetUsers = async (): Promise<string[]> => {
     }
 
     try {
-      const stdout = await execHostCrontab(
-        "ls /var/spool/cron/crontabs/ 2>/dev/null || echo ''"
-      );
+      const stdout = await execHostCrontab(READ_CRONTABS_DIRECTORY);
 
       const users = stdout
         .trim()

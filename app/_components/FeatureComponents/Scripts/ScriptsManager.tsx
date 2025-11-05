@@ -13,7 +13,7 @@ import {
   CheckCircle,
   Files,
 } from "lucide-react";
-import { Script } from "@/app/_utils/scriptScanner";
+import { Script } from "@/app/_utils/scripts-utils";
 import {
   createScript,
   updateScript,

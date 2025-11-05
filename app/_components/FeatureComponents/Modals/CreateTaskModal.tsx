@@ -9,7 +9,7 @@ import { SelectScriptModal } from "@/app/_components/FeatureComponents/Modals/Se
 import { UserSwitcher } from "@/app/_components/FeatureComponents/User/UserSwitcher";
 import { Plus, Terminal, FileText, X } from "lucide-react";
 import { getScriptContent } from "@/app/_server/actions/scripts";
-import { getHostScriptPath } from "@/app/_utils/scripts";
+import { getHostScriptPath } from "@/app/_server/actions/scripts";
 
 interface Script {
   id: string;
