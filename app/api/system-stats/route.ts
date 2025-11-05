@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as si from 'systeminformation';
+import { getTranslations } from '@/app/_utils/global-utils';
 
 export const dynamic = 'force-dynamic';
 
-import { getTranslations } from 'next-intl/server';
 
 export async function GET(request: NextRequest) {
     try {
         const t = await getTranslations();
+
         const [
             memInfo,
             cpuInfo,

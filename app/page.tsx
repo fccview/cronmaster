@@ -6,12 +6,13 @@ import { ThemeToggle } from "@/app/_components/FeatureComponents/Theme/ThemeTogg
 import { LogoutButton } from "@/app/_components/FeatureComponents/LoginForm/LogoutButton";
 import { ToastContainer } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { PWAInstallPrompt } from "@/app/_components/FeatureComponents/PWA/PWAInstallPrompt";
-import { getTranslations } from "next-intl/server";
+import { getTranslations } from "@/app/_utils/global-utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const t = await getTranslations();
+
   const [cronJobs, scripts] = await Promise.all([
     getCronJobs(),
     fetchScripts(),
