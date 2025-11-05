@@ -1,9 +1,9 @@
 "use client";
 
-import { Modal } from "../../GlobalComponents/UIElements/Modal";
-import { Button } from "../../GlobalComponents/UIElements/Button";
-import { Input } from "../../GlobalComponents/FormElements/Input";
-import { CronExpressionHelper } from "../Scripts/CronExpressionHelper";
+import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
+import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
+import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
+import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
 import { Edit, Terminal } from "lucide-react";
 
 interface EditTaskModalProps {

@@ -3,9 +3,9 @@ import { promisify } from "util";
 import {
   readAllHostCrontabs,
   writeHostCrontabForUser,
-} from "./hostCrontab";
-import { parseJobsFromLines, deleteJobInLines, updateJobInLines, pauseJobInLines, resumeJobInLines } from "../cron/line-manipulation";
-import { cleanCrontabContent, readCronFiles, writeCronFiles } from "../cron/files-manipulation";
+} from "@/app/_utils/system/hostCrontab";
+import { parseJobsFromLines, deleteJobInLines, updateJobInLines, pauseJobInLines, resumeJobInLines } from "@/app/_utils/cron/line-manipulation";
+import { cleanCrontabContent, readCronFiles, writeCronFiles } from "@/app/_utils/cron/files-manipulation";
 
 const execAsync = promisify(exec);
 
@@ -51,7 +51,7 @@ const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
   if (isDocker()) {
     return await readAllHostCrontabs();
   } else {
-    const { getAllTargetUsers } = await import("./hostCrontab");
+    const { getAllTargetUsers } = await import("@/app/_utils/system/hostCrontab");
     const users = await getAllTargetUsers();
     const results: { user: string; content: string }[] = [];
 

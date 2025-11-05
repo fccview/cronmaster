@@ -47,7 +47,7 @@ export const createCronJob = async (
     let finalCommand = command;
 
     if (selectedScriptId) {
-      const { fetchScripts } = await import("../scripts");
+      const { fetchScripts } = await import("@/app/_server/actions/scripts");
       const scripts = await fetchScripts();
       const selectedScript = scripts.find((s) => s.id === selectedScriptId);
 
@@ -260,16 +260,11 @@ export const runCronJob = async (
       return { success: false, message: "Cannot run paused cron job" };
     }
 
-    const isDocker = process.env.DOCKER === "true";
-    let command = job.command;
+    const userInfo = await getUserInfo(job.user);
+    const executionUser = userInfo ? userInfo.username : "root";
+    const escapedCommand = job.command.replace(/'/g, "'\\''");
 
-    if (isDocker) {
-      const userInfo = await getUserInfo(job.user);
-      const executionUser = userInfo ? userInfo.username : "root";
-      const escapedCommand = job.command.replace(/'/g, "'\\''");
-
-      command = `nsenter -t 1 -m -u -i -n -p su - ${executionUser} -c '${escapedCommand}'`;
-    }
+    const command = `nsenter -t 1 -m -u -i -n -p su - ${executionUser} -c '${escapedCommand}'`;
 
     const { stdout, stderr } = await execAsync(command, {
       timeout: 30000,

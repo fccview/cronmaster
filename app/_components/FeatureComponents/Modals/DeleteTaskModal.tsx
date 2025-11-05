@@ -1,7 +1,7 @@
 "use client";
 
-import { Modal } from "../../GlobalComponents/UIElements/Modal";
-import { Button } from "../../GlobalComponents/UIElements/Button";
+import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
+import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import {
   Calendar,
   Terminal,

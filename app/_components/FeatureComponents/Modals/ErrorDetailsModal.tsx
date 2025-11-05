@@ -1,9 +1,9 @@
 "use client";
 
-import { Modal } from "../../GlobalComponents/UIElements/Modal";
-import { Button } from "../../GlobalComponents/UIElements/Button";
+import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
+import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { AlertCircle, Copy, X } from "lucide-react";
-import { showToast } from "../../ui/Toast";
+import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 
 interface ErrorDetails {
   title: string;

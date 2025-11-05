@@ -1,4 +1,4 @@
-import { CronJob } from "../system";
+import { CronJob } from "@/app/_utils/system";
 
 export const pauseJobInLines = (
   lines: string[],

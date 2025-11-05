@@ -2,7 +2,7 @@
 
 import { Edit } from "lucide-react";
 import { type Script } from "@/app/_server/actions/scripts";
-import { ScriptModal } from "./ScriptModal";
+import { ScriptModal } from "@/app/_components/FeatureComponents/Modals/ScriptModal";
 
 interface EditScriptModalProps {
   isOpen: boolean;

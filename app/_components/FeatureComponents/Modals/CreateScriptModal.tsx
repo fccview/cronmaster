@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { ScriptModal } from "./ScriptModal";
+import { ScriptModal } from "@/app/_components/FeatureComponents/Modals/ScriptModal";
 
 interface CreateScriptModalProps {
   isOpen: boolean;

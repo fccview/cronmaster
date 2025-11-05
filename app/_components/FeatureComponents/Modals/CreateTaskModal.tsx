@@ -5,7 +5,7 @@ import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
-import { SelectScriptModal } from "./SelectScriptModal";
+import { SelectScriptModal } from "@/app/_components/FeatureComponents/Modals/SelectScriptModal";
 import { UserSwitcher } from "@/app/_components/FeatureComponents/User/UserSwitcher";
 import { Plus, Terminal, FileText, X } from "lucide-react";
 import { getScriptContent } from "@/app/_server/actions/scripts";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "./Button";
+import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { ChevronDown, User } from "lucide-react";
 import { fetchAvailableUsers } from "@/app/_server/actions/cronjobs";
 

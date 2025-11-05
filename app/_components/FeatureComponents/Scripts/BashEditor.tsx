@@ -5,7 +5,7 @@ import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { Button } from "../../GlobalComponents/UIElements/Button";
+import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Terminal, Copy, Check } from "lucide-react";
 
 interface BashEditorProps {

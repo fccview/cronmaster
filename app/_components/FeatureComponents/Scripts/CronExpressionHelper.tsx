@@ -5,9 +5,9 @@ import {
   parseCronExpression,
   cronPatterns,
   type CronExplanation,
-} from "../../../_utils/cronParser";
-import { Button } from "../../GlobalComponents/UIElements/Button";
-import { Input } from "../../GlobalComponents/FormElements/Input";
+} from "@/app/_utils/cronParser";
+import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
+import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import {
   Clock,
   Info,

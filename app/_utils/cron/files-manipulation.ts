@@ -2,7 +2,7 @@
 
 import { exec } from "child_process";
 import { promisify } from "util";
-import { readHostCrontab, writeHostCrontab } from "../system/hostCrontab";
+import { readHostCrontab, writeHostCrontab } from "@/app/_utils/system/hostCrontab";
 
 const execAsync = promisify(exec);
 

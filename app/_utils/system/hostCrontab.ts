@@ -72,22 +72,20 @@ export const getAllTargetUsers = async (): Promise<string[]> => {
       return process.env.HOST_CRONTAB_USER.split(",").map((u) => u.trim());
     }
 
-    const isDocker = process.env.DOCKER === "true";
-    if (isDocker) {
-      const singleUser = await getTargetUser();
-      return [singleUser];
-    } else {
-      try {
-        const { stdout } = await execAsync("ls /var/spool/cron/crontabs/");
-        const users = stdout
-          .trim()
-          .split("\n")
-          .filter((user) => user.trim());
-        return users.length > 0 ? users : ["root"];
-      } catch (error) {
-        console.error("Error detecting users from crontabs directory:", error);
-        return ["root"];
-      }
+    try {
+      const stdout = await execHostCrontab(
+        "ls /var/spool/cron/crontabs/ 2>/dev/null || echo ''"
+      );
+
+      const users = stdout
+        .trim()
+        .split("\n")
+        .filter((user) => user.trim());
+
+      return users.length > 0 ? users : ["root"];
+    } catch (error) {
+      console.error("Error detecting users from crontabs directory:", error);
+      return ["root"];
     }
   } catch (error) {
     console.error("Error getting all target users:", error);
@@ -175,35 +173,18 @@ export const writeHostCrontabForUser = async (
 
 export async function getUserInfo(username: string): Promise<UserInfo | null> {
   try {
-    const isDocker = process.env.DOCKER === "true";
+    const uidResult = await execHostCrontab(`id -u ${username}`);
+    const gidResult = await execHostCrontab(`id -g ${username}`);
 
-    if (isDocker) {
-      const uidResult = await execHostCrontab(`id -u ${username}`);
-      const gidResult = await execHostCrontab(`id -g ${username}`);
+    const uid = parseInt(uidResult.trim());
+    const gid = parseInt(gidResult.trim());
 
-      const uid = parseInt(uidResult.trim());
-      const gid = parseInt(gidResult.trim());
-
-      if (isNaN(uid) || isNaN(gid)) {
-        console.error(`Invalid UID/GID for user ${username}`);
-        return null;
-      }
-
-      return { username, uid, gid };
-    } else {
-      const { stdout } = await execAsync(`id -u ${username}`);
-      const uid = parseInt(stdout.trim());
-
-      const { stdout: gidStdout } = await execAsync(`id -g ${username}`);
-      const gid = parseInt(gidStdout.trim());
-
-      if (isNaN(uid) || isNaN(gid)) {
-        console.error(`Invalid UID/GID for user ${username}`);
-        return null;
-      }
-
-      return { username, uid, gid };
+    if (isNaN(uid) || isNaN(gid)) {
+      console.error(`Invalid UID/GID for user ${username}`);
+      return null;
     }
+
+    return { username, uid, gid };
   } catch (error) {
     console.error(`Error getting user info for ${username}:`, error);
     return null;
