@@ -10,6 +10,7 @@ import { UserSwitcher } from "@/app/_components/FeatureComponents/User/UserSwitc
 import { Plus, Terminal, FileText, X } from "lucide-react";
 import { getScriptContent } from "@/app/_server/actions/scripts";
 import { getHostScriptPath } from "@/app/_server/actions/scripts";
+import { useTranslations } from "next-intl";
 
 interface Script {
   id: string;
@@ -46,6 +47,7 @@ export const CreateTaskModal = ({
     useState<string>("");
   const [isSelectScriptModalOpen, setIsSelectScriptModalOpen] = useState(false);
   const selectedScript = scripts.find((s) => s.id === form.selectedScriptId);
+  const t = useTranslations();
 
   useEffect(() => {
     const loadScriptContent = async () => {
@@ -86,13 +88,13 @@ export const CreateTaskModal = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Create New Scheduled Task"
+        title={t("cronjobs.createNewScheduledTask")}
         size="lg"
       >
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              User
+              {t("common.user")}
             </label>
             <UserSwitcher
               selectedUser={form.user}
@@ -102,7 +104,7 @@ export const CreateTaskModal = ({
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Schedule
+              {t("cronjobs.schedule")}
             </label>
             <CronExpressionHelper
               value={form.schedule}
@@ -114,7 +116,7 @@ export const CreateTaskModal = ({
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Task Type
+              {t("cronjobs.taskType")}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -128,8 +130,8 @@ export const CreateTaskModal = ({
                 <div className="flex items-center gap-3">
                   <Terminal className="h-5 w-5" />
                   <div className="text-left">
-                    <div className="font-medium">Custom Command</div>
-                    <div className="text-xs opacity-70">Single command</div>
+                    <div className="font-medium">{t("cronjobs.customCommand")}</div>
+                    <div className="text-xs opacity-70">{t("cronjobs.singleCommand")}</div>
                   </div>
                 </div>
               </button>
@@ -145,9 +147,9 @@ export const CreateTaskModal = ({
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5" />
                   <div className="text-left">
-                    <div className="font-medium">Saved Script</div>
+                    <div className="font-medium">{t("scripts.savedScript")}</div>
                     <div className="text-xs opacity-70">
-                      Select from library
+                      {t("scripts.selectFromLibrary")}
                     </div>
                   </div>
                 </div>
@@ -182,7 +184,7 @@ export const CreateTaskModal = ({
                     onClick={() => setIsSelectScriptModalOpen(true)}
                     className="h-8 px-2 text-xs"
                   >
-                    Change
+                    {t("common.change")}
                   </Button>
                   <Button
                     type="button"
@@ -201,7 +203,7 @@ export const CreateTaskModal = ({
           {!form.selectedScriptId && !selectedScript && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
-                Command
+                {t("cronjobs.command")}
               </label>
               <div className="relative">
                 <textarea
@@ -222,8 +224,7 @@ export const CreateTaskModal = ({
               </div>
               {form.selectedScriptId && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Script path is read-only. Edit the script in the Scripts
-                  Library.
+                  {t("scripts.scriptPathReadOnly")}
                 </p>
               )}
             </div>
@@ -231,13 +232,13 @@ export const CreateTaskModal = ({
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Description{" "}
-              <span className="text-muted-foreground">(Optional)</span>
+              {t("common.description")}
+              <span className="text-muted-foreground">({t("common.optional")})</span>
             </label>
             <Input
               value={form.comment}
               onChange={(e) => onFormChange({ comment: e.target.value })}
-              placeholder="What does this task do?"
+              placeholder={t("cronjobs.whatDoesThisTaskDo")}
               className="bg-muted/30 border-border/50 focus:border-primary/50"
             />
           </div>
@@ -249,11 +250,11 @@ export const CreateTaskModal = ({
               onClick={onClose}
               className="btn-outline"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" className="btn-primary glow-primary">
               <Plus className="h-4 w-4 mr-2" />
-              Create Task
+              {t("cronjobs.createTask")}
             </Button>
           </div>
         </form>

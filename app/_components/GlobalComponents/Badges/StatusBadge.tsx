@@ -1,6 +1,7 @@
 import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
 import { CheckCircle, AlertTriangle, XCircle, Activity } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export interface StatusBadgeProps extends HTMLAttributes<HTMLDivElement> {
   status: string;
@@ -21,6 +22,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
     },
     ref
   ) => {
+    const t = useTranslations();
     const getStatusConfig = (status: string) => {
       const lowerStatus = status.toLowerCase();
 
@@ -33,7 +35,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
             bgColor: "bg-emerald-500/10",
             borderColor: "border-emerald-500/20",
             icon: CheckCircle,
-            label: "Optimal",
+            label: t("system.optimal"),
           };
         case "moderate":
         case "warning":
@@ -42,7 +44,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
             bgColor: "bg-yellow-500/10",
             borderColor: "border-yellow-500/20",
             icon: AlertTriangle,
-            label: "Warning",
+            label: t("system.warning"),
           };
         case "high":
         case "slow":
@@ -51,7 +53,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
             bgColor: "bg-orange-500/10",
             borderColor: "border-orange-500/20",
             icon: AlertTriangle,
-            label: "High",
+            label: t("system.high"),
           };
         case "critical":
         case "poor":
@@ -61,7 +63,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
             bgColor: "bg-destructive/10",
             borderColor: "border-destructive/20",
             icon: XCircle,
-            label: "Critical",
+            label: t("system.critical"),
           };
         default:
           return {
@@ -69,7 +71,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
             bgColor: "bg-muted",
             borderColor: "border-border",
             icon: Activity,
-            label: "Unknown",
+            label: t("system.unknown"),
           };
       }
     };

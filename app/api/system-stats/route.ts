@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as si from 'systeminformation';
+
 export const dynamic = 'force-dynamic';
+
+import { getTranslations } from 'next-intl/server';
 
 export async function GET(request: NextRequest) {
     try {
+        const t = await getTranslations();
         const [
-            osInfo,
             memInfo,
             cpuInfo,
             diskInfo,
@@ -13,7 +16,6 @@ export async function GET(request: NextRequest) {
             uptimeInfo,
             networkInfo
         ] = await Promise.all([
-            si.osInfo(),
             si.mem(),
             si.cpu(),
             si.fsSize(),
@@ -46,32 +48,32 @@ export async function GET(request: NextRequest) {
         const actualUsed = memInfo.active || memInfo.used;
         const actualFree = memInfo.available || memInfo.free;
         const memUsage = ((actualUsed / memInfo.total) * 100);
-        let memStatus = "Optimal";
-        if (memUsage > 90) memStatus = "Critical";
-        else if (memUsage > 80) memStatus = "High";
-        else if (memUsage > 70) memStatus = "Moderate";
+        let memStatus = t("system.optimal");
+        if (memUsage > 90) memStatus = t("system.critical");
+        else if (memUsage > 80) memStatus = t("system.high");
+        else if (memUsage > 70) memStatus = t("system.moderate");
 
         const rootDisk = diskInfo.find(disk => disk.mount === '/') || diskInfo[0];
         const diskUsage = rootDisk ? ((rootDisk.used / rootDisk.size) * 100) : 0;
-        let diskStatus = "Optimal";
-        if (diskUsage > 90) diskStatus = "Critical";
-        else if (diskUsage > 80) diskStatus = "High";
-        else if (diskUsage > 70) diskStatus = "Moderate";
+        let diskStatus = t("system.optimal");
+        if (diskUsage > 90) diskStatus = t("system.critical");
+        else if (diskUsage > 80) diskStatus = t("system.high");
+        else if (diskUsage > 70) diskStatus = t("system.moderate");
 
-        const cpuStatus = loadInfo.currentLoad > 80 ? "High" :
-            loadInfo.currentLoad > 60 ? "Moderate" : "Optimal";
+        const cpuStatus = loadInfo.currentLoad > 80 ? t("system.high") :
+            loadInfo.currentLoad > 60 ? t("system.moderate") : t("system.optimal");
 
         const criticalThreshold = 90;
         const warningThreshold = 80;
-        let overallStatus = "Optimal";
-        let statusDetails = "All systems running normally";
+        let overallStatus = t("system.optimal");
+        let statusDetails = t("system.allSystemsRunningNormally");
 
         if (memUsage > criticalThreshold || loadInfo.currentLoad > criticalThreshold || diskUsage > criticalThreshold) {
-            overallStatus = "Critical";
-            statusDetails = "High resource usage detected - immediate attention required";
+            overallStatus = t("system.critical");
+            statusDetails = t("system.highResourceUsageDetectedImmediateAttentionRequired");
         } else if (memUsage > warningThreshold || loadInfo.currentLoad > warningThreshold || diskUsage > warningThreshold) {
-            overallStatus = "Warning";
-            statusDetails = "Moderate resource usage - monitoring recommended";
+            overallStatus = t("system.warning");
+            statusDetails = t("system.moderateResourceUsageMonitoringRecommended");
         }
 
         let mainInterface: any = null;
@@ -85,7 +87,7 @@ export async function GET(request: NextRequest) {
 
         const networkSpeed = mainInterface && 'rx_sec' in mainInterface && 'tx_sec' in mainInterface
             ? `${Math.round(((mainInterface.rx_sec || 0) + (mainInterface.tx_sec || 0)) / 1024 / 1024)} Mbps`
-            : "Unknown";
+            : t("system.unknown");
 
         let latency = 0;
         try {
@@ -117,9 +119,9 @@ export async function GET(request: NextRequest) {
                 status: cpuStatus,
             },
             disk: {
-                total: rootDisk ? formatBytes(rootDisk.size) : "Unknown",
-                used: rootDisk ? formatBytes(rootDisk.used) : "Unknown",
-                free: rootDisk ? formatBytes(rootDisk.available) : "Unknown",
+                total: rootDisk ? formatBytes(rootDisk.size) : t("system.unknown"),
+                used: rootDisk ? formatBytes(rootDisk.used) : t("system.unknown"),
+                free: rootDisk ? formatBytes(rootDisk.available) : t("system.unknown"),
                 usage: Math.round(diskUsage),
                 status: diskStatus,
             },
@@ -128,7 +130,7 @@ export async function GET(request: NextRequest) {
                 latency: latency,
                 downloadSpeed: mainInterface && 'rx_sec' in mainInterface ? Math.round((mainInterface.rx_sec || 0) / 1024 / 1024) : 0,
                 uploadSpeed: mainInterface && 'tx_sec' in mainInterface ? Math.round((mainInterface.tx_sec || 0) / 1024 / 1024) : 0,
-                status: mainInterface && 'operstate' in mainInterface && mainInterface.operstate === 'up' ? "Connected" : "Unknown",
+                status: mainInterface && 'operstate' in mainInterface && mainInterface.operstate === 'up' ? t("system.connected") : t("system.unknown"),
             },
             systemStatus: {
                 overall: overallStatus,
@@ -141,20 +143,20 @@ export async function GET(request: NextRequest) {
             if (graphics.controllers && graphics.controllers.length > 0) {
                 const gpu = graphics.controllers[0];
                 systemStats.gpu = {
-                    model: gpu.model || "Unknown GPU",
+                    model: gpu.model || t("system.unknownGPU"),
                     memory: gpu.vram ? `${gpu.vram} MB` : undefined,
-                    status: "Available",
+                    status: t("system.available"),
                 };
             } else {
                 systemStats.gpu = {
-                    model: "No GPU detected",
-                    status: "Unknown",
+                    model: t("system.noGPUDetected"),
+                    status: t("system.unknown"),
                 };
             }
         } catch (error) {
             systemStats.gpu = {
-                model: "GPU detection failed",
-                status: "Unknown",
+                model: t("system.gpuDetectionFailed"),
+                status: t("system.unknown"),
             };
         }
 

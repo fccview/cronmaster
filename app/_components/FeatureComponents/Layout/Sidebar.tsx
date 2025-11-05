@@ -11,10 +11,10 @@ import {
   HardDrive,
   Wifi,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export interface SidebarProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  title?: string;
   defaultCollapsed?: boolean;
   quickStats?: {
     cpu: number;
@@ -28,13 +28,13 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     {
       className,
       children,
-      title = "System Overview",
       defaultCollapsed = false,
       quickStats,
       ...props
     },
     ref
   ) => {
+    const t = useTranslations();
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -113,7 +113,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
               </div>
               {(!isCollapsed || !isCollapsed) && (
                 <h2 className="text-sm font-semibold text-foreground truncate">
-                  {title}
+                  {t("sidebar.systemOverview")}
                 </h2>
               )}
             </div>

@@ -3,6 +3,9 @@ import { JetBrains_Mono, Inter } from "next/font/google";
 import "@/app/globals.css";
 import { ThemeProvider } from "@/app/_providers/ThemeProvider";
 import { ServiceWorkerRegister } from "@/app/_components/FeatureComponents/PWA/ServiceWorkerRegister";
+import { Locales } from "@/app/_consts/global";
+
+import { NextIntlClientProvider } from "next-intl";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -43,11 +46,21 @@ export const viewport = {
   themeColor: "#3b82f6",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let locale = process.env.LOCALE || "en";
+  let messages;
+
+
+  if (!Locales.some((item) => item.locale === locale)) {
+    locale = "en";
+  }
+
+  messages = (await import(`./_translations/${locale}.json`)).default;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -59,15 +72,18 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-        <ServiceWorkerRegister />
+
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+          <ServiceWorkerRegister />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -26,6 +26,7 @@ import { EditScriptModal } from "@/app/_components/FeatureComponents/Modals/Edit
 import { DeleteScriptModal } from "@/app/_components/FeatureComponents/Modals/DeleteScriptModal";
 import { CloneScriptModal } from "@/app/_components/FeatureComponents/Modals/CloneScriptModal";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
+import { useTranslations } from "next-intl";
 
 interface ScriptsManagerProps {
   scripts: Script[];
@@ -43,6 +44,7 @@ export const ScriptsManager = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
+  const t = useTranslations();
 
   const [createForm, setCreateForm] = useState({
     name: "",
@@ -173,10 +175,10 @@ export const ScriptsManager = ({
               </div>
               <div>
                 <CardTitle className="text-xl brand-gradient">
-                  Scripts Library
+                  {t("scripts.scriptsLibrary")}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {scripts.length} saved script{scripts.length !== 1 ? "s" : ""}
+                  {t("scripts.nOfNSavedScripts", { count: scripts.length })}
                 </p>
               </div>
             </div>
@@ -185,7 +187,7 @@ export const ScriptsManager = ({
               className="btn-primary glow-primary"
             >
               <Plus className="h-4 w-4 mr-2" />
-              New Script
+              {t("scripts.newScript")}
             </Button>
           </div>
         </CardHeader>
@@ -196,10 +198,10 @@ export const ScriptsManager = ({
                 <FileText className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-3 brand-gradient">
-                No scripts yet
+                {t("scripts.noScriptsYet")}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Create reusable bash scripts to use in your scheduled tasks.
+                {t("scripts.createReusableBashScripts")}
               </p>
               <Button
                 onClick={() => setIsCreateModalOpen(true)}
@@ -207,7 +209,7 @@ export const ScriptsManager = ({
                 size="lg"
               >
                 <Plus className="h-5 w-5 mr-2" />
-                Create Your First Script
+                {t("scripts.createYourFirstScript")}
               </Button>
             </div>
           ) : (
@@ -233,7 +235,7 @@ export const ScriptsManager = ({
                         </p>
                       )}
                       <div className="text-xs text-muted-foreground">
-                        File: {script.filename}
+                        {t("scripts.file")}: {script.filename}
                       </div>
                     </div>
 

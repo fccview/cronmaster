@@ -6,6 +6,7 @@ import { ScriptsManager } from "@/app/_components/FeatureComponents/Scripts/Scri
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
 import { Clock, FileText } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface TabbedInterfaceProps {
   cronJobs: CronJob[];
@@ -19,6 +20,7 @@ export const TabbedInterface = ({
   const [activeTab, setActiveTab] = useState<"cronjobs" | "scripts">(
     "cronjobs"
   );
+  const t = useTranslations();
 
   return (
     <div className="space-y-6">
@@ -32,7 +34,7 @@ export const TabbedInterface = ({
               }`}
           >
             <Clock className="h-4 w-4" />
-            Cron Jobs
+            {t("cronjobs.cronJobs")}
             <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
               {cronJobs.length}
             </span>
@@ -45,7 +47,7 @@ export const TabbedInterface = ({
               }`}
           >
             <FileText className="h-4 w-4" />
-            Scripts
+            {t("scripts.scripts")}
             <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
               {scripts.length}
             </span>

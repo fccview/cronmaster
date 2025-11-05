@@ -1,4 +1,4 @@
-import cronstrue from "cronstrue";
+import cronstrue from 'cronstrue/i18n';
 
 export interface CronExplanation {
   humanReadable: string;
@@ -7,7 +7,7 @@ export interface CronExplanation {
   error?: string;
 }
 
-export const parseCronExpression = (expression: string): CronExplanation => {
+export const parseCronExpression = (expression: string, locale?: string): CronExplanation => {
   try {
     const cleanExpression = expression.trim();
 
@@ -23,6 +23,7 @@ export const parseCronExpression = (expression: string): CronExplanation => {
     const humanReadable = cronstrue.toString(cleanExpression, {
       verbose: true,
       throwExceptionOnParseError: false,
+      locale: locale || "en",
     });
 
     return {

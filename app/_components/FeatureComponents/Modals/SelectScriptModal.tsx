@@ -8,6 +8,7 @@ import { FileText, Search, Check, Terminal } from "lucide-react";
 import { Script } from "@/app/_utils/scripts-utils";
 import { getScriptContent } from "@/app/_server/actions/scripts";
 import { getHostScriptPath } from "@/app/_server/actions/scripts";
+import { useTranslations } from "next-intl";
 
 interface SelectScriptModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const SelectScriptModal = ({
   onScriptSelect,
   selectedScriptId,
 }: SelectScriptModalProps) => {
+  const t = useTranslations();
   const [searchQuery, setSearchQuery] = useState("");
   const [previewScript, setPreviewScript] = useState<Script | null>(null);
   const [previewContent, setPreviewContent] = useState<string>("");
@@ -77,7 +79,7 @@ export const SelectScriptModal = ({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Select Script"
+      title={t("scripts.selectScript")}
       size="xl"
     >
       <div className="space-y-4">
@@ -86,7 +88,7 @@ export const SelectScriptModal = ({
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search scripts..."
+            placeholder={t("scripts.searchScripts")}
             className="pl-10"
           />
         </div>
@@ -95,13 +97,13 @@ export const SelectScriptModal = ({
           <div className="border border-border rounded-lg overflow-hidden">
             <div className="bg-muted/30 px-4 py-2 border-b border-border">
               <h3 className="text-sm font-medium text-foreground">
-                Available Scripts ({filteredScripts.length})
+                {t("scripts.availableScripts", { count: filteredScripts.length })}
               </h3>
             </div>
             <div className="overflow-y-auto h-full max-h-80">
               {filteredScripts.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
-                  {searchQuery ? "No scripts found" : "No scripts available"}
+                  {searchQuery ? t("scripts.noScriptsFound") : t("scripts.noScriptsAvailable")}
                 </div>
               ) : (
                 <div className="divide-y divide-border">
@@ -143,7 +145,7 @@ export const SelectScriptModal = ({
           <div className="border border-border rounded-lg overflow-hidden">
             <div className="bg-muted/30 px-4 py-2 border-b border-border">
               <h3 className="text-sm font-medium text-foreground">
-                Script Preview
+                {t("scripts.scriptPreview")}
               </h3>
             </div>
             <div className="p-4 h-full max-h-80 overflow-y-auto">
@@ -162,7 +164,7 @@ export const SelectScriptModal = ({
                     <div className="flex items-center gap-2 mb-2">
                       <Terminal className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium text-foreground">
-                        Command Preview
+                        {t("scripts.commandPreview")}
                       </span>
                     </div>
                     <div className="bg-muted/30 p-3 rounded border border-border/30">
@@ -174,7 +176,7 @@ export const SelectScriptModal = ({
 
                   <div>
                     <span className="text-sm font-medium text-foreground">
-                      Script Content
+                      {t("scripts.scriptContent")}
                     </span>
                     <div className="bg-muted/30 p-3 rounded border border-border/30 mt-2 max-h-32 overflow-auto">
                       <pre className="text-xs font-mono text-foreground whitespace-pre-wrap">
@@ -186,7 +188,7 @@ export const SelectScriptModal = ({
               ) : (
                 <div className="text-center text-muted-foreground py-8">
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Select a script to preview</p>
+                  <p>{t("scripts.selectScriptToPreview")}</p>
                 </div>
               )}
             </div>
@@ -200,7 +202,7 @@ export const SelectScriptModal = ({
             onClick={handleClose}
             className="btn-outline"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -209,7 +211,7 @@ export const SelectScriptModal = ({
             className="btn-primary glow-primary"
           >
             <Check className="h-4 w-4 mr-2" />
-            Select Script
+            {t("scripts.selectScript")}
           </Button>
         </div>
       </div>

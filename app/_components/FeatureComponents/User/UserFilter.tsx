@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { ChevronDown, User, X } from "lucide-react";
 import { fetchAvailableUsers } from "@/app/_server/actions/cronjobs";
+import { useTranslations } from "next-intl";
 
 interface UserFilterProps {
   selectedUser: string | null;
@@ -19,6 +20,7 @@ export const UserFilter = ({
   const [users, setUsers] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const t = useTranslations();
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -56,7 +58,7 @@ export const UserFilter = ({
         <div className="flex items-center gap-2">
           <User className="h-4 w-4" />
           <span className="text-sm">
-            {selectedUser ? `User: ${selectedUser}` : "All users"}
+            {selectedUser ? `${t("common.userWithUsername", { user: selectedUser })}` : t("common.allUsers")}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -85,7 +87,7 @@ export const UserFilter = ({
             className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${!selectedUser ? "bg-accent text-accent-foreground" : ""
               }`}
           >
-            All users
+            {t("common.allUsers")}
           </button>
           {users.map((user) => (
             <button

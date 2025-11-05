@@ -55,6 +55,7 @@ interface SystemInfoType {
   };
 }
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 interface SystemInfoCardProps {
   systemInfo: SystemInfoType;
@@ -67,6 +68,7 @@ export const SystemInfoCard = ({
   const [systemInfo, setSystemInfo] =
     useState<SystemInfoType>(initialSystemInfo);
   const [isUpdating, setIsUpdating] = useState(false);
+  const t = useTranslations();
 
 
 
@@ -126,7 +128,7 @@ export const SystemInfoCard = ({
   const basicInfoItems = [
     {
       icon: Clock,
-      label: "Uptime",
+      label: t("sidebar.uptime"),
       value: systemInfo.uptime,
       color: "text-orange-500",
     },
@@ -135,7 +137,7 @@ export const SystemInfoCard = ({
   const performanceItems = [
     {
       icon: HardDrive,
-      label: "Memory",
+      label: t("sidebar.memory"),
       value: `${systemInfo.memory.used} / ${systemInfo.memory.total}`,
       detail: `${systemInfo.memory.free} free`,
       status: systemInfo.memory.status,
@@ -145,7 +147,7 @@ export const SystemInfoCard = ({
     },
     {
       icon: Cpu,
-      label: "CPU",
+      label: t("sidebar.cpu"),
       value: systemInfo.cpu.model,
       detail: `${systemInfo.cpu.cores} cores`,
       status: systemInfo.cpu.status,
@@ -155,7 +157,7 @@ export const SystemInfoCard = ({
     },
     {
       icon: Monitor,
-      label: "GPU",
+      label: t("sidebar.gpu"),
       value: systemInfo.gpu.model,
       detail: systemInfo.gpu.memory
         ? `${systemInfo.gpu.memory} VRAM`
@@ -165,7 +167,7 @@ export const SystemInfoCard = ({
     },
     ...(systemInfo.network ? [{
       icon: Wifi,
-      label: "Network",
+      label: t("sidebar.network"),
       value: `${systemInfo.network.latency}ms`,
       detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
       status: systemInfo.network.status,
@@ -175,17 +177,17 @@ export const SystemInfoCard = ({
 
   const performanceMetrics = [
     {
-      label: "CPU Usage",
+      label: t("sidebar.cpuUsage"),
       value: `${systemInfo.cpu.usage}%`,
       status: systemInfo.cpu.status,
     },
     {
-      label: "Memory Usage",
+      label: t("sidebar.memoryUsage"),
       value: `${systemInfo.memory.usage}%`,
       status: systemInfo.memory.status,
     },
     ...(systemInfo.network ? [{
-      label: "Network Latency",
+      label: t("sidebar.networkLatency"),
       value: `${systemInfo.network.latency}ms`,
       status: systemInfo.network.status,
     }] : []),
@@ -193,7 +195,6 @@ export const SystemInfoCard = ({
 
   return (
     <Sidebar
-      title="System Overview"
       defaultCollapsed={false}
       quickStats={quickStats}
     >
@@ -206,7 +207,7 @@ export const SystemInfoCard = ({
 
       <div>
         <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
-          System Information
+          {t("sidebar.systemInformation")}
         </h3>
         <div className="space-y-2">
           {basicInfoItems.map((item) => (
@@ -224,7 +225,7 @@ export const SystemInfoCard = ({
 
       <div>
         <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
-          Performance Metrics
+          {t("sidebar.performanceMetrics")}
         </h3>
         <div className="space-y-2">
           {performanceItems.map((item) => (
@@ -247,14 +248,14 @@ export const SystemInfoCard = ({
       <PerformanceSummary metrics={performanceMetrics} />
 
       <div className="text-xs text-muted-foreground text-center p-2 bg-muted/20 rounded-lg">
-        💡 Stats update every{" "}
+        {t("sidebar.statsUpdateEvery")}{" "}
         {Math.round(
           parseInt(process.env.NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL || "30000") /
           1000
         )}
-        s • Network speed estimated from latency
+        s • {t("sidebar.networkSpeedEstimatedFromLatency")}
         {isUpdating && (
-          <span className="ml-2 animate-pulse">🔄 Updating...</span>
+          <span className="ml-2 animate-pulse">{t("sidebar.updating")}...</span>
         )}
       </div>
     </Sidebar>

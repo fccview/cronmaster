@@ -18,6 +18,7 @@ import {
   ChevronUp,
   Search,
 } from "lucide-react";
+import { useLocale } from "next-intl";
 
 interface CronExpressionHelperProps {
   value: string;
@@ -34,6 +35,7 @@ export const CronExpressionHelper = ({
   className = "",
   showPatterns = true,
 }: CronExpressionHelperProps) => {
+  const locale = useLocale();
   const [explanation, setExplanation] = useState<CronExplanation | null>(null);
   const [showPatternsPanel, setShowPatternsPanel] = useState(false);
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -49,7 +51,7 @@ export const CronExpressionHelper = ({
 
   useEffect(() => {
     if (debouncedValue) {
-      const result = parseCronExpression(debouncedValue);
+      const result = parseCronExpression(debouncedValue, locale);
       setExplanation(result);
     } else {
       setExplanation(null);

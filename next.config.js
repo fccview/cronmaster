@@ -1,3 +1,5 @@
+const withNextIntl = require('next-intl/plugin')('./app/i18n.ts');
+
 const withPWA = require('next-pwa')({
     dest: 'public',
     register: true,
@@ -8,6 +10,13 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    webpack: (config) => {
+        config.resolve.alias = {
+            ...config.resolve.alias,
+            'osx-temperature-sensor': false,
+        };
+        return config;
+    },
     async headers() {
         return [
             {
@@ -27,4 +36,6 @@ const nextConfig = {
     },
 }
 
-module.exports = withPWA(nextConfig)
+module.exports = withNextIntl({
+    ...withPWA(nextConfig)
+});

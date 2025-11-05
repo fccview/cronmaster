@@ -1,6 +1,7 @@
 import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
 import { Activity } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export interface SystemStatusProps extends HTMLAttributes<HTMLDivElement> {
   status: string;
@@ -14,6 +15,7 @@ export const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
     { className, status, details, timestamp, isUpdating = false, ...props },
     ref
   ) => {
+    const t = useTranslations();
     const getStatusConfig = (status: string) => {
       const lowerStatus = status.toLowerCase();
 
@@ -64,11 +66,11 @@ export const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">
-                System Status: {status}
+                {t("system.systemStatus")}: {status}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {details} • Last updated: {timestamp}
+              {details} • {t("system.lastUpdated")}: {timestamp}
               {isUpdating && <span className="ml-2 animate-pulse">🔄</span>}
             </p>
           </div>
