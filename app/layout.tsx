@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "./_components/ui/ThemeProvider";
-import { ServiceWorkerRegister } from "./_components/ui/ServiceWorkerRegister";
+import { ThemeProvider } from "@/app/_providers/ThemeProvider";
+import { ServiceWorkerRegister } from "@/app/_components/FeatureComponents/PWA/ServiceWorkerRegister";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],

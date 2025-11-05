@@ -1,11 +1,11 @@
-import { SystemInfoCard } from "./_components/SystemInfo";
-import { TabbedInterface } from "./_components/TabbedInterface";
-import { getCronJobs } from "./_utils/system";
-import { fetchScripts } from "./_server/actions/scripts";
-import { ThemeToggle } from "./_components/ui/ThemeToggle";
-import { LogoutButton } from "./_components/ui/LogoutButton";
-import { ToastContainer } from "./_components/ui/Toast";
-import { PWAInstallPrompt } from "./_components/ui/PWAInstallPrompt";
+import { SystemInfoCard } from "@/app/_components/FeatureComponents/System/SystemInfo";
+import { TabbedInterface } from "@/app/_components/FeatureComponents/Layout/TabbedInterface";
+import { getCronJobs } from "@/app/_utils/system";
+import { fetchScripts } from "@/app/_server/actions/scripts";
+import { ThemeToggle } from "@/app/_components/FeatureComponents/Theme/ThemeToggle";
+import { LogoutButton } from "@/app/_components/FeatureComponents/LoginForm/LogoutButton";
+import { ToastContainer } from "@/app/_components/GlobalComponents/UIElements/Toast";
+import { PWAInstallPrompt } from "@/app/_components/FeatureComponents/PWA/PWAInstallPrompt";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
