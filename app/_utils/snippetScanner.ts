@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { isDocker } from "../_server/actions/global";
 
 export interface BashSnippet {
   id: string;
@@ -118,12 +119,12 @@ const scanSnippetDirectory = async (
 }
 
 export const loadAllSnippets = async (): Promise<BashSnippet[]> => {
-  const isDocker = process.env.DOCKER === "true";
+  const docker = await isDocker();
 
   let builtinSnippetsPath: string;
   let userSnippetsPath: string;
 
-  if (isDocker) {
+  if (docker) {
     builtinSnippetsPath = "/app/app/_utils/snippets";
     userSnippetsPath = "/app/snippets";
   } else {

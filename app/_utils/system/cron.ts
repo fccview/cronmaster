@@ -6,6 +6,7 @@ import {
 } from "@/app/_utils/system/hostCrontab";
 import { parseJobsFromLines, deleteJobInLines, updateJobInLines, pauseJobInLines, resumeJobInLines } from "@/app/_utils/cron/line-manipulation";
 import { cleanCrontabContent, readCronFiles, writeCronFiles } from "@/app/_utils/cron/files-manipulation";
+import { isDocker } from "@/app/_server/actions/global";
 
 const execAsync = promisify(exec);
 
@@ -18,10 +19,8 @@ export interface CronJob {
   paused?: boolean;
 }
 
-const isDocker = (): boolean => process.env.DOCKER === "true";
-
 const readUserCrontab = async (user: string): Promise<string> => {
-  if (isDocker()) {
+  if (await isDocker()) {
     const userCrontabs = await readAllHostCrontabs();
     const targetUserCrontab = userCrontabs.find((uc) => uc.user === user);
     return targetUserCrontab?.content || "";
@@ -34,7 +33,7 @@ const readUserCrontab = async (user: string): Promise<string> => {
 };
 
 const writeUserCrontab = async (user: string, content: string): Promise<boolean> => {
-  if (isDocker()) {
+  if (await isDocker()) {
     return await writeHostCrontabForUser(user, content);
   } else {
     try {
@@ -48,7 +47,7 @@ const writeUserCrontab = async (user: string, content: string): Promise<boolean>
 };
 
 const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
-  if (isDocker()) {
+  if (await isDocker()) {
     return await readAllHostCrontabs();
   } else {
     const { getAllTargetUsers } = await import("@/app/_utils/system/hostCrontab");

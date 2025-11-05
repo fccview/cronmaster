@@ -6,12 +6,12 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { SCRIPTS_DIR, normalizeLineEndings } from "@/app/_utils/scripts";
-import { loadAllScripts, type Script } from "@/app/_utils/scriptScanner";
+import { normalizeLineEndings } from "@/app/_utils/scripts";
+import { SCRIPTS_DIR } from "@/app/_consts/file";
+import { loadAllScripts, Script } from "@/app/_utils/scriptScanner";
+import { isDocker } from "@/app/_server/actions/global";
 
 const execAsync = promisify(exec);
-
-export type { Script } from "@/app/_utils/scriptScanner";
 
 const sanitizeScriptName = (name: string): string => {
   return name
@@ -37,24 +37,22 @@ const generateUniqueFilename = async (baseName: string): Promise<string> => {
 };
 
 const ensureScriptsDirectory = async () => {
-  const scriptsDir = await SCRIPTS_DIR();
+  const scriptsDir = join(process.cwd(), SCRIPTS_DIR);
   if (!existsSync(scriptsDir)) {
     await mkdir(scriptsDir, { recursive: true });
   }
 };
 
 const ensureHostScriptsDirectory = async () => {
-  const hostProjectDir = process.env.HOST_PROJECT_DIR || process.cwd();
-
-  const hostScriptsDir = join(hostProjectDir, "scripts");
+  const hostScriptsDir = join(process.cwd(), SCRIPTS_DIR);
   if (!existsSync(hostScriptsDir)) {
     await mkdir(hostScriptsDir, { recursive: true });
   }
 };
 
 const saveScriptFile = async (filename: string, content: string) => {
-  const isDocker = process.env.DOCKER === "true";
-  const scriptsDir = isDocker ? "/app/scripts" : await SCRIPTS_DIR();
+  const docker = await isDocker();
+  const scriptsDir = docker ? "/app/scripts" : join(process.cwd(), SCRIPTS_DIR);
   await ensureScriptsDirectory();
 
   const scriptPath = join(scriptsDir, filename);
@@ -68,8 +66,8 @@ const saveScriptFile = async (filename: string, content: string) => {
 };
 
 const deleteScriptFile = async (filename: string) => {
-  const isDocker = process.env.DOCKER === "true";
-  const scriptsDir = isDocker ? "/app/scripts" : await SCRIPTS_DIR();
+  const docker = await isDocker();
+  const scriptsDir = docker ? "/app/scripts" : join(process.cwd(), SCRIPTS_DIR);
   const scriptPath = join(scriptsDir, filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
@@ -240,8 +238,8 @@ export const cloneScript = async (
 
 export const getScriptContent = async (filename: string): Promise<string> => {
   try {
-    const isDocker = process.env.DOCKER === "true";
-    const scriptPath = isDocker
+    const docker = await isDocker();
+    const scriptPath = docker
       ? join("/app/scripts", filename)
       : join(process.cwd(), "scripts", filename);
 
@@ -280,8 +278,8 @@ export const executeScript = async (
 }> => {
   try {
     await ensureHostScriptsDirectory();
-    const isDocker = process.env.DOCKER === "true";
-    const hostScriptPath = isDocker
+    const docker = await isDocker();
+    const hostScriptPath = docker
       ? join("/app/scripts", filename)
       : join(process.cwd(), "scripts", filename);
 

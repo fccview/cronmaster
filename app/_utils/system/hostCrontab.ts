@@ -1,3 +1,4 @@
+import { NSENTER_HOST_CRONTAB } from "@/app/_consts/nsenter";
 import { exec } from "child_process";
 import { promisify } from "util";
 
@@ -11,15 +12,13 @@ export interface UserInfo {
 
 const execHostCrontab = async (command: string): Promise<string> => {
   try {
-    const { stdout } = await execAsync(
-      `nsenter -t 1 -m -u -i -n -p sh -c "${command}"`
-    );
+    const { stdout } = await execAsync(NSENTER_HOST_CRONTAB(command?.trim()));
     return stdout;
   } catch (error: any) {
     console.error("Error executing host crontab command:", error);
     throw error;
   }
-}
+};
 
 const getTargetUser = async (): Promise<string> => {
   try {
@@ -31,19 +30,6 @@ const getTargetUser = async (): Promise<string> => {
     const dockerSocketOwner = stdout.trim();
 
     if (dockerSocketOwner === "root") {
-      try {
-        const projectDir = process.env.HOST_PROJECT_DIR;
-
-        if (projectDir) {
-          const dirOwner = await execHostCrontab(
-            `stat -c "%U" "${projectDir}"`
-          );
-          return dirOwner.trim();
-        }
-      } catch (error) {
-        console.warn("Could not detect user from project directory:", error);
-      }
-
       try {
         const users = await execHostCrontab(
           'getent passwd | grep ":/home/" | head -1 | cut -d: -f1'
@@ -64,7 +50,7 @@ const getTargetUser = async (): Promise<string> => {
     console.error("Error detecting target user:", error);
     return "root";
   }
-}
+};
 
 export const getAllTargetUsers = async (): Promise<string[]> => {
   try {
@@ -91,7 +77,7 @@ export const getAllTargetUsers = async (): Promise<string[]> => {
     console.error("Error getting all target users:", error);
     return ["root"];
   }
-}
+};
 
 export const readHostCrontab = async (): Promise<string> => {
   try {
@@ -103,7 +89,7 @@ export const readHostCrontab = async (): Promise<string> => {
     console.error("Error reading host crontab:", error);
     return "";
   }
-}
+};
 
 export const readAllHostCrontabs = async (): Promise<
   { user: string; content: string }[]
@@ -129,7 +115,7 @@ export const readAllHostCrontabs = async (): Promise<
     console.error("Error reading all host crontabs:", error);
     return [];
   }
-}
+};
 
 export const writeHostCrontab = async (content: string): Promise<boolean> => {
   try {
@@ -148,7 +134,7 @@ export const writeHostCrontab = async (content: string): Promise<boolean> => {
     console.error("Error writing host crontab:", error);
     return false;
   }
-}
+};
 
 export const writeHostCrontabForUser = async (
   user: string,
@@ -169,7 +155,7 @@ export const writeHostCrontabForUser = async (
     console.error(`Error writing host crontab for user ${user}:`, error);
     return false;
   }
-}
+};
 
 export async function getUserInfo(username: string): Promise<UserInfo | null> {
   try {

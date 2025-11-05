@@ -3,6 +3,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { readHostCrontab, writeHostCrontab } from "@/app/_utils/system/hostCrontab";
+import { isDocker } from "@/app/_server/actions/global";
 
 const execAsync = promisify(exec);
 
@@ -27,9 +28,9 @@ export const cleanCrontabContent = async (content: string): Promise<string> => {
 }
 
 export const readCronFiles = async (): Promise<string> => {
-    const isDocker = process.env.DOCKER === "true";
+    const docker = await isDocker();
 
-    if (!isDocker) {
+    if (!docker) {
         try {
             const { stdout } = await execAsync('crontab -l 2>/dev/null || echo ""');
             return stdout;
@@ -43,9 +44,9 @@ export const readCronFiles = async (): Promise<string> => {
 }
 
 export const writeCronFiles = async (content: string): Promise<boolean> => {
-    const isDocker = process.env.DOCKER === "true";
+    const docker = await isDocker();
 
-    if (!isDocker) {
+    if (!docker) {
         try {
             await execAsync('echo "' + content + '" | crontab -');
             return true;

@@ -18,6 +18,8 @@ import { revalidatePath } from "next/cache";
 import { getScriptPath } from "@/app/_utils/scripts";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { isDocker } from "@/app/_server/actions/global";
+import { NSENTER_RUN_JOB } from "@/app/_consts/nsenter";
 
 const execAsync = promisify(exec);
 
@@ -260,11 +262,25 @@ export const runCronJob = async (
       return { success: false, message: "Cannot run paused cron job" };
     }
 
-    const userInfo = await getUserInfo(job.user);
-    const executionUser = userInfo ? userInfo.username : "root";
-    const escapedCommand = job.command.replace(/'/g, "'\\''");
+    let command: string;
+    const docker = await isDocker();
 
-    const command = `nsenter -t 1 -m -u -i -n -p su - ${executionUser} -c '${escapedCommand}'`;
+    if (docker) {
+      const userInfo = await getUserInfo(job.user);
+      const executionUser = userInfo ? userInfo.username : "root";
+      const escapedCommand = job.command.replace(/'/g, "'\\''");
+
+      command = NSENTER_RUN_JOB(executionUser, escapedCommand);
+    } else {
+      command = job.command;
+
+      const appUser = process.env.USER || "unknown";
+      if (job.user !== appUser) {
+        console.warn(
+          `[Native Mode] Running job ${job.id} as current user (${appUser}) instead of target user (${job.user}).`
+        );
+      }
+    }
 
     const { stdout, stderr } = await execAsync(command, {
       timeout: 30000,
@@ -285,7 +301,7 @@ export const runCronJob = async (
     return {
       success: false,
       message: "Failed to execute cron job",
-      output: errorMessage,
+      output: errorMessage.trim(),
       details: error.stack,
     };
   }

@@ -3,7 +3,7 @@
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { FileText, AlertCircle, Trash2 } from "lucide-react";
-import { type Script } from "@/app/_server/actions/scripts";
+import { Script } from "@/app/_utils/scriptScanner";
 
 interface DeleteScriptModalProps {
   script: Script | null;

@@ -5,7 +5,7 @@ import { Copy } from "lucide-react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
-import { type Script } from "@/app/_server/actions/scripts";
+import { Script } from "@/app/_utils/scriptScanner";
 
 interface CloneScriptModalProps {
   script: Script | null;

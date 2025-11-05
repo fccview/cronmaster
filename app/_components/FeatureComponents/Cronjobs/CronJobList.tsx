@@ -22,7 +22,8 @@ import { CloneTaskModal } from "@/app/_components/FeatureComponents/Modals/Clone
 import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
 import { ErrorBadge } from "@/app/_components/GlobalComponents/Badges/ErrorBadge";
 import { ErrorDetailsModal } from "@/app/_components/FeatureComponents/Modals/ErrorDetailsModal";
-import { type Script } from "@/app/_server/actions/scripts";
+import { Script } from "@/app/_utils/scriptScanner";
+
 import {
   getJobErrorsByJobId,
   JobError,
