@@ -273,13 +273,6 @@ export const runCronJob = async (
       command = NSENTER_RUN_JOB(executionUser, escapedCommand);
     } else {
       command = job.command;
-
-      const appUser = process.env.USER || "unknown";
-      if (job.user !== appUser) {
-        console.warn(
-          `[Native Mode] Running job ${job.id} as current user (${appUser}) instead of target user (${job.user}).`
-        );
-      }
     }
 
     const { stdout, stderr } = await execAsync(command, {

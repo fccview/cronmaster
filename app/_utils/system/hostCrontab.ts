@@ -1,3 +1,4 @@
+import { ID_G, ID_U, READ_CRONTAB, WRITE_HOST_CRONTAB } from "@/app/_consts/commands";
 import { NSENTER_HOST_CRONTAB } from "@/app/_consts/nsenter";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -82,9 +83,7 @@ export const getAllTargetUsers = async (): Promise<string[]> => {
 export const readHostCrontab = async (): Promise<string> => {
   try {
     const user = await getTargetUser();
-    return await execHostCrontab(
-      `crontab -l -u ${user} 2>/dev/null || echo ""`
-    );
+    return await execHostCrontab(READ_CRONTAB(user));
   } catch (error) {
     console.error("Error reading host crontab:", error);
     return "";
@@ -100,9 +99,7 @@ export const readAllHostCrontabs = async (): Promise<
 
     for (const user of users) {
       try {
-        const content = await execHostCrontab(
-          `crontab -l -u ${user} 2>/dev/null || echo ""`
-        );
+        const content = await execHostCrontab(READ_CRONTAB(user));
         results.push({ user, content });
       } catch (error) {
         console.warn(`Error reading crontab for user ${user}:`, error);
@@ -126,9 +123,7 @@ export const writeHostCrontab = async (content: string): Promise<boolean> => {
     }
 
     const base64Content = Buffer.from(finalContent).toString("base64");
-    await execHostCrontab(
-      `echo '${base64Content}' | base64 -d | crontab -u ${user} -`
-    );
+    await execHostCrontab(WRITE_HOST_CRONTAB(base64Content, user));
     return true;
   } catch (error) {
     console.error("Error writing host crontab:", error);
@@ -147,9 +142,7 @@ export const writeHostCrontabForUser = async (
     }
 
     const base64Content = Buffer.from(finalContent).toString("base64");
-    await execHostCrontab(
-      `echo '${base64Content}' | base64 -d | crontab -u ${user} -`
-    );
+    await execHostCrontab(WRITE_HOST_CRONTAB(base64Content, user));
     return true;
   } catch (error) {
     console.error(`Error writing host crontab for user ${user}:`, error);
@@ -159,8 +152,8 @@ export const writeHostCrontabForUser = async (
 
 export async function getUserInfo(username: string): Promise<UserInfo | null> {
   try {
-    const uidResult = await execHostCrontab(`id -u ${username}`);
-    const gidResult = await execHostCrontab(`id -g ${username}`);
+    const uidResult = await execHostCrontab(ID_U(username));
+    const gidResult = await execHostCrontab(ID_G(username));
 
     const uid = parseInt(uidResult.trim());
     const gid = parseInt(gidResult.trim());

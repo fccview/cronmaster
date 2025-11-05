@@ -6,10 +6,11 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { normalizeLineEndings } from "@/app/_utils/scripts";
+import { getHostScriptPath, getScriptPath, normalizeLineEndings } from "@/app/_utils/scripts";
 import { SCRIPTS_DIR } from "@/app/_consts/file";
 import { loadAllScripts, Script } from "@/app/_utils/scriptScanner";
 import { isDocker } from "@/app/_server/actions/global";
+import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
 
 const execAsync = promisify(exec);
 
@@ -51,24 +52,20 @@ const ensureHostScriptsDirectory = async () => {
 };
 
 const saveScriptFile = async (filename: string, content: string) => {
-  const docker = await isDocker();
-  const scriptsDir = docker ? "/app/scripts" : join(process.cwd(), SCRIPTS_DIR);
   await ensureScriptsDirectory();
 
-  const scriptPath = join(scriptsDir, filename);
+  const scriptPath = getScriptPath(filename);
   await writeFile(scriptPath, content, "utf8");
 
   try {
-    await execAsync(`chmod +x "${scriptPath}"`);
+    await execAsync(MAKE_SCRIPT_EXECUTABLE(scriptPath));
   } catch (error) {
     console.error(`Failed to set execute permissions on ${scriptPath}:`, error);
   }
 };
 
 const deleteScriptFile = async (filename: string) => {
-  const docker = await isDocker();
-  const scriptsDir = docker ? "/app/scripts" : join(process.cwd(), SCRIPTS_DIR);
-  const scriptPath = join(scriptsDir, filename);
+  const scriptPath = getScriptPath(filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
   }
@@ -238,10 +235,7 @@ export const cloneScript = async (
 
 export const getScriptContent = async (filename: string): Promise<string> => {
   try {
-    const docker = await isDocker();
-    const scriptPath = docker
-      ? join("/app/scripts", filename)
-      : join(process.cwd(), "scripts", filename);
+    const scriptPath = getScriptPath(filename);
 
     if (existsSync(scriptPath)) {
       const content = await readFile(scriptPath, "utf8");
@@ -278,10 +272,7 @@ export const executeScript = async (
 }> => {
   try {
     await ensureHostScriptsDirectory();
-    const docker = await isDocker();
-    const hostScriptPath = docker
-      ? join("/app/scripts", filename)
-      : join(process.cwd(), "scripts", filename);
+    const hostScriptPath = getHostScriptPath(filename);
 
     if (!existsSync(hostScriptPath)) {
       return {
@@ -291,7 +282,7 @@ export const executeScript = async (
       };
     }
 
-    const { stdout, stderr } = await execAsync(`bash "${hostScriptPath}"`, {
+    const { stdout, stderr } = await execAsync(RUN_SCRIPT(hostScriptPath), {
       timeout: 30000,
     });
 

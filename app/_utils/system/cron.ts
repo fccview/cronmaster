@@ -7,6 +7,7 @@ import {
 import { parseJobsFromLines, deleteJobInLines, updateJobInLines, pauseJobInLines, resumeJobInLines } from "@/app/_utils/cron/line-manipulation";
 import { cleanCrontabContent, readCronFiles, writeCronFiles } from "@/app/_utils/cron/files-manipulation";
 import { isDocker } from "@/app/_server/actions/global";
+import { READ_CRONTAB, WRITE_CRONTAB } from "@/app/_consts/commands";
 
 const execAsync = promisify(exec);
 
@@ -20,24 +21,28 @@ export interface CronJob {
 }
 
 const readUserCrontab = async (user: string): Promise<string> => {
-  if (await isDocker()) {
+  const docker = await isDocker();
+
+  if (docker) {
     const userCrontabs = await readAllHostCrontabs();
     const targetUserCrontab = userCrontabs.find((uc) => uc.user === user);
     return targetUserCrontab?.content || "";
   } else {
     const { stdout } = await execAsync(
-      `crontab -l -u ${user} 2>/dev/null || echo ""`
+      READ_CRONTAB(user)
     );
     return stdout;
   }
 };
 
 const writeUserCrontab = async (user: string, content: string): Promise<boolean> => {
-  if (await isDocker()) {
+  const docker = await isDocker();
+
+  if (docker) {
     return await writeHostCrontabForUser(user, content);
   } else {
     try {
-      await execAsync(`echo '${content}' | crontab -u ${user} -`);
+      await execAsync(WRITE_CRONTAB(content, user));
       return true;
     } catch (error) {
       console.error(`Error writing crontab for user ${user}:`, error);
@@ -47,7 +52,9 @@ const writeUserCrontab = async (user: string, content: string): Promise<boolean>
 };
 
 const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
-  if (await isDocker()) {
+  const docker = await isDocker();
+
+  if (docker) {
     return await readAllHostCrontabs();
   } else {
     const { getAllTargetUsers } = await import("@/app/_utils/system/hostCrontab");
@@ -56,9 +63,7 @@ const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
 
     for (const user of users) {
       try {
-        const { stdout } = await execAsync(
-          `crontab -l -u ${user} 2>/dev/null || echo ""`
-        );
+        const { stdout } = await execAsync(READ_CRONTAB(user));
         results.push({ user, content: stdout });
       } catch (error) {
         console.error(`Error reading crontab for user ${user}:`, error);

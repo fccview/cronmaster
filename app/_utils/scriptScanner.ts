@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { isDocker } from "../_server/actions/global";
+import { SCRIPTS_DIR } from "../_consts/file";
 
 export interface Script {
   id: string;
@@ -68,10 +68,7 @@ const scanScriptsDirectory = async (dirPath: string): Promise<Script[]> => {
 }
 
 export const loadAllScripts = async (): Promise<Script[]> => {
-  const docker = await isDocker();
-  const scriptsDir = docker
-    ? "/app/scripts"
-    : path.join(process.cwd(), "scripts");
+  const scriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
   return await scanScriptsDirectory(scriptsDir);
 }
 
