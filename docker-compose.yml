@@ -1,5 +1,5 @@
 services:
-  cronjob-manager:
+  cronmaster:
     image: ghcr.io/fccview/cronmaster:latest
     container_name: cronmaster
     user: "root"
@@ -9,10 +9,14 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER=true
-
-      # --- MAP HOST PROJECT DIRECTORY, THIS IS MANDATORY FOR SCRIPTS TO WORK
-      - HOST_PROJECT_DIR=/path/to/cronmaster/directory
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
+
+      # --- SET LOCALE TO ONE OF OUR SUPPORTED LOCALES - see the /app/_translations/ folder for supported locales
+      # - LOCALE=en
+
+      # --- UNCOMMENT TO SET DIFFERENT LOGGING VALUES
+      # - MAX_LOG_AGE_DAYS=30
+      # - MAX_LOGS_PER_JOB=50
 
       # --- PASSWORD PROTECTION
       # Uncomment to enable password protection (replace "password" with your own)

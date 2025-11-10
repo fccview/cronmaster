@@ -4,10 +4,26 @@ import {
   readAllHostCrontabs,
   writeHostCrontabForUser,
 } from "@/app/_utils/crontab-utils";
-import { parseJobsFromLines, deleteJobInLines, updateJobInLines, pauseJobInLines, resumeJobInLines } from "@/app/_utils/line-manipulation-utils";
-import { cleanCrontabContent, readCronFiles, writeCronFiles } from "@/app/_utils/files-manipulation-utils";
+import {
+  parseJobsFromLines,
+  deleteJobInLines,
+  updateJobInLines,
+  pauseJobInLines,
+  resumeJobInLines,
+  formatCommentWithMetadata,
+} from "@/app/_utils/line-manipulation-utils";
+import {
+  cleanCrontabContent,
+  readCronFiles,
+  writeCronFiles,
+} from "@/app/_utils/files-manipulation-utils";
 import { isDocker } from "@/app/_server/actions/global";
 import { READ_CRONTAB, WRITE_CRONTAB } from "@/app/_consts/commands";
+import {
+  wrapCommandWithLogger,
+  unwrapCommand,
+  isCommandWrapped,
+} from "@/app/_utils/wrapper-utils";
 
 const execAsync = promisify(exec);
 
@@ -18,6 +34,7 @@ export interface CronJob {
   comment?: string;
   user: string;
   paused?: boolean;
+  logsEnabled?: boolean;
 }
 
 const readUserCrontab = async (user: string): Promise<string> => {
@@ -28,14 +45,15 @@ const readUserCrontab = async (user: string): Promise<string> => {
     const targetUserCrontab = userCrontabs.find((uc) => uc.user === user);
     return targetUserCrontab?.content || "";
   } else {
-    const { stdout } = await execAsync(
-      READ_CRONTAB(user)
-    );
+    const { stdout } = await execAsync(READ_CRONTAB(user));
     return stdout;
   }
 };
 
-const writeUserCrontab = async (user: string, content: string): Promise<boolean> => {
+const writeUserCrontab = async (
+  user: string,
+  content: string
+): Promise<boolean> => {
   const docker = await isDocker();
 
   if (docker) {
@@ -93,20 +111,35 @@ export const getCronJobs = async (): Promise<CronJob[]> => {
     console.error("Error getting cron jobs:", error);
     return [];
   }
-}
+};
 
 export const addCronJob = async (
   schedule: string,
   command: string,
   comment: string = "",
-  user?: string
+  user?: string,
+  logsEnabled: boolean = false
 ): Promise<boolean> => {
   try {
     if (user) {
       const cronContent = await readUserCrontab(user);
-      const newEntry = comment
-        ? `# ${comment}\n${schedule} ${command}`
-        : `${schedule} ${command}`;
+
+      const lines = cronContent.split("\n");
+      const existingJobs = parseJobsFromLines(lines, user);
+      const nextJobIndex = existingJobs.length;
+      const jobId = `${user}-${nextJobIndex}`;
+
+      let finalCommand = command;
+      if (logsEnabled) {
+        const docker = await isDocker();
+        finalCommand = await wrapCommandWithLogger(jobId, command, docker, comment);
+      }
+
+      const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
+
+      const newEntry = formattedComment
+        ? `# ${formattedComment}\n${schedule} ${finalCommand}`
+        : `${schedule} ${finalCommand}`;
 
       let newCron;
       if (cronContent.trim() === "") {
@@ -120,9 +153,23 @@ export const addCronJob = async (
     } else {
       const cronContent = await readCronFiles();
 
-      const newEntry = comment
-        ? `# ${comment}\n${schedule} ${command}`
-        : `${schedule} ${command}`;
+      const currentUser = process.env.USER || "user";
+      const lines = cronContent.split("\n");
+      const existingJobs = parseJobsFromLines(lines, currentUser);
+      const nextJobIndex = existingJobs.length;
+      const jobId = `${currentUser}-${nextJobIndex}`;
+
+      let finalCommand = command;
+      if (logsEnabled) {
+        const docker = await isDocker();
+        finalCommand = await wrapCommandWithLogger(jobId, command, docker, comment);
+      }
+
+      const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
+
+      const newEntry = formattedComment
+        ? `# ${formattedComment}\n${schedule} ${finalCommand}`
+        : `${schedule} ${finalCommand}`;
 
       let newCron;
       if (cronContent.trim() === "") {
@@ -138,7 +185,7 @@ export const addCronJob = async (
     console.error("Error adding cron job:", error);
     return false;
   }
-}
+};
 
 export const deleteCronJob = async (id: string): Promise<boolean> => {
   try {
@@ -155,13 +202,14 @@ export const deleteCronJob = async (id: string): Promise<boolean> => {
     console.error("Error deleting cron job:", error);
     return false;
   }
-}
+};
 
 export const updateCronJob = async (
   id: string,
   schedule: string,
   command: string,
-  comment: string = ""
+  comment: string = "",
+  logsEnabled: boolean = false
 ): Promise<boolean> => {
   try {
     const [user, jobIndexStr] = id.split("-");
@@ -169,7 +217,37 @@ export const updateCronJob = async (
 
     const cronContent = await readUserCrontab(user);
     const lines = cronContent.split("\n");
-    const newCronEntries = updateJobInLines(lines, jobIndex, schedule, command, comment);
+    const existingJobs = parseJobsFromLines(lines, user);
+    const currentJob = existingJobs[jobIndex];
+
+    if (!currentJob) {
+      console.error(`Job with index ${jobIndex} not found`);
+      return false;
+    }
+
+    const wasLogsEnabled = currentJob.logsEnabled || false;
+
+    let finalCommand = command;
+
+    if (!wasLogsEnabled && logsEnabled) {
+      const docker = await isDocker();
+      finalCommand = await wrapCommandWithLogger(id, command, docker, comment);
+    } else if (wasLogsEnabled && !logsEnabled) {
+      finalCommand = unwrapCommand(command);
+    } else if (wasLogsEnabled && logsEnabled) {
+      const unwrapped = unwrapCommand(command);
+      const docker = await isDocker();
+      finalCommand = await wrapCommandWithLogger(id, unwrapped, docker, comment);
+    }
+
+    const newCronEntries = updateJobInLines(
+      lines,
+      jobIndex,
+      schedule,
+      finalCommand,
+      comment,
+      logsEnabled
+    );
     const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
 
     return await writeUserCrontab(user, newCron);
@@ -177,7 +255,7 @@ export const updateCronJob = async (
     console.error("Error updating cron job:", error);
     return false;
   }
-}
+};
 
 export const pauseCronJob = async (id: string): Promise<boolean> => {
   try {
@@ -194,7 +272,7 @@ export const pauseCronJob = async (id: string): Promise<boolean> => {
     console.error("Error pausing cron job:", error);
     return false;
   }
-}
+};
 
 export const resumeCronJob = async (id: string): Promise<boolean> => {
   try {
@@ -211,7 +289,7 @@ export const resumeCronJob = async (id: string): Promise<boolean> => {
     console.error("Error resuming cron job:", error);
     return false;
   }
-}
+};
 
 export const cleanupCrontab = async (): Promise<boolean> => {
   try {
@@ -229,4 +307,4 @@ export const cleanupCrontab = async (): Promise<boolean> => {
     console.error("Error cleaning crontab:", error);
     return false;
   }
-}
+};

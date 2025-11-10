@@ -9,6 +9,7 @@ import { promisify } from "util";
 import { SCRIPTS_DIR } from "@/app/_consts/file";
 import { loadAllScripts, Script } from "@/app/_utils/scripts-utils";
 import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
+import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
 
 const execAsync = promisify(exec);
 
@@ -16,14 +17,29 @@ export const getScriptPath = (filename: string): string => {
   return join(process.cwd(), SCRIPTS_DIR, filename);
 };
 
+export const getScriptPathForCron = async (
+  filename: string
+): Promise<string> => {
+  const docker = await isDocker();
+
+  if (docker) {
+    const hostScriptsPath = await getHostScriptsPath();
+    if (hostScriptsPath) {
+      return `bash ${join(hostScriptsPath, filename)}`;
+    }
+    console.warn("Could not determine host scripts path, using container path");
+  }
+
+  return `bash ${join(process.cwd(), SCRIPTS_DIR, filename)}`;
+};
+
 export const getHostScriptPath = (filename: string): string => {
   return `bash ${join(process.cwd(), SCRIPTS_DIR, filename)}`;
 };
 
 export const normalizeLineEndings = (content: string): string => {
-  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 };
-
 
 const sanitizeScriptName = (name: string): string => {
   return name

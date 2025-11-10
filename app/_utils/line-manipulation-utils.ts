@@ -154,12 +154,50 @@ export const resumeJobInLines = (
   return newCronEntries;
 };
 
+export const parseCommentMetadata = (
+  commentText: string
+): { comment: string; logsEnabled: boolean } => {
+  if (!commentText) {
+    return { comment: "", logsEnabled: false };
+  }
+
+  const parts = commentText.split("|").map((p) => p.trim());
+  const comment = parts[0] || "";
+  let logsEnabled = false;
+
+  if (parts.length > 1) {
+    const metadata = parts[1];
+    const logsMatch = metadata.match(/logsEnabled:\s*(true|false)/i);
+    if (logsMatch) {
+      logsEnabled = logsMatch[1].toLowerCase() === "true";
+    }
+  }
+
+  return { comment, logsEnabled };
+};
+
+export const formatCommentWithMetadata = (
+  comment: string,
+  logsEnabled: boolean
+): string => {
+  const trimmedComment = comment.trim();
+
+  if (logsEnabled) {
+    return trimmedComment
+      ? `${trimmedComment} | logsEnabled: true`
+      : `logsEnabled: true`;
+  }
+
+  return trimmedComment;
+};
+
 export const parseJobsFromLines = (
   lines: string[],
   user: string
 ): CronJob[] => {
   const jobs: CronJob[] = [];
   let currentComment = "";
+  let currentLogsEnabled = false;
   let jobIndex = 0;
   let i = 0;
 
@@ -181,7 +219,8 @@ export const parseJobsFromLines = (
     }
 
     if (trimmedLine.startsWith("# PAUSED:")) {
-      const comment = trimmedLine.substring(9).trim();
+      const commentText = trimmedLine.substring(9).trim();
+      const { comment, logsEnabled } = parseCommentMetadata(commentText);
 
       if (i + 1 < lines.length) {
         const nextLine = lines[i + 1].trim();
@@ -199,6 +238,7 @@ export const parseJobsFromLines = (
               comment: comment || undefined,
               user,
               paused: true,
+              logsEnabled,
             });
 
             jobIndex++;
@@ -217,7 +257,10 @@ export const parseJobsFromLines = (
         !lines[i + 1].trim().startsWith("#") &&
         lines[i + 1].trim()
       ) {
-        currentComment = trimmedLine.substring(1).trim();
+        const commentText = trimmedLine.substring(1).trim();
+        const { comment, logsEnabled } = parseCommentMetadata(commentText);
+        currentComment = comment;
+        currentLogsEnabled = logsEnabled;
         i++;
         continue;
       } else {
@@ -247,10 +290,12 @@ export const parseJobsFromLines = (
         comment: currentComment || undefined,
         user,
         paused: false,
+        logsEnabled: currentLogsEnabled,
       });
 
       jobIndex++;
       currentComment = "";
+      currentLogsEnabled = false;
     }
     i++;
   }
@@ -345,7 +390,8 @@ export const updateJobInLines = (
   targetJobIndex: number,
   schedule: string,
   command: string,
-  comment: string = ""
+  comment: string = "",
+  logsEnabled: boolean = false
 ): string[] => {
   const newCronEntries: string[] = [];
   let currentJobIndex = 0;
@@ -377,8 +423,12 @@ export const updateJobInLines = (
 
     if (trimmedLine.startsWith("# PAUSED:")) {
       if (currentJobIndex === targetJobIndex) {
-        const newEntry = comment
-          ? `# PAUSED: ${comment}\n# ${schedule} ${command}`
+        const formattedComment = formatCommentWithMetadata(
+          comment,
+          logsEnabled
+        );
+        const newEntry = formattedComment
+          ? `# PAUSED: ${formattedComment}\n# ${schedule} ${command}`
           : `# PAUSED:\n# ${schedule} ${command}`;
         newCronEntries.push(newEntry);
         if (i + 1 < lines.length && lines[i + 1].trim().startsWith("# ")) {
@@ -406,8 +456,12 @@ export const updateJobInLines = (
         lines[i + 1].trim()
       ) {
         if (currentJobIndex === targetJobIndex) {
-          const newEntry = comment
-            ? `# ${comment}\n${schedule} ${command}`
+          const formattedComment = formatCommentWithMetadata(
+            comment,
+            logsEnabled
+          );
+          const newEntry = formattedComment
+            ? `# ${formattedComment}\n${schedule} ${command}`
             : `${schedule} ${command}`;
           newCronEntries.push(newEntry);
           i += 2;
@@ -425,8 +479,9 @@ export const updateJobInLines = (
     }
 
     if (currentJobIndex === targetJobIndex) {
-      const newEntry = comment
-        ? `# ${comment}\n${schedule} ${command}`
+      const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
+      const newEntry = formattedComment
+        ? `# ${formattedComment}\n${schedule} ${command}`
         : `${schedule} ${command}`;
       newCronEntries.push(newEntry);
     } else {

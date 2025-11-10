@@ -8,6 +8,7 @@ import {
   pauseCronJobAction,
   resumeCronJobAction,
   runCronJob,
+  toggleCronJobLogging,
 } from "@/app/_server/actions/cronjobs";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 
@@ -30,6 +31,7 @@ interface HandlerProps {
     schedule: string;
     command: string;
     comment: string;
+    logsEnabled: boolean;
   };
   newCronForm: {
     schedule: string;
@@ -37,6 +39,7 @@ interface HandlerProps {
     comment: string;
     selectedScriptId: string | null;
     user: string;
+    logsEnabled: boolean;
   };
 }
 
@@ -163,6 +166,20 @@ export const handlePause = async (id: string) => {
   }
 };
 
+export const handleToggleLogging = async (id: string) => {
+  try {
+    const result = await toggleCronJobLogging(id);
+    if (result.success) {
+      showToast("success", result.message);
+    } else {
+      showToast("error", "Failed to toggle logging", result.message);
+    }
+  } catch (error: any) {
+    console.error("Error toggling logging:", error);
+    showToast("error", "Error toggling logging", error.message);
+  }
+};
+
 export const handleResume = async (id: string) => {
   try {
     const result = await resumeCronJobAction(id);
@@ -261,6 +278,7 @@ export const handleEditSubmit = async (
     formData.append("schedule", editForm.schedule);
     formData.append("command", editForm.command);
     formData.append("comment", editForm.comment);
+    formData.append("logsEnabled", editForm.logsEnabled.toString());
 
     const result = await editCronJob(formData);
     if (result.success) {
@@ -335,6 +353,7 @@ export const handleNewCronSubmit = async (
     formData.append("command", newCronForm.command);
     formData.append("comment", newCronForm.comment);
     formData.append("user", newCronForm.user);
+    formData.append("logsEnabled", newCronForm.logsEnabled.toString());
     if (newCronForm.selectedScriptId) {
       formData.append("selectedScriptId", newCronForm.selectedScriptId);
     }
@@ -348,6 +367,7 @@ export const handleNewCronSubmit = async (
         comment: "",
         selectedScriptId: null,
         user: "",
+        logsEnabled: false,
       });
       showToast("success", "Cron job created successfully");
     } else {

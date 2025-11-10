@@ -7,7 +7,7 @@ import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
 import { SelectScriptModal } from "@/app/_components/FeatureComponents/Modals/SelectScriptModal";
 import { UserSwitcher } from "@/app/_components/FeatureComponents/User/UserSwitcher";
-import { Plus, Terminal, FileText, X } from "lucide-react";
+import { Plus, Terminal, FileText, X, FileOutput } from "lucide-react";
 import { getScriptContent } from "@/app/_server/actions/scripts";
 import { getHostScriptPath } from "@/app/_server/actions/scripts";
 import { useTranslations } from "next-intl";
@@ -31,6 +31,7 @@ interface CreateTaskModalProps {
     comment: string;
     selectedScriptId: string | null;
     user: string;
+    logsEnabled: boolean;
   };
   onFormChange: (updates: Partial<CreateTaskModalProps["form"]>) => void;
 }
@@ -122,16 +123,21 @@ export const CreateTaskModal = ({
               <button
                 type="button"
                 onClick={handleCustomCommand}
-                className={`p-4 rounded-lg border-2 transition-all ${!form.selectedScriptId
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                  }`}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  !form.selectedScriptId
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <Terminal className="h-5 w-5" />
                   <div className="text-left">
-                    <div className="font-medium">{t("cronjobs.customCommand")}</div>
-                    <div className="text-xs opacity-70">{t("cronjobs.singleCommand")}</div>
+                    <div className="font-medium">
+                      {t("cronjobs.customCommand")}
+                    </div>
+                    <div className="text-xs opacity-70">
+                      {t("cronjobs.singleCommand")}
+                    </div>
                   </div>
                 </div>
               </button>
@@ -139,15 +145,18 @@ export const CreateTaskModal = ({
               <button
                 type="button"
                 onClick={() => setIsSelectScriptModalOpen(true)}
-                className={`p-4 rounded-lg border-2 transition-all ${form.selectedScriptId
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                  }`}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  form.selectedScriptId
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5" />
                   <div className="text-left">
-                    <div className="font-medium">{t("scripts.savedScript")}</div>
+                    <div className="font-medium">
+                      {t("scripts.savedScript")}
+                    </div>
                     <div className="text-xs opacity-70">
                       {t("scripts.selectFromLibrary")}
                     </div>
@@ -233,7 +242,9 @@ export const CreateTaskModal = ({
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               {t("common.description")}
-              <span className="text-muted-foreground">({t("common.optional")})</span>
+              <span className="text-muted-foreground">
+                ({t("common.optional")})
+              </span>
             </label>
             <Input
               value={form.comment}
@@ -241,6 +252,32 @@ export const CreateTaskModal = ({
               placeholder={t("cronjobs.whatDoesThisTaskDo")}
               className="bg-muted/30 border-border/50 focus:border-primary/50"
             />
+          </div>
+
+          <div className="border border-border/30 bg-muted/10 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="logsEnabled"
+                checked={form.logsEnabled}
+                onChange={(e) =>
+                  onFormChange({ logsEnabled: e.target.checked })
+                }
+                className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
+              />
+              <div className="flex-1">
+                <label
+                  htmlFor="logsEnabled"
+                  className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer"
+                >
+                  <FileOutput className="h-4 w-4 text-primary" />
+                  {t("cronjobs.enableLogging")}
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("cronjobs.loggingDescription")}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
@@ -269,4 +306,4 @@ export const CreateTaskModal = ({
       />
     </>
   );
-}
+};

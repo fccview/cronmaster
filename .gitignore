@@ -14,3 +14,4 @@ node_modules
 .idea
 tsconfig.tsbuildinfo
 docker-compose.test.yml
+/data

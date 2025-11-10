@@ -16,6 +16,7 @@ import {
     handleRun,
     handleEditSubmit,
     handleNewCronSubmit,
+    handleToggleLogging,
 } from "@/app/_components/FeatureComponents/Cronjobs/helpers";
 
 interface CronJobListProps {
@@ -38,11 +39,14 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const [jobErrors, setJobErrors] = useState<Record<string, JobError[]>>({});
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [selectedError, setSelectedError] = useState<JobError | null>(null);
+    const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
+    const [jobForLogs, setJobForLogs] = useState<CronJob | null>(null);
 
     const [editForm, setEditForm] = useState({
         schedule: "",
         command: "",
         comment: "",
+        logsEnabled: false,
     });
     const [newCronForm, setNewCronForm] = useState({
         schedule: "",
@@ -50,6 +54,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         comment: "",
         selectedScriptId: null as string | null,
         user: "",
+        logsEnabled: false,
     });
 
     useEffect(() => {
@@ -132,6 +137,15 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         await handleRun(id, getHelperState());
     };
 
+    const handleToggleLoggingLocal = async (id: string) => {
+        await handleToggleLogging(id);
+    };
+
+    const handleViewLogs = (job: CronJob) => {
+        setJobForLogs(job);
+        setIsLogsModalOpen(true);
+    };
+
     const confirmDelete = (job: CronJob) => {
         setJobToDelete(job);
         setIsDeleteModalOpen(true);
@@ -148,6 +162,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
             schedule: job.schedule,
             command: job.command,
             comment: job.comment || "",
+            logsEnabled: job.logsEnabled || false,
         });
         setIsEditModalOpen(true);
     };
@@ -170,6 +185,9 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         setErrorModalOpen,
         selectedError,
         setSelectedError,
+        isLogsModalOpen,
+        setIsLogsModalOpen,
+        jobForLogs,
         filteredJobs,
         isNewCronModalOpen,
         setIsNewCronModalOpen,
@@ -193,6 +211,8 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         handlePauseLocal,
         handleResumeLocal,
         handleRunLocal,
+        handleToggleLoggingLocal,
+        handleViewLogs,
         confirmDelete,
         confirmClone,
         handleEdit,

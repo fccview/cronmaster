@@ -10,12 +10,9 @@ import {
   cleanupCrontab,
   type CronJob,
 } from "@/app/_utils/cronjob-utils";
-import {
-  getAllTargetUsers,
-  getUserInfo,
-} from "@/app/_utils/crontab-utils";
+import { getAllTargetUsers, getUserInfo } from "@/app/_utils/crontab-utils";
 import { revalidatePath } from "next/cache";
-import { getScriptPath } from "@/app/_server/actions/scripts";
+import { getScriptPathForCron } from "@/app/_server/actions/scripts";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { isDocker } from "@/app/_server/actions/global";
@@ -41,6 +38,7 @@ export const createCronJob = async (
     const comment = formData.get("comment") as string;
     const selectedScriptId = formData.get("selectedScriptId") as string;
     const user = formData.get("user") as string;
+    const logsEnabled = formData.get("logsEnabled") === "true";
 
     if (!schedule) {
       return { success: false, message: "Schedule is required" };
@@ -54,7 +52,7 @@ export const createCronJob = async (
       const selectedScript = scripts.find((s) => s.id === selectedScriptId);
 
       if (selectedScript) {
-        finalCommand = await getScriptPath(selectedScript.filename);
+        finalCommand = await getScriptPathForCron(selectedScript.filename);
       } else {
         return { success: false, message: "Selected script not found" };
       }
@@ -65,7 +63,13 @@ export const createCronJob = async (
       };
     }
 
-    const success = await addCronJob(schedule, finalCommand, comment, user);
+    const success = await addCronJob(
+      schedule,
+      finalCommand,
+      comment,
+      user,
+      logsEnabled
+    );
     if (success) {
       revalidatePath("/");
       return { success: true, message: "Cron job created successfully" };
@@ -111,12 +115,19 @@ export const editCronJob = async (
     const schedule = formData.get("schedule") as string;
     const command = formData.get("command") as string;
     const comment = formData.get("comment") as string;
+    const logsEnabled = formData.get("logsEnabled") === "true";
 
     if (!id || !schedule || !command) {
       return { success: false, message: "Missing required fields" };
     }
 
-    const success = await updateCronJob(id, schedule, command, comment);
+    const success = await updateCronJob(
+      id,
+      schedule,
+      command,
+      comment,
+      logsEnabled
+    );
     if (success) {
       revalidatePath("/");
       return { success: true, message: "Cron job updated successfully" };
@@ -237,6 +248,48 @@ export const cleanupCrontabAction = async (): Promise<{
     return {
       success: false,
       message: error.message || "Error cleaning crontab",
+      details: error.stack,
+    };
+  }
+};
+
+export const toggleCronJobLogging = async (
+  id: string
+): Promise<{ success: boolean; message: string; details?: string }> => {
+  try {
+    const cronJobs = await getCronJobs();
+    const job = cronJobs.find((j) => j.id === id);
+
+    if (!job) {
+      return { success: false, message: "Cron job not found" };
+    }
+
+    const newLogsEnabled = !job.logsEnabled;
+
+    const success = await updateCronJob(
+      id,
+      job.schedule,
+      job.command,
+      job.comment || "",
+      newLogsEnabled
+    );
+
+    if (success) {
+      revalidatePath("/");
+      return {
+        success: true,
+        message: newLogsEnabled
+          ? "Logging enabled successfully"
+          : "Logging disabled successfully",
+      };
+    } else {
+      return { success: false, message: "Failed to toggle logging" };
+    }
+  } catch (error: any) {
+    console.error("Error toggling logging:", error);
+    return {
+      success: false,
+      message: error.message || "Error toggling logging",
       details: error.stack,
     };
   }

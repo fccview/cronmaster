@@ -4,7 +4,8 @@ import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
-import { Edit, Terminal } from "lucide-react";
+import { Edit, Terminal, FileOutput } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface EditTaskModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface EditTaskModalProps {
     schedule: string;
     command: string;
     comment: string;
+    logsEnabled: boolean;
   };
   onFormChange: (updates: Partial<EditTaskModalProps["form"]>) => void;
 }
@@ -25,11 +27,13 @@ export const EditTaskModal = ({
   form,
   onFormChange,
 }: EditTaskModalProps) => {
+  const t = useTranslations();
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit Scheduled Task"
+      title={t("cronjobs.editScheduledTask")}
       size="xl"
     >
       <form onSubmit={onSubmit} className="space-y-4">
@@ -67,15 +71,41 @@ export const EditTaskModal = ({
 
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Description{" "}
-            <span className="text-muted-foreground">(Optional)</span>
+            {t("common.description")}{" "}
+            <span className="text-muted-foreground">
+              ({t("common.optional")})
+            </span>
           </label>
           <Input
             value={form.comment}
             onChange={(e) => onFormChange({ comment: e.target.value })}
-            placeholder="What does this task do?"
+            placeholder={t("cronjobs.whatDoesThisTaskDo")}
             className="bg-muted/30 border-border/50 focus:border-primary/50"
           />
+        </div>
+
+        <div className="border border-border/30 bg-muted/10 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="logsEnabled"
+              checked={form.logsEnabled}
+              onChange={(e) => onFormChange({ logsEnabled: e.target.checked })}
+              className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
+            />
+            <div className="flex-1">
+              <label
+                htmlFor="logsEnabled"
+                className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer"
+              >
+                <FileOutput className="h-4 w-4 text-primary" />
+                {t("cronjobs.enableLogging")}
+              </label>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("cronjobs.loggingDescription")}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
@@ -95,4 +125,4 @@ export const EditTaskModal = ({
       </form>
     </Modal>
   );
-}
+};

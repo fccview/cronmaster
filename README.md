@@ -8,6 +8,7 @@
 - **System Information**: Display hostname, IP address, uptime, memory, network and CPU info.
 - **Cron Job Management**: View, create, and delete cron jobs with comments.
 - **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
+- **Job Execution Logging**: Optional logging for cronjobs with automatic cleanup, capturing stdout, stderr, exit codes, and timestamps.
 - **Docker Support**: Runs entirely from a Docker container.
 - **Easy Setup**: Quick presets for common cron schedules.
 
@@ -53,7 +54,7 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 
 ```bash
 services:
-  cronjob-manager:
+  cronmaster:
     image: ghcr.io/fccview/cronmaster:latest
     container_name: cronmaster
     user: "root"
@@ -63,13 +64,17 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER=true
-
-      # --- MAP HOST PROJECT DIRECTORY, THIS IS MANDATORY FOR SCRIPTS TO WORK
-      - HOST_PROJECT_DIR=/path/to/cronmaster/directory
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
 
+      # --- SET LOCALE TO ONE OF OUR SUPPORTED LOCALES - see the /app/_translations/ folder for supported locales
+      # - LOCALE=en
+
+      # --- UNCOMMENT TO SET DIFFERENT LOGGING VALUES
+      # - MAX_LOG_AGE_DAYS=30
+      # - MAX_LOGS_PER_JOB=50
+
       # --- PASSWORD PROTECTION
-      # Uncomment to enable password protection (replace "very_strong_password" with your own)
+      # Uncomment to enable password protection (replace "password" with your own)
       - AUTH_PASSWORD=very_strong_password
 
       # --- CRONTAB USERS
@@ -192,6 +197,129 @@ The application automatically detects your operating system and displays:
 4. **Add Comments**: Include descriptions for your cron jobs
 5. **Delete Jobs**: Remove unwanted cron jobs with the delete button
 6. **Clone Jobs**: Clone jobs to quickly edit the command in case it's similar
+7. **Enable Logging**: Optionally enable execution logging for any cronjob to capture detailed execution information
+
+### Job Execution Logging
+
+CronMaster includes an optional logging feature that captures detailed execution information for your cronjobs:
+
+#### How It Works
+
+When you enable logging for a cronjob, CronMaster automatically wraps your command with a log wrapper script. This wrapper:
+
+- Captures **stdout** and **stderr** output
+- Records the **exit code** of your command
+- Timestamps the **start and end** of execution
+- Calculates **execution duration**
+- Stores all this information in organized log files
+
+#### Enabling Logs
+
+1. When creating or editing a cronjob, check the "Enable Logging" checkbox
+2. The wrapper is automatically added to your crontab entry
+3. Jobs run independently - they continue to work even if CronMaster is offline
+
+#### Log Storage
+
+Logs are stored in the `./data/logs/` directory with descriptive folder names:
+
+- If a job has a **description/comment**: `{sanitized-description}_{jobId}/`
+- If a job has **no description**: `{jobId}/`
+
+Example structure:
+
+```
+./data/logs/
+├── backup-database_root-0/
+│   ├── 2025-11-10_14-30-00.log
+│   ├── 2025-11-10_15-30-00.log
+│   └── 2025-11-10_16-30-00.log
+├── daily-cleanup_root-1/
+│   └── 2025-11-10_14-35-00.log
+├── root-2/  (no description provided)
+│   └── 2025-11-10_14-40-00.log
+```
+
+**Note**: Folder names are sanitized to be filesystem-safe (lowercase, alphanumeric with hyphens, max 50 chars for the description part).
+
+#### Log Format
+
+Each log file includes:
+
+```
+==========================================
+=== CronMaster Job Execution Log ===
+==========================================
+Log Folder: backup-database_root-0
+Command: bash /app/scripts/backup.sh
+Started: 2025-11-10 14:30:00
+==========================================
+
+[command output here]
+
+==========================================
+=== Execution Summary ===
+==========================================
+Completed: 2025-11-10 14:30:45
+Duration: 45 seconds
+Exit code: 0
+==========================================
+```
+
+#### Automatic Cleanup
+
+Logs are automatically cleaned up to prevent disk space issues:
+
+- **Maximum logs per job**: 50 log files
+- **Maximum age**: 30 days
+- **Cleanup trigger**: When viewing logs or after manual execution
+- **Method**: Oldest logs are deleted first when limits are exceeded
+
+#### Custom Wrapper Script
+
+You can override the default log wrapper by creating your own at `./data/wrapper-override.sh`. This allows you to:
+
+- Customize log format
+- Add additional metadata
+- Integrate with external logging services
+- Implement custom retention policies
+
+**Example custom wrapper**:
+
+```bash
+#!/bin/bash
+JOB_ID="$1"
+shift
+
+# Your custom logic here
+LOG_FILE="/custom/path/${JOB_ID}_$(date '+%Y%m%d').log"
+
+{
+  echo "=== Custom Log Format ==="
+  echo "Job: $JOB_ID"
+  "$@"
+  echo "Exit: $?"
+} >> "$LOG_FILE" 2>&1
+```
+
+#### Docker Considerations
+
+- Mount the `./data` directory to persist logs on the host
+- The wrapper script location: `./data/cron-log-wrapper.sh`. This will be generated automatically the first time you enable logging.
+
+#### Non-Docker Considerations
+
+- Logs are stored at `./data/logs/` relative to the project directory
+- The codebase wrapper script location: `./app/_scripts/cron-log-wrapper.sh`
+- The running wrapper script location: `./data/cron-log-wrapper.sh`
+
+#### Important Notes
+
+- Logging is **optional** and disabled by default
+- Jobs with logging enabled are marked with a blue "Logged" badge in the UI
+- Logs are captured for both scheduled runs and manual executions
+- Commands with file redirections (>, >>) may conflict with logging
+- The crontab stores the **wrapped command**, so jobs run independently of CronMaster
 
 ### Cron Schedule Format
 

@@ -11,6 +11,7 @@ import { useCronJobState } from "@/app/_hooks/useCronJobState";
 import { CronJobItem } from "@/app/_components/FeatureComponents/Cronjobs/Parts/CronJobItem";
 import { CronJobEmptyState } from "@/app/_components/FeatureComponents/Cronjobs/Parts/CronJobEmptyState";
 import { CronJobListModals } from "@/app/_components/FeatureComponents/Modals/CronJobListsModals";
+import { LogsModal } from "@/app/_components/FeatureComponents/Modals/LogsModal";
 import { useTranslations } from "next-intl";
 
 interface CronJobListProps {
@@ -30,6 +31,9 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     setErrorModalOpen,
     selectedError,
     setSelectedError,
+    isLogsModalOpen,
+    setIsLogsModalOpen,
+    jobForLogs,
     filteredJobs,
     isNewCronModalOpen,
     setIsNewCronModalOpen,
@@ -53,6 +57,8 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     handlePauseLocal,
     handleResumeLocal,
     handleRunLocal,
+    handleToggleLoggingLocal,
+    handleViewLogs,
     confirmDelete,
     confirmClone,
     handleEdit,
@@ -117,6 +123,8 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                   onClone={confirmClone}
                   onResume={handleResumeLocal}
                   onPause={handlePauseLocal}
+                  onToggleLogging={handleToggleLoggingLocal}
+                  onViewLogs={handleViewLogs}
                   onDelete={confirmDelete}
                   onErrorClick={handleErrorClickLocal}
                   onErrorDismiss={refreshJobErrorsLocal}
@@ -167,6 +175,15 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         }}
         selectedError={selectedError}
       />
+
+      {jobForLogs && (
+        <LogsModal
+          isOpen={isLogsModalOpen}
+          onClose={() => setIsLogsModalOpen(false)}
+          jobId={jobForLogs.id}
+          jobComment={jobForLogs.comment}
+        />
+      )}
     </>
   );
 };  
