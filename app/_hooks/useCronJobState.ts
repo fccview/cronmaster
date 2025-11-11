@@ -17,6 +17,7 @@ import {
     handleEditSubmit,
     handleNewCronSubmit,
     handleToggleLogging,
+    handleBackup,
 } from "@/app/_components/FeatureComponents/Cronjobs/helpers";
 
 interface CronJobListProps {
@@ -185,6 +186,10 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         await handleNewCronSubmit(e, getHelperState());
     };
 
+    const handleBackupLocal = async (id: string) => {
+        await handleBackup(id);
+    };
+
     return {
         deletingId,
         runningJobId,
@@ -233,5 +238,6 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         handleEdit,
         handleEditSubmitLocal,
         handleNewCronSubmitLocal,
+        handleBackupLocal,
     };
 };

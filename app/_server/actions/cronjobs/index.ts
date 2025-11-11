@@ -386,3 +386,193 @@ export const executeJob = async (
     };
   }
 };
+
+export const backupCronJob = async (
+  id: string
+): Promise<{ success: boolean; message: string; details?: string }> => {
+  try {
+    const {
+      backupJobToFile,
+    } = await import("@/app/_utils/backup-utils");
+    const success = await backupJobToFile(id);
+    if (success) {
+      return { success: true, message: "Cron job backed up successfully" };
+    } else {
+      return { success: false, message: "Failed to backup cron job" };
+    }
+  } catch (error: any) {
+    console.error("Error backing up cron job:", error);
+    return {
+      success: false,
+      message: error.message || "Error backing up cron job",
+      details: error.stack,
+    };
+  }
+};
+
+export const backupAllCronJobs = async (): Promise<{
+  success: boolean;
+  message: string;
+  details?: string;
+}> => {
+  try {
+    const {
+      backupAllJobsToFiles,
+    } = await import("@/app/_utils/backup-utils");
+    const result = await backupAllJobsToFiles();
+    if (result.success) {
+      return {
+        success: true,
+        message: `Backed up ${result.count} cron job(s) successfully`,
+      };
+    } else {
+      return { success: false, message: "Failed to backup cron jobs" };
+    }
+  } catch (error: any) {
+    console.error("Error backing up all cron jobs:", error);
+    return {
+      success: false,
+      message: error.message || "Error backing up all cron jobs",
+      details: error.stack,
+    };
+  }
+};
+
+export const fetchBackupFiles = async (): Promise<Array<{
+  filename: string;
+  job: CronJob;
+  backedUpAt: string;
+}>> => {
+  try {
+    const {
+      getAllBackupFiles,
+    } = await import("@/app/_utils/backup-utils");
+    return await getAllBackupFiles();
+  } catch (error) {
+    console.error("Error fetching backup files:", error);
+    return [];
+  }
+};
+
+export const restoreCronJob = async (
+  filename: string
+): Promise<{ success: boolean; message: string; details?: string }> => {
+  try {
+    const {
+      restoreJobFromBackup,
+    } = await import("@/app/_utils/backup-utils");
+
+    const result = await restoreJobFromBackup(filename);
+
+    if (!result.success || !result.job) {
+      return { success: false, message: "Failed to read backup file" };
+    }
+
+    const job = result.job;
+    const success = await addCronJob(
+      job.schedule,
+      job.command,
+      job.comment || "",
+      job.user,
+      job.logsEnabled || false
+    );
+
+    if (success) {
+      revalidatePath("/");
+      return { success: true, message: "Cron job restored successfully" };
+    } else {
+      return { success: false, message: "Failed to restore cron job" };
+    }
+  } catch (error: any) {
+    console.error("Error restoring cron job:", error);
+    return {
+      success: false,
+      message: error.message || "Error restoring cron job",
+      details: error.stack,
+    };
+  }
+};
+
+export const deleteBackup = async (
+  filename: string
+): Promise<{ success: boolean; message: string; details?: string }> => {
+  try {
+    const {
+      deleteBackupFile,
+    } = await import("@/app/_utils/backup-utils");
+
+    const success = await deleteBackupFile(filename);
+
+    if (success) {
+      return { success: true, message: "Backup deleted successfully" };
+    } else {
+      return { success: false, message: "Failed to delete backup" };
+    }
+  } catch (error: any) {
+    console.error("Error deleting backup:", error);
+    return {
+      success: false,
+      message: error.message || "Error deleting backup",
+      details: error.stack,
+    };
+  }
+};
+
+export const restoreAllCronJobs = async (): Promise<{
+  success: boolean;
+  message: string;
+  details?: string;
+}> => {
+  try {
+    const {
+      getAllBackupFiles,
+    } = await import("@/app/_utils/backup-utils");
+
+    const backups = await getAllBackupFiles();
+
+    if (backups.length === 0) {
+      return { success: false, message: "No backup files found" };
+    }
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const backup of backups) {
+      const job = backup.job;
+      const success = await addCronJob(
+        job.schedule,
+        job.command,
+        job.comment || "",
+        job.user,
+        job.logsEnabled || false
+      );
+
+      if (success) {
+        successCount++;
+      } else {
+        failedCount++;
+      }
+    }
+
+    revalidatePath("/");
+
+    if (failedCount === 0) {
+      return {
+        success: true,
+        message: `Successfully restored ${successCount} cron job(s)`,
+      };
+    } else {
+      return {
+        success: true,
+        message: `Restored ${successCount} job(s), ${failedCount} failed`,
+      };
+    }
+  } catch (error: any) {
+    console.error("Error restoring all cron jobs:", error);
+    return {
+      success: false,
+      message: error.message || "Error restoring all cron jobs",
+      details: error.stack,
+    };
+  }
+};

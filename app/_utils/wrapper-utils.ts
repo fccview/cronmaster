@@ -15,10 +15,6 @@ export const generateLogFolderName = (
   jobId: string,
   comment?: string
 ): string => {
-  if (comment && comment.trim()) {
-    const sanitized = sanitizeForFilesystem(comment.trim());
-    return sanitized ? `${sanitized}_${jobId}` : jobId;
-  }
   return jobId;
 };
 

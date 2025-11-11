@@ -1,8 +1,13 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/_components/GlobalComponents/Cards/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/_components/GlobalComponents/Cards/Card";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { Clock, Plus } from "lucide-react";
+import { Clock, Plus, Archive } from "lucide-react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
 import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
@@ -13,10 +18,19 @@ import { CronJobEmptyState } from "@/app/_components/FeatureComponents/Cronjobs/
 import { CronJobListModals } from "@/app/_components/FeatureComponents/Modals/CronJobListsModals";
 import { LogsModal } from "@/app/_components/FeatureComponents/Modals/LogsModal";
 import { LiveLogModal } from "@/app/_components/FeatureComponents/Modals/LiveLogModal";
+import { RestoreBackupModal } from "@/app/_components/FeatureComponents/Modals/RestoreBackupModal";
 import { useTranslations } from "next-intl";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  fetchBackupFiles,
+  restoreCronJob,
+  deleteBackup,
+  backupAllCronJobs,
+  restoreAllCronJobs,
+} from "@/app/_server/actions/cronjobs";
+import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 
 interface CronJobListProps {
   cronJobs: CronJob[];
@@ -27,6 +41,14 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
   const t = useTranslations();
   const router = useRouter();
   const { subscribe } = useSSEContext();
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+  const [backupFiles, setBackupFiles] = useState<
+    Array<{
+      filename: string;
+      job: CronJob;
+      backedUpAt: string;
+    }>
+  >([]);
 
   useEffect(() => {
     const unsubscribe = subscribe((event) => {
@@ -37,6 +59,53 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
 
     return unsubscribe;
   }, [subscribe, router]);
+
+  const loadBackupFiles = async () => {
+    const backups = await fetchBackupFiles();
+    setBackupFiles(backups);
+  };
+
+  const handleRestore = async (filename: string) => {
+    const result = await restoreCronJob(filename);
+    if (result.success) {
+      showToast("success", t("cronjobs.restoreJobSuccess"));
+      router.refresh();
+      loadBackupFiles();
+    } else {
+      showToast("error", t("cronjobs.restoreJobFailed"), result.message);
+    }
+  };
+
+  const handleRestoreAll = async () => {
+    const result = await restoreAllCronJobs();
+    if (result.success) {
+      showToast("success", result.message);
+      router.refresh();
+      setIsBackupModalOpen(false);
+    } else {
+      showToast("error", "Failed to restore all jobs", result.message);
+    }
+  };
+
+  const handleBackupAll = async () => {
+    const result = await backupAllCronJobs();
+    if (result.success) {
+      showToast("success", result.message);
+      loadBackupFiles();
+    } else {
+      showToast("error", t("cronjobs.backupAllFailed"), result.message);
+    }
+  };
+
+  const handleDeleteBackup = async (filename: string) => {
+    const result = await deleteBackup(filename);
+    if (result.success) {
+      showToast("success", t("cronjobs.backupDeleted"));
+      loadBackupFiles();
+    } else {
+      showToast("error", "Failed to delete backup", result.message);
+    }
+  };
 
   const {
     deletingId,
@@ -86,6 +155,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     handleEdit,
     handleEditSubmitLocal,
     handleNewCronSubmitLocal,
+    handleBackupLocal,
   } = useCronJobState({ cronJobs, scripts });
 
   return (
@@ -102,19 +172,32 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                   {t("cronjobs.scheduledTasks")}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {t("cronjobs.nOfNJObs", { filtered: filteredJobs.length, total: cronJobs.length })}
-                  {" "}
-                  {selectedUser && t("cronjobs.forUser", { user: selectedUser })}
+                  {t("cronjobs.nOfNJObs", {
+                    filtered: filteredJobs.length,
+                    total: cronJobs.length,
+                  })}{" "}
+                  {selectedUser &&
+                    t("cronjobs.forUser", { user: selectedUser })}
                 </p>
               </div>
             </div>
-            <Button
-              onClick={() => setIsNewCronModalOpen(true)}
-              className="btn-primary glow-primary"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {t("cronjobs.newTask")}
-            </Button>
+            <div className="flex gap-2 w-full justify-between sm:w-auto">
+              <Button
+                onClick={() => setIsBackupModalOpen(true)}
+                variant="outline"
+                className="btn-outline"
+              >
+                <Archive className="h-4 w-4 mr-2" />
+                {t("cronjobs.backups")}
+              </Button>
+              <Button
+                onClick={() => setIsNewCronModalOpen(true)}
+                className="btn-primary glow-primary"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t("cronjobs.newTask")}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -148,6 +231,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                   onToggleLogging={handleToggleLoggingLocal}
                   onViewLogs={handleViewLogs}
                   onDelete={confirmDelete}
+                  onBackup={handleBackupLocal}
                   onErrorClick={handleErrorClickLocal}
                   onErrorDismiss={refreshJobErrorsLocal}
                 />
@@ -160,7 +244,6 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
       <CronJobListModals
         cronJobs={cronJobs}
         scripts={scripts}
-
         isNewCronModalOpen={isNewCronModalOpen}
         onNewCronModalClose={() => setIsNewCronModalOpen(false)}
         onNewCronSubmit={handleNewCronSubmitLocal}
@@ -168,7 +251,6 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         onNewCronFormChange={(updates) =>
           setNewCronForm((prev) => ({ ...prev, ...updates }))
         }
-
         isEditModalOpen={isEditModalOpen}
         onEditModalClose={() => setIsEditModalOpen(false)}
         onEditSubmit={handleEditSubmitLocal}
@@ -176,20 +258,17 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         onEditFormChange={(updates) =>
           setEditForm((prev) => ({ ...prev, ...updates }))
         }
-
         isDeleteModalOpen={isDeleteModalOpen}
         onDeleteModalClose={() => setIsDeleteModalOpen(false)}
         onDeleteConfirm={() =>
           jobToDelete ? handleDeleteLocal(jobToDelete.id) : undefined
         }
         jobToDelete={jobToDelete}
-
         isCloneModalOpen={isCloneModalOpen}
         onCloneModalClose={() => setIsCloneModalOpen(false)}
         onCloneConfirm={handleCloneLocal}
         jobToClone={jobToClone}
         isCloning={isCloning}
-
         isErrorModalOpen={errorModalOpen}
         onErrorModalClose={() => {
           setErrorModalOpen(false);
@@ -215,6 +294,17 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         jobId={liveLogJobId}
         jobComment={liveLogJobComment}
       />
+
+      <RestoreBackupModal
+        isOpen={isBackupModalOpen}
+        onClose={() => setIsBackupModalOpen(false)}
+        backups={backupFiles}
+        onRestore={handleRestore}
+        onRestoreAll={handleRestoreAll}
+        onBackupAll={handleBackupAll}
+        onDelete={handleDeleteBackup}
+        onRefresh={loadBackupFiles}
+      />
     </>
   );
-};  
+};

@@ -1,8 +1,10 @@
 import { CronJob } from "@/app/_utils/cronjob-utils";
+import { generateShortUUID } from "@/app/_utils/uuid-utils";
 
 export const pauseJobInLines = (
   lines: string[],
-  targetJobIndex: number
+  targetJobIndex: number,
+  uuid: string
 ): string[] => {
   const newCronEntries: string[] = [];
   let currentJobIndex = 0;
@@ -51,9 +53,11 @@ export const pauseJobInLines = (
         lines[i + 1].trim()
       ) {
         if (currentJobIndex === targetJobIndex) {
-          const comment = trimmedLine.substring(1).trim();
+          const commentText = trimmedLine.substring(1).trim();
+          const { comment, logsEnabled } = parseCommentMetadata(commentText);
+          const formattedComment = formatCommentWithMetadata(comment, logsEnabled, uuid);
           const nextLine = lines[i + 1].trim();
-          const pausedEntry = `# PAUSED: ${comment}\n# ${nextLine}`;
+          const pausedEntry = `# PAUSED: ${formattedComment}\n# ${nextLine}`;
           newCronEntries.push(pausedEntry);
           i += 2;
           currentJobIndex++;
@@ -71,7 +75,8 @@ export const pauseJobInLines = (
     }
 
     if (currentJobIndex === targetJobIndex) {
-      const pausedEntry = `# PAUSED:\n# ${trimmedLine}`;
+      const formattedComment = formatCommentWithMetadata("", false, uuid);
+      const pausedEntry = `# PAUSED: ${formattedComment}\n# ${trimmedLine}`;
       newCronEntries.push(pausedEntry);
     } else {
       newCronEntries.push(line);
@@ -86,7 +91,8 @@ export const pauseJobInLines = (
 
 export const resumeJobInLines = (
   lines: string[],
-  targetJobIndex: number
+  targetJobIndex: number,
+  uuid: string
 ): string[] => {
   const newCronEntries: string[] = [];
   let currentJobIndex = 0;
@@ -118,10 +124,12 @@ export const resumeJobInLines = (
 
     if (trimmedLine.startsWith("# PAUSED:")) {
       if (currentJobIndex === targetJobIndex) {
-        const comment = trimmedLine.substring(9).trim();
+        const commentText = trimmedLine.substring(9).trim();
+        const { comment, logsEnabled } = parseCommentMetadata(commentText);
         if (i + 1 < lines.length && lines[i + 1].trim().startsWith("# ")) {
           const cronLine = lines[i + 1].trim().substring(2);
-          const resumedEntry = comment ? `# ${comment}\n${cronLine}` : cronLine;
+          const formattedComment = formatCommentWithMetadata(comment, logsEnabled, uuid);
+          const resumedEntry = formattedComment ? `# ${formattedComment}\n${cronLine}` : cronLine;
           newCronEntries.push(resumedEntry);
           i += 2;
         } else {
@@ -156,47 +164,70 @@ export const resumeJobInLines = (
 
 export const parseCommentMetadata = (
   commentText: string
-): { comment: string; logsEnabled: boolean } => {
+): { comment: string; logsEnabled: boolean; uuid?: string } => {
   if (!commentText) {
     return { comment: "", logsEnabled: false };
   }
 
   const parts = commentText.split("|").map((p) => p.trim());
-  let comment = parts[0] || "";
+  let comment = "";
   let logsEnabled = false;
+  let uuid: string | undefined;
 
   if (parts.length > 1) {
-    // Format: "fccview absolutely rocks | logsEnabled: true"
-    const metadata = parts[1];
+    comment = parts[0] || "";
+    const metadata = parts.slice(1).join("|").trim();
+
     const logsMatch = metadata.match(/logsEnabled:\s*(true|false)/i);
     if (logsMatch) {
       logsEnabled = logsMatch[1].toLowerCase() === "true";
     }
+
+    const uuidMatch = metadata.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
+    if (uuidMatch) {
+      uuid = uuidMatch[1].toLowerCase();
+    }
   } else {
-    // Format: logsEnabled: true
-    const logsMatch = commentText.match(/^logsEnabled:\s*(true|false)$/i);
-    if (logsMatch) {
-      logsEnabled = logsMatch[1].toLowerCase() === "true";
+    const logsMatch = commentText.match(/logsEnabled:\s*(true|false)/i);
+    const uuidMatch = commentText.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
+
+    if (logsMatch || uuidMatch) {
+      if (logsMatch) {
+        logsEnabled = logsMatch[1].toLowerCase() === "true";
+      }
+      if (uuidMatch) {
+        uuid = uuidMatch[1].toLowerCase();
+      }
       comment = "";
+    } else {
+      comment = parts[0] || "";
     }
   }
 
-  return { comment, logsEnabled };
+  return { comment, logsEnabled, uuid };
 };
 
 export const formatCommentWithMetadata = (
   comment: string,
-  logsEnabled: boolean
+  logsEnabled: boolean,
+  uuid: string
 ): string => {
   const trimmedComment = comment.trim();
+  const metadataParts: string[] = [];
 
   if (logsEnabled) {
-    return trimmedComment
-      ? `${trimmedComment} | logsEnabled: true`
-      : `logsEnabled: true`;
+    metadataParts.push("logsEnabled: true");
   }
 
-  return trimmedComment;
+  metadataParts.push(`id: ${uuid}`);
+
+  const metadata = metadataParts.join(" | ");
+
+  if (trimmedComment) {
+    return `${trimmedComment} | ${metadata}`;
+  }
+
+  return metadata;
 };
 
 export const parseJobsFromLines = (
@@ -206,6 +237,7 @@ export const parseJobsFromLines = (
   const jobs: CronJob[] = [];
   let currentComment = "";
   let currentLogsEnabled = false;
+  let currentUuid: string | undefined;
   let jobIndex = 0;
   let i = 0;
 
@@ -228,7 +260,7 @@ export const parseJobsFromLines = (
 
     if (trimmedLine.startsWith("# PAUSED:")) {
       const commentText = trimmedLine.substring(9).trim();
-      const { comment, logsEnabled } = parseCommentMetadata(commentText);
+      const { comment, logsEnabled, uuid } = parseCommentMetadata(commentText);
 
       if (i + 1 < lines.length) {
         const nextLine = lines[i + 1].trim();
@@ -239,8 +271,10 @@ export const parseJobsFromLines = (
             const schedule = parts.slice(0, 5).join(" ");
             const command = parts.slice(5).join(" ");
 
+            const jobId = uuid || generateShortUUID();
+
             jobs.push({
-              id: `${user}-${jobIndex}`,
+              id: jobId,
               schedule,
               command,
               comment: comment || undefined,
@@ -266,9 +300,10 @@ export const parseJobsFromLines = (
         lines[i + 1].trim()
       ) {
         const commentText = trimmedLine.substring(1).trim();
-        const { comment, logsEnabled } = parseCommentMetadata(commentText);
+        const { comment, logsEnabled, uuid } = parseCommentMetadata(commentText);
         currentComment = comment;
         currentLogsEnabled = logsEnabled;
+        currentUuid = uuid;
         i++;
         continue;
       } else {
@@ -291,8 +326,10 @@ export const parseJobsFromLines = (
     }
 
     if (schedule && command) {
+      const jobId = currentUuid || generateShortUUID();
+
       jobs.push({
-        id: `${user}-${jobIndex}`,
+        id: jobId,
         schedule,
         command,
         comment: currentComment || undefined,
@@ -304,6 +341,7 @@ export const parseJobsFromLines = (
       jobIndex++;
       currentComment = "";
       currentLogsEnabled = false;
+      currentUuid = undefined;
     }
     i++;
   }
@@ -399,7 +437,8 @@ export const updateJobInLines = (
   schedule: string,
   command: string,
   comment: string = "",
-  logsEnabled: boolean = false
+  logsEnabled: boolean = false,
+  uuid: string
 ): string[] => {
   const newCronEntries: string[] = [];
   let currentJobIndex = 0;
@@ -433,7 +472,8 @@ export const updateJobInLines = (
       if (currentJobIndex === targetJobIndex) {
         const formattedComment = formatCommentWithMetadata(
           comment,
-          logsEnabled
+          logsEnabled,
+          uuid
         );
         const newEntry = formattedComment
           ? `# PAUSED: ${formattedComment}\n# ${schedule} ${command}`
@@ -466,7 +506,8 @@ export const updateJobInLines = (
         if (currentJobIndex === targetJobIndex) {
           const formattedComment = formatCommentWithMetadata(
             comment,
-            logsEnabled
+            logsEnabled,
+            uuid
           );
           const newEntry = formattedComment
             ? `# ${formattedComment}\n${schedule} ${command}`
@@ -487,7 +528,7 @@ export const updateJobInLines = (
     }
 
     if (currentJobIndex === targetJobIndex) {
-      const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
+      const formattedComment = formatCommentWithMetadata(comment, logsEnabled, uuid);
       const newEntry = formattedComment
         ? `# ${formattedComment}\n${schedule} ${command}`
         : `${schedule} ${command}`;

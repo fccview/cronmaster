@@ -176,7 +176,7 @@ const getExitCodeFromLog = async (
   runId: string
 ): Promise<number | undefined> => {
   try {
-    const { readdir, readFile } = await import("fs/promises");
+    const { readdir, readFile, access } = await import("fs/promises");
     const path = await import("path");
 
     const job = getRunningJob(runId);
@@ -185,6 +185,13 @@ const getExitCodeFromLog = async (
     }
 
     const logDir = path.join(process.cwd(), "data", "logs", job.logFolderName);
+
+    try {
+      await access(logDir);
+    } catch {
+      return undefined;
+    }
+
     const files = await readdir(logDir);
 
     const sortedFiles = files.sort().reverse();

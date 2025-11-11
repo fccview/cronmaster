@@ -9,6 +9,7 @@ import {
   resumeCronJobAction,
   runCronJob,
   toggleCronJobLogging,
+  backupCronJob,
 } from "@/app/_server/actions/cronjobs";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 
@@ -397,5 +398,19 @@ export const handleNewCronSubmit = async (
     }
   } catch (error) {
     showToast("error", "Failed to create cron job", "Please try again later.");
+  }
+};
+
+export const handleBackup = async (id: string) => {
+  try {
+    const result = await backupCronJob(id);
+    if (result.success) {
+      showToast("success", "Job backed up successfully");
+    } else {
+      showToast("error", "Failed to backup job", result.message);
+    }
+  } catch (error: any) {
+    console.error("Error backing up job:", error);
+    showToast("error", "Error backing up job", error.message);
   }
 };

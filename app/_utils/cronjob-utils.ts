@@ -24,6 +24,7 @@ import {
   unwrapCommand,
   isCommandWrapped,
 } from "@/app/_utils/wrapper-utils";
+import { generateShortUUID } from "@/app/_utils/uuid-utils";
 
 const execAsync = promisify(exec);
 
@@ -101,7 +102,9 @@ const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
   }
 };
 
-export const getCronJobs = async (includeLogErrors: boolean = true): Promise<CronJob[]> => {
+export const getCronJobs = async (
+  includeLogErrors: boolean = true
+): Promise<CronJob[]> => {
   try {
     const userCrontabs = await getAllUsers();
     let allJobs: CronJob[] = [];
@@ -111,15 +114,43 @@ export const getCronJobs = async (includeLogErrors: boolean = true): Promise<Cro
 
       const lines = content.split("\n");
       const jobs = parseJobsFromLines(lines, user);
+
+      let needsUpdate = false;
+      let updatedLines = [...lines];
+
+      for (let jobIndex = 0; jobIndex < jobs.length; jobIndex++) {
+        const job = jobs[jobIndex];
+
+        const cronContent = lines.join("\n");
+        if (!cronContent.includes(`id: ${job.id}`)) {
+          needsUpdate = true;
+
+          updatedLines = updateJobInLines(
+            updatedLines,
+            jobIndex,
+            job.schedule,
+            job.command,
+            job.comment || "",
+            job.logsEnabled || false,
+            job.id
+          );
+        }
+      }
+
+      if (needsUpdate) {
+        const newCron = await cleanCrontabContent(updatedLines.join("\n"));
+        await writeUserCrontab(user, newCron);
+      }
+
       allJobs.push(...jobs);
     }
 
     if (includeLogErrors) {
       const { getAllJobLogErrors } = await import("@/app/_server/actions/logs");
-      const jobIds = allJobs.map(job => job.id);
+      const jobIds = allJobs.map((job) => job.id);
       const errorMap = await getAllJobLogErrors(jobIds);
 
-      allJobs = allJobs.map(job => ({
+      allJobs = allJobs.map((job) => ({
         ...job,
         logError: errorMap.get(job.id),
       }));
@@ -140,27 +171,31 @@ export const addCronJob = async (
   logsEnabled: boolean = false
 ): Promise<boolean> => {
   try {
+    const jobId = generateShortUUID();
+
     if (user) {
       const cronContent = await readUserCrontab(user);
-
-      const lines = cronContent.split("\n");
-      const existingJobs = parseJobsFromLines(lines, user);
-      const nextJobIndex = existingJobs.length;
-      const jobId = `${user}-${nextJobIndex}`;
 
       let finalCommand = command;
       if (logsEnabled && !isCommandWrapped(command)) {
         const docker = await isDocker();
-        finalCommand = await wrapCommandWithLogger(jobId, command, docker, comment);
+        finalCommand = await wrapCommandWithLogger(
+          jobId,
+          command,
+          docker,
+          comment
+        );
       } else if (logsEnabled && isCommandWrapped(command)) {
         finalCommand = command;
       }
 
-      const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
+      const formattedComment = formatCommentWithMetadata(
+        comment,
+        logsEnabled,
+        jobId
+      );
 
-      const newEntry = formattedComment
-        ? `# ${formattedComment}\n${schedule} ${finalCommand}`
-        : `${schedule} ${finalCommand}`;
+      const newEntry = `# ${formattedComment}\n${schedule} ${finalCommand}`;
 
       let newCron;
       if (cronContent.trim() === "") {
@@ -174,25 +209,26 @@ export const addCronJob = async (
     } else {
       const cronContent = await readCronFiles();
 
-      const currentUser = process.env.USER || "user";
-      const lines = cronContent.split("\n");
-      const existingJobs = parseJobsFromLines(lines, currentUser);
-      const nextJobIndex = existingJobs.length;
-      const jobId = `${currentUser}-${nextJobIndex}`;
-
       let finalCommand = command;
       if (logsEnabled && !isCommandWrapped(command)) {
         const docker = await isDocker();
-        finalCommand = await wrapCommandWithLogger(jobId, command, docker, comment);
+        finalCommand = await wrapCommandWithLogger(
+          jobId,
+          command,
+          docker,
+          comment
+        );
       } else if (logsEnabled && isCommandWrapped(command)) {
         finalCommand = command;
       }
 
-      const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
+      const formattedComment = formatCommentWithMetadata(
+        comment,
+        logsEnabled,
+        jobId
+      );
 
-      const newEntry = formattedComment
-        ? `# ${formattedComment}\n${schedule} ${finalCommand}`
-        : `${schedule} ${finalCommand}`;
+      const newEntry = `# ${formattedComment}\n${schedule} ${finalCommand}`;
 
       let newCron;
       if (cronContent.trim() === "") {
@@ -212,11 +248,25 @@ export const addCronJob = async (
 
 export const deleteCronJob = async (id: string): Promise<boolean> => {
   try {
-    const [user, jobIndexStr] = id.split("-");
-    const jobIndex = parseInt(jobIndexStr);
+    const allJobs = await getCronJobs(false);
+    const targetJob = allJobs.find((j) => j.id === id);
 
+    if (!targetJob) {
+      console.error(`Job with id ${id} not found`);
+      return false;
+    }
+
+    const user = targetJob.user;
     const cronContent = await readUserCrontab(user);
     const lines = cronContent.split("\n");
+    const userJobs = parseJobsFromLines(lines, user);
+    const jobIndex = userJobs.findIndex((j) => j.id === id);
+
+    if (jobIndex === -1) {
+      console.error(`Job with id ${id} not found in parsed jobs`);
+      return false;
+    }
+
     const newCronEntries = deleteJobInLines(lines, jobIndex);
     const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
 
@@ -235,16 +285,22 @@ export const updateCronJob = async (
   logsEnabled: boolean = false
 ): Promise<boolean> => {
   try {
-    const [user, jobIndexStr] = id.split("-");
-    const jobIndex = parseInt(jobIndexStr);
+    const allJobs = await getCronJobs(false);
+    const targetJob = allJobs.find((j) => j.id === id);
 
+    if (!targetJob) {
+      console.error(`Job with id ${id} not found`);
+      return false;
+    }
+
+    const user = targetJob.user;
     const cronContent = await readUserCrontab(user);
     const lines = cronContent.split("\n");
-    const existingJobs = parseJobsFromLines(lines, user);
-    const currentJob = existingJobs[jobIndex];
+    const userJobs = parseJobsFromLines(lines, user);
+    const jobIndex = userJobs.findIndex((j) => j.id === id);
 
-    if (!currentJob) {
-      console.error(`Job with index ${jobIndex} not found`);
+    if (jobIndex === -1) {
+      console.error(`Job with id ${id} not found in parsed jobs`);
       return false;
     }
 
@@ -255,16 +311,18 @@ export const updateCronJob = async (
     if (logsEnabled && !isWrappd) {
       const docker = await isDocker();
       finalCommand = await wrapCommandWithLogger(id, command, docker, comment);
-    }
-    else if (!logsEnabled && isWrappd) {
+    } else if (!logsEnabled && isWrappd) {
       finalCommand = unwrapCommand(command);
-    }
-    else if (logsEnabled && isWrappd) {
+    } else if (logsEnabled && isWrappd) {
       const unwrapped = unwrapCommand(command);
       const docker = await isDocker();
-      finalCommand = await wrapCommandWithLogger(id, unwrapped, docker, comment);
-    }
-    else {
+      finalCommand = await wrapCommandWithLogger(
+        id,
+        unwrapped,
+        docker,
+        comment
+      );
+    } else {
       finalCommand = command;
     }
 
@@ -274,7 +332,8 @@ export const updateCronJob = async (
       schedule,
       finalCommand,
       comment,
-      logsEnabled
+      logsEnabled,
+      id
     );
     const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
 
@@ -287,12 +346,26 @@ export const updateCronJob = async (
 
 export const pauseCronJob = async (id: string): Promise<boolean> => {
   try {
-    const [user, jobIndexStr] = id.split("-");
-    const jobIndex = parseInt(jobIndexStr);
+    const allJobs = await getCronJobs(false);
+    const targetJob = allJobs.find((j) => j.id === id);
 
+    if (!targetJob) {
+      console.error(`Job with id ${id} not found`);
+      return false;
+    }
+
+    const user = targetJob.user;
     const cronContent = await readUserCrontab(user);
     const lines = cronContent.split("\n");
-    const newCronEntries = pauseJobInLines(lines, jobIndex);
+    const userJobs = parseJobsFromLines(lines, user);
+    const jobIndex = userJobs.findIndex((j) => j.id === id);
+
+    if (jobIndex === -1) {
+      console.error(`Job with id ${id} not found in parsed jobs`);
+      return false;
+    }
+
+    const newCronEntries = pauseJobInLines(lines, jobIndex, id);
     const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
 
     return await writeUserCrontab(user, newCron);
@@ -304,12 +377,26 @@ export const pauseCronJob = async (id: string): Promise<boolean> => {
 
 export const resumeCronJob = async (id: string): Promise<boolean> => {
   try {
-    const [user, jobIndexStr] = id.split("-");
-    const jobIndex = parseInt(jobIndexStr);
+    const allJobs = await getCronJobs(false);
+    const targetJob = allJobs.find((j) => j.id === id);
 
+    if (!targetJob) {
+      console.error(`Job with id ${id} not found`);
+      return false;
+    }
+
+    const user = targetJob.user;
     const cronContent = await readUserCrontab(user);
     const lines = cronContent.split("\n");
-    const newCronEntries = resumeJobInLines(lines, jobIndex);
+    const userJobs = parseJobsFromLines(lines, user);
+    const jobIndex = userJobs.findIndex((j) => j.id === id);
+
+    if (jobIndex === -1) {
+      console.error(`Job with id ${id} not found in parsed jobs`);
+      return false;
+    }
+
+    const newCronEntries = resumeJobInLines(lines, jobIndex, id);
     const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
 
     return await writeUserCrontab(user, newCron);

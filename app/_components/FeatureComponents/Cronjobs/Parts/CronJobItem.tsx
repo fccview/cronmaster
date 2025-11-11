@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
+import { DropdownMenu } from "@/app/_components/GlobalComponents/UIElements/DropdownMenu";
 import {
   Trash2,
   Edit,
@@ -17,6 +18,9 @@ import {
   AlertCircle,
   CheckCircle,
   AlertTriangle,
+  Download,
+  Hash,
+  Check,
 } from "lucide-react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { JobError } from "@/app/_utils/error-utils";
@@ -28,6 +32,7 @@ import {
 import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { copyToClipboard } from "@/app/_utils/global-utils";
 
 interface CronJobItemProps {
   job: CronJob;
@@ -42,6 +47,7 @@ interface CronJobItemProps {
   onDelete: (job: CronJob) => void;
   onToggleLogging: (id: string) => void;
   onViewLogs: (job: CronJob) => void;
+  onBackup: (id: string) => void;
   onErrorClick: (error: JobError) => void;
   onErrorDismiss: () => void;
 }
@@ -59,11 +65,14 @@ export const CronJobItem = ({
   onDelete,
   onToggleLogging,
   onViewLogs,
+  onBackup,
   onErrorClick,
   onErrorDismiss,
 }: CronJobItemProps) => {
   const [cronExplanation, setCronExplanation] =
     useState<CronExplanation | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showCopyConfirmation, setShowCopyConfirmation] = useState(false);
   const locale = useLocale();
   const t = useTranslations();
   const displayCommand = unwrapCommand(job.command);
@@ -76,13 +85,71 @@ export const CronJobItem = ({
       setCronExplanation(null);
     }
   }, [job.schedule]);
+
+  const dropdownMenuItems = [
+    {
+      label: t("cronjobs.editCronJob"),
+      icon: <Edit className="h-3 w-3" />,
+      onClick: () => onEdit(job),
+    },
+    {
+      label: job.logsEnabled
+        ? t("cronjobs.disableLogging")
+        : t("cronjobs.enableLogging"),
+      icon: job.logsEnabled ? (
+        <FileX className="h-3 w-3" />
+      ) : (
+        <FileOutput className="h-3 w-3" />
+      ),
+      onClick: () => onToggleLogging(job.id),
+    },
+    ...(job.logsEnabled
+      ? [
+          {
+            label: t("cronjobs.viewLogs"),
+            icon: <FileText className="h-3 w-3" />,
+            onClick: () => onViewLogs(job),
+          },
+        ]
+      : []),
+    {
+      label: job.paused
+        ? t("cronjobs.resumeCronJob")
+        : t("cronjobs.pauseCronJob"),
+      icon: job.paused ? (
+        <Play className="h-3 w-3" />
+      ) : (
+        <Pause className="h-3 w-3" />
+      ),
+      onClick: () => (job.paused ? onResume(job.id) : onPause(job.id)),
+    },
+    {
+      label: t("cronjobs.cloneCronJob"),
+      icon: <Files className="h-3 w-3" />,
+      onClick: () => onClone(job),
+    },
+    {
+      label: t("cronjobs.backupJob"),
+      icon: <Download className="h-3 w-3" />,
+      onClick: () => onBackup(job.id),
+    },
+    {
+      label: t("cronjobs.deleteCronJob"),
+      icon: <Trash2 className="h-3 w-3" />,
+      onClick: () => onDelete(job),
+      variant: "destructive" as const,
+      disabled: deletingId === job.id,
+    },
+  ];
   return (
     <div
       key={job.id}
-      className="glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
+      className={`glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors ${
+        isDropdownOpen ? "relative z-10" : ""
+      }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-        <div className="flex-1 min-w-0 order-2 lg:order-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
               {job.schedule}
@@ -134,31 +201,40 @@ export const CronJobItem = ({
                 title="Latest execution failed - Click to view error log"
               >
                 <AlertCircle className="h-3 w-3" />
-                <span>{t("cronjobs.failed", { exitCode: job.logError?.exitCode?.toString() ?? "" })}</span>
+                <span>
+                  {t("cronjobs.failed", {
+                    exitCode: job.logError?.exitCode?.toString() ?? "",
+                  })}
+                </span>
               </button>
             )}
 
-            {job.logsEnabled && !job.logError?.hasError && job.logError?.hasHistoricalFailures && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewLogs(job);
-                }}
-                className="flex items-center gap-1 text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors cursor-pointer"
-                title="Latest execution succeeded, but has historical failures - Click to view logs"
-              >
-                <CheckCircle className="h-3 w-3" />
-                <span>{t("cronjobs.healthy")}</span>
-                <AlertTriangle className="h-3 w-3" />
-              </button>
-            )}
+            {job.logsEnabled &&
+              !job.logError?.hasError &&
+              job.logError?.hasHistoricalFailures && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewLogs(job);
+                  }}
+                  className="flex items-center gap-1 text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors cursor-pointer"
+                  title="Latest execution succeeded, but has historical failures - Click to view logs"
+                >
+                  <CheckCircle className="h-3 w-3" />
+                  <span>{t("cronjobs.healthy")}</span>
+                  <AlertTriangle className="h-3 w-3" />
+                </button>
+              )}
 
-            {job.logsEnabled && !job.logError?.hasError && !job.logError?.hasHistoricalFailures && job.logError?.latestExitCode === 0 && (
-              <div className="flex items-center gap-1 text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded border border-green-500/30">
-                <CheckCircle className="h-3 w-3" />
-                <span>{t("cronjobs.healthy")}</span>
-              </div>
-            )}
+            {job.logsEnabled &&
+              !job.logError?.hasError &&
+              !job.logError?.hasHistoricalFailures &&
+              job.logError?.latestExitCode === 0 && (
+                <div className="flex items-center gap-1 text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded border border-green-500/30">
+                  <CheckCircle className="h-3 w-3" />
+                  <span>{t("cronjobs.healthy")}</span>
+                </div>
+              )}
 
             {!job.logsEnabled && (
               <ErrorBadge
@@ -170,126 +246,103 @@ export const CronJobItem = ({
           </div>
 
           {job.comment && (
-            <p
-              className="text-xs text-muted-foreground italic truncate"
-              title={job.comment}
-            >
-              {job.comment}
-            </p>
+            <div className="flex items-center gap-2 pb-2 pt-4">
+              <div
+                className="flex items-center gap-1 text-xs bg-muted/50 text-muted-foreground px-2 py-0.5 rounded border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors relative"
+                title="Click to copy Job UUID"
+                onClick={async () => {
+                  const success = await copyToClipboard(job.id);
+                  if (success) {
+                    setShowCopyConfirmation(true);
+                    setTimeout(() => setShowCopyConfirmation(false), 3000);
+                  }
+                }}
+              >
+                {showCopyConfirmation ? (
+                  <Check className="h-3 w-3 text-green-600" />
+                ) : (
+                  <Hash className="h-3 w-3" />
+                )}
+                <span className="font-mono">{job.id}</span>
+              </div>
+
+              <p
+                className="text-xs text-muted-foreground italic truncate"
+                title={job.comment}
+              >
+                {job.comment}
+              </p>
+            </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0 order-1 lg:order-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onRun(job.id)}
-            disabled={runningJobId === job.id || job.paused}
-            className="btn-outline h-8 px-3"
-            title={t("cronjobs.runCronManually")}
-            aria-label={t("cronjobs.runCronManually")}
-          >
-            {runningJobId === job.id ? (
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            ) : (
-              <Code className="h-3 w-3" />
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(job)}
-            className="btn-outline h-8 px-3"
-            title={t("cronjobs.editCronJob")}
-            aria-label={t("cronjobs.editCronJob")}
-          >
-            <Edit className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onClone(job)}
-            className="btn-outline h-8 px-3"
-            title={t("cronjobs.cloneCronJob")}
-            aria-label={t("cronjobs.cloneCronJob")}
-          >
-            <Files className="h-3 w-3" />
-          </Button>
-          {job.paused ? (
+        <div className="flex items-center gap-2 justify-between sm:justify-end">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onResume(job.id)}
+              onClick={() => onRun(job.id)}
+              disabled={runningJobId === job.id || job.paused}
               className="btn-outline h-8 px-3"
-              title={t("cronjobs.resumeCronJob")}
-              aria-label={t("cronjobs.resumeCronJob")}
+              title={t("cronjobs.runCronManually")}
+              aria-label={t("cronjobs.runCronManually")}
             >
-              <Play className="h-3 w-3" />
+              {runningJobId === job.id ? (
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              ) : (
+                <Code className="h-3 w-3" />
+              )}
             </Button>
-          ) : (
+
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onPause(job.id)}
+              onClick={() => {
+                if (job.paused) {
+                  onResume(job.id);
+                } else {
+                  onPause(job.id);
+                }
+              }}
               className="btn-outline h-8 px-3"
               title={t("cronjobs.pauseCronJob")}
               aria-label={t("cronjobs.pauseCronJob")}
             >
-              <Pause className="h-3 w-3" />
+              {job.paused ? (
+                <Play className="h-3 w-3" />
+              ) : (
+                <Pause className="h-3 w-3" />
+              )}
             </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onToggleLogging(job.id)}
-            className={`h-8 px-3 ${job.logsEnabled
-              ? "btn-outline border-blue-500/50 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
-              : "btn-outline"
-              }`}
-            title={
-              job.logsEnabled
-                ? t("cronjobs.disableLogging")
-                : t("cronjobs.enableLogging")
-            }
-            aria-label={
-              job.logsEnabled
-                ? t("cronjobs.disableLogging")
-                : t("cronjobs.enableLogging")
-            }
-          >
-            {job.logsEnabled ? (
-              <FileOutput className="h-3 w-3" />
-            ) : (
-              <FileX className="h-3 w-3" />
-            )}
-          </Button>
-          {job.logsEnabled && (
+
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onViewLogs(job)}
+              onClick={() => onToggleLogging(job.id)}
               className="btn-outline h-8 px-3"
-              title={t("cronjobs.viewLogs")}
-              aria-label={t("cronjobs.viewLogs")}
+              title={
+                job.logsEnabled
+                  ? t("cronjobs.disableLogging")
+                  : t("cronjobs.enableLogging")
+              }
+              aria-label={
+                job.logsEnabled
+                  ? t("cronjobs.disableLogging")
+                  : t("cronjobs.enableLogging")
+              }
             >
-              <FileText className="h-3 w-3" />
+              {job.logsEnabled ? (
+                <FileX className="h-3 w-3" />
+              ) : (
+                <FileOutput className="h-3 w-3" />
+              )}
             </Button>
-          )}
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDelete(job)}
-            disabled={deletingId === job.id}
-            className="btn-destructive h-8 px-3"
-            title={t("cronjobs.deleteCronJob")}
-            aria-label={t("cronjobs.deleteCronJob")}
-          >
-            {deletingId === job.id ? (
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            ) : (
-              <Trash2 className="h-3 w-3" />
-            )}
-          </Button>
+          </div>
+
+          <DropdownMenu
+            items={dropdownMenuItems}
+            onOpenChange={setIsDropdownOpen}
+          />
         </div>
       </div>
     </div>
