@@ -96,7 +96,7 @@ export const LogsModal = ({
   };
 
   const handleDeleteLog = async (filename: string) => {
-    if (!confirm(t("confirmDeleteLog"))) return;
+    if (!confirm(t("cronjobs.confirmDeleteLog"))) return;
 
     try {
       const result = await deleteLogFile(jobId, filename);
@@ -116,7 +116,7 @@ export const LogsModal = ({
   };
 
   const handleDeleteAllLogs = async () => {
-    if (!confirm(t("confirmDeleteAllLogs"))) return;
+    if (!confirm(t("cronjobs.confirmDeleteAllLogs"))) return;
 
     try {
       const result = await deleteAllJobLogs(jobId);
@@ -177,7 +177,7 @@ export const LogsModal = ({
                 className={`w-4 h-4 mr-2 ${isLoadingLogs ? "animate-spin" : ""
                   }`}
               />
-              {t("refresh")}
+              {t("common.refresh")}
             </Button>
             {logs.length > 0 && (
               <Button
@@ -186,7 +186,7 @@ export const LogsModal = ({
                 size="sm"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                {t("deleteAll")}
+                {t("cronjobs.deleteAll")}
               </Button>
             )}
           </div>
@@ -198,11 +198,11 @@ export const LogsModal = ({
             <div className="flex-1 overflow-y-auto space-y-2">
               {isLoadingLogs ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {t("loading")}...
+                  {t("common.loading")}...
                 </div>
               ) : logs.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {t("noLogsFound")}
+                  {t("cronjobs.noLogsFound")}
                 </div>
               ) : (
                 logs.map((log) => (
@@ -268,7 +268,7 @@ export const LogsModal = ({
             <div className="flex-1 overflow-hidden">
               {isLoadingContent ? (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  {t("loading")}...
+                  {t("common.loading")}...
                 </div>
               ) : selectedLog ? (
                 <pre className="h-full overflow-auto bg-muted/50 p-4 rounded border border-border text-xs font-mono whitespace-pre-wrap">
@@ -278,7 +278,7 @@ export const LogsModal = ({
                 <div className="h-full flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
                     <Eye className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>{t("selectLogToView")}</p>
+                    <p>{t("cronjobs.selectLogToView")}</p>
                   </div>
                 </div>
               )}
@@ -289,7 +289,7 @@ export const LogsModal = ({
         <div className="mt-4 pt-4 border-t border-border flex justify-end">
           <Button onClick={onClose} className="btn-primary glow-primary">
             <X className="w-4 h-4 mr-2" />
-            {t("close")}
+            {t("common.close")}
           </Button>
         </div>
       </div>

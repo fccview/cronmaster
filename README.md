@@ -9,6 +9,8 @@
 - **Cron Job Management**: View, create, and delete cron jobs with comments.
 - **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
 - **Job Execution Logging**: Optional logging for cronjobs with automatic cleanup, capturing stdout, stderr, exit codes, and timestamps.
+- **Live Updates (SSE)**: Real-time job status updates and live log streaming for long-running jobs (when logging is enabled).
+- **Smart Job Execution**: Jobs with logging run in background with live updates, jobs without logging run synchronously with 5-minute timeout.
 - **Docker Support**: Runs entirely from a Docker container.
 - **Easy Setup**: Quick presets for common cron schedules.
 
@@ -76,6 +78,10 @@ services:
       # --- PASSWORD PROTECTION
       # Uncomment to enable password protection (replace "password" with your own)
       - AUTH_PASSWORD=very_strong_password
+
+      # --- LIVE UPDATES (SSE)
+      # Set to false to disable live updates via Server-Sent Events
+      # - LIVE_UPDATES=false
 
       # --- CRONTAB USERS
       # This is used to read the crontabs for the specific user.
@@ -157,6 +163,7 @@ The following environment variables can be configured:
 | `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
 | `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
 | `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
+| `HOME`                              | `N/A`   | Optional path to your home folder, defaults to `/home`                                      |
 
 
 ### Important Notes for Docker

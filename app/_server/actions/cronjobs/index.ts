@@ -16,7 +16,7 @@ import { getScriptPathForCron } from "@/app/_server/actions/scripts";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { isDocker } from "@/app/_server/actions/global";
-import { NSENTER_RUN_JOB } from "@/app/_consts/nsenter";
+import { runJobSynchronously, runJobInBackground } from "@/app/_utils/job-execution-utils";
 
 const execAsync = promisify(exec);
 
@@ -302,6 +302,8 @@ export const runCronJob = async (
   message: string;
   output?: string;
   details?: string;
+  runId?: string;
+  mode?: "sync" | "async";
 }> => {
   try {
     const cronJobs = await getCronJobs();
@@ -315,31 +317,14 @@ export const runCronJob = async (
       return { success: false, message: "Cannot run paused cron job" };
     }
 
-    let command: string;
     const docker = await isDocker();
+    const liveUpdatesEnabled = typeof process.env.LIVE_UPDATES === "boolean" && process.env.LIVE_UPDATES === true || process.env.LIVE_UPDATES !== "false";
 
-    if (docker) {
-      const userInfo = await getUserInfo(job.user);
-      const executionUser = userInfo ? userInfo.username : "root";
-      const escapedCommand = job.command.replace(/'/g, "'\\''");
-
-      command = NSENTER_RUN_JOB(executionUser, escapedCommand);
-    } else {
-      command = job.command;
+    if (job.logsEnabled && liveUpdatesEnabled) {
+      return runJobInBackground(job, docker);
     }
 
-    const { stdout, stderr } = await execAsync(command, {
-      timeout: 30000,
-      cwd: process.env.HOME || "/home",
-    });
-
-    const output = stdout || stderr || "Command executed successfully";
-
-    return {
-      success: true,
-      message: "Cron job executed successfully",
-      output: output.trim(),
-    };
+    return runJobSynchronously(job, docker);
   } catch (error: any) {
     console.error("Error running cron job:", error);
     const errorMessage =

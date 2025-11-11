@@ -56,6 +56,8 @@ interface SystemInfoType {
 }
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useSSEContext } from "@/app/_contexts/SSEContext";
+import { SSEEvent } from "@/app/_utils/sse-events";
 
 interface SystemInfoCardProps {
   systemInfo: SystemInfoType;
@@ -69,8 +71,7 @@ export const SystemInfoCard = ({
     useState<SystemInfoType>(initialSystemInfo);
   const [isUpdating, setIsUpdating] = useState(false);
   const t = useTranslations();
-
-
+  const { subscribe } = useSSEContext();
 
   const updateSystemInfo = async () => {
     try {
@@ -87,6 +88,16 @@ export const SystemInfoCard = ({
       setIsUpdating(false);
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = subscribe((event: SSEEvent) => {
+      if (event.type === "system-stats") {
+        setSystemInfo(event.data);
+      }
+    });
+
+    return unsubscribe;
+  }, [subscribe]);
 
   useEffect(() => {
     const updateTime = () => {

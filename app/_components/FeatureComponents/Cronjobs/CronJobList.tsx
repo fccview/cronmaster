@@ -12,7 +12,11 @@ import { CronJobItem } from "@/app/_components/FeatureComponents/Cronjobs/Parts/
 import { CronJobEmptyState } from "@/app/_components/FeatureComponents/Cronjobs/Parts/CronJobEmptyState";
 import { CronJobListModals } from "@/app/_components/FeatureComponents/Modals/CronJobListsModals";
 import { LogsModal } from "@/app/_components/FeatureComponents/Modals/LogsModal";
+import { LiveLogModal } from "@/app/_components/FeatureComponents/Modals/LiveLogModal";
 import { useTranslations } from "next-intl";
+import { useSSEContext } from "@/app/_contexts/SSEContext";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface CronJobListProps {
   cronJobs: CronJob[];
@@ -21,6 +25,19 @@ interface CronJobListProps {
 
 export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
   const t = useTranslations();
+  const router = useRouter();
+  const { subscribe } = useSSEContext();
+
+  useEffect(() => {
+    const unsubscribe = subscribe((event) => {
+      if (event.type === "job-completed" || event.type === "job-failed") {
+        router.refresh();
+      }
+    });
+
+    return unsubscribe;
+  }, [subscribe, router]);
+
   const {
     deletingId,
     runningJobId,
@@ -34,6 +51,11 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     isLogsModalOpen,
     setIsLogsModalOpen,
     jobForLogs,
+    isLiveLogModalOpen,
+    setIsLiveLogModalOpen,
+    liveLogRunId,
+    liveLogJobId,
+    liveLogJobComment,
     filteredJobs,
     isNewCronModalOpen,
     setIsNewCronModalOpen,
@@ -185,6 +207,14 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
           preSelectedLog={jobForLogs.logError?.lastFailedLog}
         />
       )}
+
+      <LiveLogModal
+        isOpen={isLiveLogModalOpen}
+        onClose={() => setIsLiveLogModalOpen(false)}
+        runId={liveLogRunId}
+        jobId={liveLogJobId}
+        jobComment={liveLogJobComment}
+      />
     </>
   );
 };  

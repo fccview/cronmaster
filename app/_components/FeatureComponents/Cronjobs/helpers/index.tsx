@@ -25,6 +25,10 @@ interface HandlerProps {
   setNewCronForm: (form: any) => void;
   setRunningJobId: (id: string | null) => void;
   refreshJobErrors: () => void;
+  setIsLiveLogModalOpen?: (open: boolean) => void;
+  setLiveLogRunId?: (runId: string) => void;
+  setLiveLogJobId?: (jobId: string) => void;
+  setLiveLogJobComment?: (comment: string) => void;
   jobToClone: CronJob | null;
   editingJob: CronJob | null;
   editForm: {
@@ -193,14 +197,32 @@ export const handleResume = async (id: string) => {
   }
 };
 
-export const handleRun = async (id: string, props: HandlerProps) => {
-  const { setRunningJobId, refreshJobErrors } = props;
+export const handleRun = async (id: string, props: HandlerProps, job: CronJob) => {
+  const {
+    setRunningJobId,
+    refreshJobErrors,
+    setIsLiveLogModalOpen,
+    setLiveLogRunId,
+    setLiveLogJobId,
+    setLiveLogJobComment,
+  } = props;
 
   setRunningJobId(id);
   try {
     const result = await runCronJob(id);
     if (result.success) {
-      showToast("success", "Cron job executed successfully");
+      if (result.mode === "async" && result.runId) {
+        if (setIsLiveLogModalOpen && setLiveLogRunId && setLiveLogJobId) {
+          setLiveLogRunId(result.runId);
+          setLiveLogJobId(id);
+          if (setLiveLogJobComment) {
+            setLiveLogJobComment(job.comment || "");
+          }
+          setIsLiveLogModalOpen(true);
+        }
+      } else {
+        showToast("success", "Cron job executed successfully");
+      }
     } else {
       const errorId = `run-${id}-${Date.now()}`;
       const jobError: JobError = {

@@ -1,4 +1,12 @@
-import { GET_DOCKER_SOCKET_OWNER, GET_TARGET_USER, ID_G, ID_U, READ_CRONTAB, READ_CRONTABS_DIRECTORY, WRITE_HOST_CRONTAB } from "@/app/_consts/commands";
+import {
+  GET_DOCKER_SOCKET_OWNER,
+  GET_TARGET_USER,
+  ID_G,
+  ID_U,
+  READ_CRONTAB,
+  READ_CRONTABS_DIRECTORY,
+  WRITE_HOST_CRONTAB,
+} from "@/app/_consts/commands";
 import { NSENTER_HOST_CRONTAB } from "@/app/_consts/nsenter";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -145,7 +153,9 @@ export const writeHostCrontabForUser = async (
   }
 };
 
-export async function getUserInfo(username: string): Promise<UserInfo | null> {
+export const getUserInfo = async (
+  username: string
+): Promise<UserInfo | null> => {
   try {
     const uidResult = await execHostCrontab(ID_U(username));
     const gidResult = await execHostCrontab(ID_G(username));

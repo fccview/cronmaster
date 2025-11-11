@@ -1,12 +1,20 @@
 import { NextResponse } from "next/server";
 import { getTranslations } from "@/app/_utils/global-utils";
 import * as si from "systeminformation";
-import { getPing, formatBytes, formatUptime, findMainInterface, getStatus, getOverallStatus, formatGpuInfo } from "@/app/_utils/system-stats-utils";
+import {
+  getPing,
+  formatBytes,
+  formatUptime,
+  findMainInterface,
+  getStatus,
+  getOverallStatus,
+  formatGpuInfo,
+} from "@/app/_utils/system-stats-utils";
+import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
 
 export const dynamic = "force-dynamic";
 
-
-export async function GET() {
+export const GET = async () => {
   try {
     const t = await getTranslations();
 
@@ -31,8 +39,12 @@ export async function GET() {
     const cpuLoad = loadInfo.currentLoad;
 
     const mainInterface = findMainInterface(networkInfo);
-    const rxSpeed = mainInterface ? (mainInterface.rx_sec || 0) / 1024 / 1024 : 0;
-    const txSpeed = mainInterface ? (mainInterface.tx_sec || 0) / 1024 / 1024 : 0;
+    const rxSpeed = mainInterface
+      ? (mainInterface.rx_sec || 0) / 1024 / 1024
+      : 0;
+    const txSpeed = mainInterface
+      ? (mainInterface.tx_sec || 0) / 1024 / 1024
+      : 0;
 
     const systemStats = {
       uptime: formatUptime(uptimeInfo.uptime),
@@ -56,8 +68,8 @@ export async function GET() {
       network: {
         speed:
           mainInterface &&
-            mainInterface.rx_sec != null &&
-            mainInterface.tx_sec != null
+          mainInterface.rx_sec != null &&
+          mainInterface.tx_sec != null
             ? `${Math.round(rxSpeed + txSpeed)} Mbps`
             : t("system.unknown"),
         latency: latency,
@@ -72,6 +84,14 @@ export async function GET() {
       gpu: formatGpuInfo(graphics, t),
     };
 
+    if (sseBroadcaster.hasClients()) {
+      sseBroadcaster.broadcast({
+        type: "system-stats",
+        timestamp: new Date().toISOString(),
+        data: systemStats,
+      });
+    }
+
     return NextResponse.json(systemStats);
   } catch (error) {
     console.error("Error fetching system stats:", error);
@@ -80,4 +100,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+};

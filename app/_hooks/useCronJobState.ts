@@ -41,6 +41,10 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const [selectedError, setSelectedError] = useState<JobError | null>(null);
     const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
     const [jobForLogs, setJobForLogs] = useState<CronJob | null>(null);
+    const [isLiveLogModalOpen, setIsLiveLogModalOpen] = useState(false);
+    const [liveLogRunId, setLiveLogRunId] = useState<string>("");
+    const [liveLogJobId, setLiveLogJobId] = useState<string>("");
+    const [liveLogJobComment, setLiveLogJobComment] = useState<string>("");
 
     const [editForm, setEditForm] = useState({
         schedule: "",
@@ -107,6 +111,10 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         setNewCronForm,
         setRunningJobId,
         refreshJobErrors: refreshJobErrorsLocal,
+        setIsLiveLogModalOpen,
+        setLiveLogRunId,
+        setLiveLogJobId,
+        setLiveLogJobComment,
         jobToClone,
         editingJob,
         editForm,
@@ -134,7 +142,9 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const handleRunLocal = async (id: string) => {
-        await handleRun(id, getHelperState());
+        const job = cronJobs.find(j => j.id === id);
+        if (!job) return;
+        await handleRun(id, getHelperState(), job);
     };
 
     const handleToggleLoggingLocal = async (id: string) => {
@@ -188,6 +198,11 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         isLogsModalOpen,
         setIsLogsModalOpen,
         jobForLogs,
+        isLiveLogModalOpen,
+        setIsLiveLogModalOpen,
+        liveLogRunId,
+        liveLogJobId,
+        liveLogJobComment,
         filteredJobs,
         isNewCronModalOpen,
         setIsNewCronModalOpen,

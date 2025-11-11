@@ -22,6 +22,10 @@ services:
       # Uncomment to enable password protection (replace "password" with your own)
       - AUTH_PASSWORD=very_strong_password
 
+      # --- LIVE UPDATES (SSE)
+      # Set to false to disable live updates via Server-Sent Events
+      # - LIVE_UPDATES=false
+
       # --- CRONTAB USERS
       # This is used to read the crontabs for the specific user.
       # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
