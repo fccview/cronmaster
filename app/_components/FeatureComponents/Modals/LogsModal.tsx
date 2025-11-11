@@ -155,14 +155,14 @@ export const LogsModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t("viewLogs")} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("cronjobs.viewLogs")} size="xl">
       <div className="flex flex-col h-[600px]">
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div>
             <h3 className="font-semibold text-lg">{jobComment || jobId}</h3>
             {stats && (
               <p className="text-sm text-muted-foreground">
-                {stats.count} {t("logs")} • {stats.totalSizeMB} MB
+                {stats.count} {t("cronjobs.logs")} • {stats.totalSizeMB} MB
               </p>
             )}
           </div>
@@ -194,7 +194,7 @@ export const LogsModal = ({
 
         <div className="flex-1 flex gap-4 overflow-hidden">
           <div className="w-1/3 flex flex-col border-r border-border pr-4 overflow-hidden">
-            <h4 className="font-semibold mb-2">{t("logFiles")}</h4>
+            <h4 className="font-semibold mb-2">{t("cronjobs.logFiles")}</h4>
             <div className="flex-1 overflow-y-auto space-y-2">
               {isLoadingLogs ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -264,7 +264,7 @@ export const LogsModal = ({
           </div>
 
           <div className="flex-1 flex flex-col overflow-hidden">
-            <h4 className="font-semibold mb-2">{t("logContent")}</h4>
+            <h4 className="font-semibold mb-2">{t("cronjobs.logContent")}</h4>
             <div className="flex-1 overflow-hidden">
               {isLoadingContent ? (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
