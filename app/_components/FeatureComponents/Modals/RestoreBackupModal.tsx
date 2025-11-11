@@ -10,10 +10,12 @@ import {
   User,
   Download,
   RefreshCw,
+  Check,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
+import { copyToClipboard } from "@/app/_utils/global-utils";
 
 interface BackupFile {
   filename: string;
@@ -44,6 +46,7 @@ export const RestoreBackupModal = ({
 }: RestoreBackupModalProps) => {
   const t = useTranslations();
   const [deletingFilename, setDeletingFilename] = useState<string | null>(null);
+  const [commandCopied, setCommandCopied] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -125,9 +128,24 @@ export const RestoreBackupModal = ({
                         {backup.job.schedule}
                       </code>
                       <div className="flex-1 min-w-0">
-                        <pre className="text-sm font-medium text-foreground truncate bg-muted/30 px-2 py-1 rounded border border-border/30">
-                          {unwrapCommand(backup.job.command)}
-                        </pre>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {commandCopied === backup.filename && (
+                            <Check className="h-3 w-3 text-green-600" />
+                          )}
+                          <pre
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(
+                                unwrapCommand(backup.job.command)
+                              );
+                              setCommandCopied(backup.filename);
+                              setTimeout(() => setCommandCopied(null), 3000);
+                            }}
+                            className="w-full cursor-pointer overflow-x-auto text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border/30 hide-scrollbar"
+                          >
+                            {unwrapCommand(backup.job.command)}
+                          </pre>
+                        </div>
                       </div>
                     </div>
 

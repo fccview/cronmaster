@@ -76,6 +76,7 @@ export const CronJobItem = ({
   const locale = useLocale();
   const t = useTranslations();
   const displayCommand = unwrapCommand(job.command);
+  const [commandCopied, setCommandCopied] = useState<string | null>(null);
 
   useEffect(() => {
     if (job.schedule) {
@@ -155,28 +156,48 @@ export const CronJobItem = ({
               {job.schedule}
             </code>
             <div className="flex-1 min-w-0">
-              <pre
-                className="text-sm font-medium text-foreground truncate bg-muted/30 px-2 py-1 rounded border border-border/30"
-                title={displayCommand}
-              >
-                {displayCommand}
-              </pre>
+              <div className="flex items-center gap-2 min-w-0 w-full">
+                {commandCopied === job.id && (
+                  <Check className="h-3 w-3 text-green-600" />
+                )}
+                <pre
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    copyToClipboard(unwrapCommand(job.command));
+                    setCommandCopied(job.id);
+                    setTimeout(() => setCommandCopied(null), 3000);
+                  }}
+                  className="w-full cursor-pointer overflow-x-auto text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border/30 hide-scrollbar"
+                >
+                  {unwrapCommand(displayCommand)}
+                </pre>
+              </div>
             </div>
           </div>
 
-          {cronExplanation?.isValid && (
-            <div className="flex items-start gap-1.5 mb-1">
-              <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-muted-foreground italic">
-                {cronExplanation.humanReadable}
-              </p>
-            </div>
-          )}
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 py-3">
+            <div className="flex items-center gap-1 text-xs bg-muted/50 text-muted-foreground px-2 py-0.5 rounded border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors relative">
               <User className="h-3 w-3" />
               <span>{job.user}</span>
+            </div>
+
+            <div
+              className="flex items-center gap-1 text-xs bg-muted/50 text-muted-foreground px-2 py-0.5 rounded border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors relative"
+              title="Click to copy Job UUID"
+              onClick={async () => {
+                const success = await copyToClipboard(job.id);
+                if (success) {
+                  setShowCopyConfirmation(true);
+                  setTimeout(() => setShowCopyConfirmation(false), 3000);
+                }
+              }}
+            >
+              {showCopyConfirmation ? (
+                <Check className="h-3 w-3 text-green-600" />
+              ) : (
+                <Hash className="h-3 w-3" />
+              )}
+              <span className="font-mono">{job.id}</span>
             </div>
 
             {job.paused && (
@@ -247,24 +268,14 @@ export const CronJobItem = ({
 
           {job.comment && (
             <div className="flex items-center gap-2 pb-2 pt-4">
-              <div
-                className="flex items-center gap-1 text-xs bg-muted/50 text-muted-foreground px-2 py-0.5 rounded border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors relative"
-                title="Click to copy Job UUID"
-                onClick={async () => {
-                  const success = await copyToClipboard(job.id);
-                  if (success) {
-                    setShowCopyConfirmation(true);
-                    setTimeout(() => setShowCopyConfirmation(false), 3000);
-                  }
-                }}
-              >
-                {showCopyConfirmation ? (
-                  <Check className="h-3 w-3 text-green-600" />
-                ) : (
-                  <Hash className="h-3 w-3" />
-                )}
-                <span className="font-mono">{job.id}</span>
-              </div>
+              {cronExplanation?.isValid && (
+                <div className="flex items-start gap-1.5 border-b border-primary/30 bg-primary/10 rounded text-primary px-2 py-0.5">
+                  <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-xs italic">
+                    {cronExplanation.humanReadable}
+                  </p>
+                </div>
+              )}
 
               <p
                 className="text-xs text-muted-foreground italic truncate"

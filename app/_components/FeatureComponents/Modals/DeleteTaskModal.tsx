@@ -45,7 +45,7 @@ export const DeleteTaskModal = ({
 
             <div className="flex items-start gap-2">
               <Terminal className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <pre className="text-xs font-medium text-foreground break-words bg-muted/30 px-1 py-0.5 rounded border border-border/30 flex-1">
+              <pre className="max-w-full overflow-x-auto text-xs font-medium text-foreground break-words bg-muted/30 px-1 py-0.5 rounded border border-border/30 flex-1 hide-scrollbar">
                 {job.command}
               </pre>
             </div>
@@ -91,4 +91,4 @@ export const DeleteTaskModal = ({
       </div>
     </Modal>
   );
-}
+};

@@ -37,6 +37,9 @@ export const middleware = async (request: NextRequest) => {
   const sessionId = request.cookies.get(cookieName)?.value;
 
   if (process.env.DEBUGGER) {
+    console.log("MIDDLEWARE - cookieName:", cookieName);
+    console.log("MIDDLEWARE - NODE_ENV:", process.env.NODE_ENV);
+    console.log("MIDDLEWARE - HTTPS:", process.env.HTTPS);
     console.log("MIDDLEWARE - sessionId:", sessionId);
     console.log("MIDDLEWARE - cookies:", request.cookies.getAll());
   }

@@ -68,6 +68,14 @@
   }
 }
 
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
 @layer base {
   * {
     @apply border-border;

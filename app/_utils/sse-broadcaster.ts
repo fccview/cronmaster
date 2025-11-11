@@ -15,12 +15,20 @@ class SSEBroadcaster {
       controller,
       connectedAt: new Date(),
     });
-    console.log(`[SSE] Client ${id} connected. Total clients: ${this.clients.size}`);
+    if (process.env.DEBUGGER) {
+      console.log(
+        `[SSE] Client ${id} connected. Total clients: ${this.clients.size}`
+      );
+    }
   }
 
   removeClient(id: string): void {
     this.clients.delete(id);
-    console.log(`[SSE] Client ${id} disconnected. Total clients: ${this.clients.size}`);
+    if (process.env.DEBUGGER) {
+      console.log(
+        `[SSE] Client ${id} disconnected. Total clients: ${this.clients.size}`
+      );
+    }
   }
 
   broadcast(event: SSEEvent): void {
@@ -36,23 +44,29 @@ class SSEBroadcaster {
         client.controller.enqueue(encoded);
         successCount++;
       } catch (error) {
-        console.error(`[SSE] Failed to send to client ${id}:`, error);
+        if (process.env.DEBUGGER) {
+          console.error(`[SSE] Failed to send to client ${id}:`, error);
+        }
         this.removeClient(id);
         failCount++;
       }
     });
 
     if (this.clients.size > 0) {
-      console.log(
-        `[SSE] Broadcast ${event.type} to ${successCount} clients (${failCount} failed)`
-      );
+      if (process.env.DEBUGGER) {
+        console.log(
+          `[SSE] Broadcast ${event.type} to ${successCount} clients (${failCount} failed)`
+        );
+      }
     }
   }
 
   sendToClient(clientId: string, event: SSEEvent): void {
     const client = this.clients.get(clientId);
     if (!client) {
-      console.warn(`[SSE] Client ${clientId} not found`);
+      if (process.env.DEBUGGER) {
+        console.warn(`[SSE] Client ${clientId} not found`);
+      }
       return;
     }
 
@@ -61,7 +75,9 @@ class SSEBroadcaster {
       const encoder = new TextEncoder();
       client.controller.enqueue(encoder.encode(formattedEvent));
     } catch (error) {
-      console.error(`[SSE] Failed to send to client ${clientId}:`, error);
+      if (process.env.DEBUGGER) {
+        console.error(`[SSE] Failed to send to client ${clientId}:`, error);
+      }
       this.removeClient(clientId);
     }
   }

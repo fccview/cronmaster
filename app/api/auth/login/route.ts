@@ -32,6 +32,13 @@ export const POST = async (request: NextRequest) => {
     );
 
     const cookieName = getSessionCookieName();
+
+    if (process.env.DEBUGGER) {
+      console.log("LOGIN - cookieName:", cookieName);
+      console.log("LOGIN - NODE_ENV:", process.env.NODE_ENV);
+      console.log("LOGIN - HTTPS:", process.env.HTTPS);
+      console.log("LOGIN - sessionId:", sessionId.substring(0, 10) + "...");
+    }
     response.cookies.set(cookieName, sessionId, {
       httpOnly: true,
       secure:

@@ -34,7 +34,6 @@ export const ensureWrapperScriptInData = (): string => {
   if (!existsSync(dataScriptPath)) {
     try {
       copyFileSync(sourceScriptPath, dataScriptPath);
-      console.log(`Copied wrapper script to ${dataScriptPath}`);
     } catch (error) {
       console.error("Failed to copy wrapper script to data directory:", error);
       return sourceScriptPath;
