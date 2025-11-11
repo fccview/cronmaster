@@ -10,11 +10,19 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    webpack: (config) => {
+    webpack: (config, { dev, isServer }) => {
         config.resolve.alias = {
             ...config.resolve.alias,
             'osx-temperature-sensor': false,
         };
+
+        if (dev && !isServer) {
+            config.watchOptions = {
+                ...config.watchOptions,
+                ignored: /node_modules/,
+            };
+        }
+
         return config;
     },
     async headers() {

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getTranslations } from "@/app/_utils/global-utils";
 import * as si from "systeminformation";
 import {
@@ -11,10 +11,13 @@ import {
   formatGpuInfo,
 } from "@/app/_utils/system-stats-utils";
 import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
+import { requireAuth } from "@/app/_utils/api-auth-utils";
 
 export const dynamic = "force-dynamic";
 
-export const GET = async () => {
+export const GET = async (request: NextRequest) => {
+  const authError = await requireAuth(request);
+  if (authError) return authError;
   try {
     const t = await getTranslations();
 

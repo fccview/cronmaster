@@ -2,6 +2,28 @@
   <img src="public/heading.png" width="400px">
 </p>
 
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+  - [Using Docker (Recommended)](#using-docker-recommended)
+  - [API](#api)
+  - [Single Sign-On (SSO) with OIDC](#single-sign-on-sso-with-oidc)
+  - [Local Development](#local-development)
+  - [Environment Variables](howto/ENV_VARIABLES.md)
+- [Authentication](#authentication)
+- [REST API](#rest-api)
+- [Usage](#usage)
+  - [Viewing System Information](#viewing-system-information)
+  - [Managing Cron Jobs](#managing-cron-jobs)
+  - [Job Execution Logging](#job-execution-logging)
+  - [Managing Scripts](#managing-scripts)
+- [Technologies Used](#technologies-used)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ## Features
 
 - **Modern UI**: Beautiful, responsive interface with dark/light mode.
@@ -11,6 +33,8 @@
 - **Job Execution Logging**: Optional logging for cronjobs with automatic cleanup, capturing stdout, stderr, exit codes, and timestamps.
 - **Live Updates (SSE)**: Real-time job status updates and live log streaming for long-running jobs (when logging is enabled).
 - **Smart Job Execution**: Jobs with logging run in background with live updates, jobs without logging run synchronously with 5-minute timeout.
+- **Authentication**: Secure password-based and/or OIDC (SSO) authentication with proper session management.
+- **REST API**: Full REST API with optional API key authentication for external integrations.
 - **Docker Support**: Runs entirely from a Docker container.
 - **Easy Setup**: Quick presets for common cron schedules.
 
@@ -48,69 +72,59 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
   <img width="500px" src="screenshots/scripts-view.png" />
 </div>
 
+<a id="quick-start"></a>
+
 ## Quick Start
+
+<a id="using-docker-recommended"></a>
 
 ### Using Docker (Recommended)
 
-1. Create a `docker-compose.yml` file with this content:
+1. Create a `docker-compose.yml` file with this minimal configuration:
 
-```bash
+```yaml
+# For all configuration options, see howto/DOCKER.md
 services:
   cronmaster:
     image: ghcr.io/fccview/cronmaster:latest
     container_name: cronmaster
     user: "root"
     ports:
-      # Feel free to change port, 3000 is very common so I like to map it to something else
       - "40123:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-
-      # --- SET LOCALE TO ONE OF OUR SUPPORTED LOCALES - see the /app/_translations/ folder for supported locales
-      # - LOCALE=en
-
-      # --- UNCOMMENT TO SET DIFFERENT LOGGING VALUES
-      # - MAX_LOG_AGE_DAYS=30
-      # - MAX_LOGS_PER_JOB=50
-
-      # --- PASSWORD PROTECTION
-      # Uncomment to enable password protection (replace "password" with your own)
       - AUTH_PASSWORD=very_strong_password
-
-      # --- LIVE UPDATES (SSE)
-      # Set to false to disable live updates via Server-Sent Events
-      # - LIVE_UPDATES=false
-
-      # --- CRONTAB USERS
-      # This is used to read the crontabs for the specific user.
-      # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
-      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,user1,user2
       - HOST_CRONTAB_USER=root
     volumes:
-      # --- MOUNT DOCKER SOCKET
-      # Mount Docker socket to execute commands on host
       - /var/run/docker.sock:/var/run/docker.sock
-
-      # --- MOUNT DATA
-      # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
-      # DO NOT change the location of ./scripts once you create crons as all cronjobs that use custom
-      # scripts created via the app will target this folder
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
-
-    # --- USE HOST PID NAMESPACE FOR HOST COMMAND EXECUTION
-    # --- RUN IN PRIVILEGED MODE FOR NSENTER ACCESS
     pid: "host"
     privileged: true
     restart: always
     init: true
-
-    # --- DEFAULT PLATFORM IS SET TO AMD64, UNCOMMENT TO USE ARM64.
-    #platform: linux/arm64
 ```
+
+**📖 For all available configuration options, see [`howto/DOCKER.md`](howto/DOCKER.md)**
+
+<a id="api"></a>
+
+## API
+
+`cr*nmaster` includes a REST API for programmatic access to your checklists and notes. This is perfect for integrations.
+
+📖 **For the complete API documentation, see [howto/API.md](howto/API.md)**
+
+<a id="single-sign-on-sso-with-oidc"></a>
+
+## Single Sign-On (SSO) with OIDC
+
+`cr*nmaster` supports any OIDC provider (Authentik, Auth0, Keycloak, Okta, Google, EntraID, etc.)
+
+📖 **For the complete SSO documentation, see [howto/SSO.md](howto/SSO.md)**
 
 ### ARM64 Support
 
@@ -136,6 +150,8 @@ docker compose up --build
 
 **Note**: The Docker implementation uses direct file access to read and write crontab files, ensuring real-time synchronization with the host system's cron jobs. This approach bypasses the traditional `crontab` command limitations in containerized environments
 
+<a id="local-development"></a>
+
 ### Local Development
 
 1. Install dependencies:
@@ -152,29 +168,140 @@ yarn dev
 
 3. Open your browser and navigate to `http://localhost:3000`
 
+<a id="environment-variables"></a>
+
 ### Environment Variables
 
-The following environment variables can be configured:
+📖 **For the complete environment variables reference, see [`howto/ENV_VARIABLES.md`](howto/ENV_VARIABLES.md)**
 
-| Variable                            | Default | Description                                                                                 |
-| ----------------------------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds)                                          |
-| `HOST_PROJECT_DIR`                  | `N/A`   | Mandatory variable to make sure cron runs on the right path.                                |
-| `DOCKER`                            | `false` | ONLY set this to true if you are runnign the app via docker, in the docker-compose.yml file |
-| `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
-| `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
-| `HOME`                              | `N/A`   | Optional path to your home folder, defaults to `/home`                                      |
+This includes all configuration options for:
 
+- Core application settings
+- Docker configuration
+- UI customization
+- Logging settings
+- Authentication (password, SSO/OIDC, API keys)
+- Development and debugging options
 
 ### Important Notes for Docker
 
 - Root user is required for cron operations and direct file access. There is no way around this, if you don't feel comfortable in running it as root feel free to run the app locally with `yarn install`, `yarn build` and `yarn start`
-- `HOST_PROJECT_DIR` is required in order for the scripts created within the app to run properly
 - The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
+- The Docker socket and data volume mounts are required for proper functionality
 
 **Important Note on Root Commands**: When running commands as `root` within Cronmaster, ensure that these commands also function correctly as `root` on your host machine. If a command works as `root` on your host but fails within Cronmaster, please open an issue with detailed information.
 
+<a id="authentication"></a>
+
+## Authentication
+
+Cr\*nMaster supports multiple authentication methods to secure your instance:
+
+### Password Authentication
+
+Set a password to protect access to your Cronmaster instance:
+
+```yaml
+environment:
+  - AUTH_PASSWORD=your_secure_password
+```
+
+Users will be prompted to enter this password before accessing the application.
+
+### SSO Authentication (OIDC)
+
+Cr\*nMaster supports SSO via OIDC (OpenID Connect), compatible with providers like:
+
+- Authentik
+- Auth0
+- Keycloak
+- Okta
+- Google
+- Entra ID (Azure AD)
+- And many more!
+
+For detailed setup instructions, see **[README_SSO.md](README_SSO.md)**
+
+Quick example:
+
+```yaml
+environment:
+  - SSO_MODE=oidc
+  - OIDC_ISSUER=https://your-sso-provider.com
+  - OIDC_CLIENT_ID=your_client_id
+  - APP_URL=https://your-cronmaster-domain.com
+```
+
+### Combined Authentication
+
+You can enable **both** password and SSO authentication simultaneously:
+
+```yaml
+environment:
+  - AUTH_PASSWORD=your_password
+  - SSO_MODE=oidc
+  - OIDC_ISSUER=https://your-sso-provider.com
+  - OIDC_CLIENT_ID=your_client_id
+```
+
+The login page will display both options, allowing users to choose their preferred method.
+
+### Security Features
+
+- ✅ **Secure session management** with cryptographically random session IDs
+- ✅ **30-day session expiration** with automatic cleanup
+- ✅ **HTTP-only cookies** to prevent XSS attacks
+- ✅ **Proper JWT verification** for OIDC tokens using provider's public keys (JWKS)
+- ✅ **PKCE support** for OIDC authentication (or confidential client mode)
+
+<a id="rest-api"></a>
+
+## REST API
+
+Cr\*nMaster provides a full REST API for programmatic access. Perfect for:
+
+- External monitoring tools
+- Automation scripts
+- CI/CD integrations
+- Custom dashboards
+
+### API Authentication
+
+Protect your API with an optional API key:
+
+```yaml
+environment:
+  - API_KEY=your-secret-api-key-here
+```
+
+Use the API key in your requests:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://your-domain.com/api/cronjobs
+```
+
+For complete API documentation with examples, see **[README_API.md](README_API.md)**
+
+### Available Endpoints
+
+- `GET /api/cronjobs` - List all cron jobs
+- `POST /api/cronjobs` - Create a new cron job
+- `GET /api/cronjobs/:id` - Get a specific cron job
+- `PATCH /api/cronjobs/:id` - Update a cron job
+- `DELETE /api/cronjobs/:id` - Delete a cron job
+- `POST /api/cronjobs/:id/execute` - Manually execute a job
+- `GET /api/scripts` - List all scripts
+- `POST /api/scripts` - Create a new script
+- `GET /api/system-stats` - Get system statistics
+- `GET /api/logs/stream?runId=xxx` - Stream job logs
+- `GET /api/events` - SSE stream for real-time updates
+
+<a id="usage"></a>
+
 ## Usage
+
+<a id="viewing-system-information"></a>
 
 ### Viewing System Information
 
@@ -185,6 +312,8 @@ The application automatically detects your operating system and displays:
 - CPU Information
 - GPU Information (if supported)
 
+<a id="managing-cron-jobs"></a>
+
 ### Managing Cron Jobs
 
 1. **View Existing Jobs**: All current cron jobs are displayed with their schedules and commands
@@ -194,6 +323,8 @@ The application automatically detects your operating system and displays:
 5. **Delete Jobs**: Remove unwanted cron jobs with the delete button
 6. **Clone Jobs**: Clone jobs to quickly edit the command in case it's similar
 7. **Enable Logging**: Optionally enable execution logging for any cronjob to capture detailed execution information
+
+<a id="job-execution-logging"></a>
 
 ### Job Execution Logging
 
@@ -327,6 +458,8 @@ The application uses standard cron format: `* * * * *`
 - Fourth field: Month (1-12)
 - Fifth field: Day of week (0-7, where 0 and 7 are Sunday)
 
+<a id="managing-scripts"></a>
+
 ### Managing Scripts
 
 1. **View Existing Scripts**: All current user created scripts are displayed with their name and descriptions
@@ -334,6 +467,8 @@ The application uses standard cron format: `* * * * *`
 3. **Quick Snippets**: Pre-set of snippets, with ability to add new ones. Check README.md in [Snippets](snippets/README.md)
 4. **Delete Scripts**: Remove unwanted scripts (this won't delete the cronjob, you will need to manually remove these yourself)
 5. **Clone Scripts**: Clone scripts to quickly edit them in case they are similar to one another.
+
+<a id="technologies-used"></a>
 
 ## Technologies Used
 
@@ -343,6 +478,8 @@ The application uses standard cron format: `* * * * *`
 - **Lucide React**: Beautiful icons
 - **next-themes**: Dark/light mode support
 - **Docker**: Containerization
+
+<a id="contributing"></a>
 
 ## Contributing
 
@@ -394,6 +531,8 @@ I would like to thank the following members for raising issues and help test/deb
     </tr>
   </tbody>
 </table>
+
+<a id="license"></a>
 
 ## License
 

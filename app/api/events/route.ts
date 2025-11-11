@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
 import { createHeartbeatEvent } from "@/app/_utils/sse-events";
 import { startLogWatcher } from "@/app/_utils/log-watcher";
+import { requireAuth } from "@/app/_utils/api-auth-utils";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -9,6 +10,9 @@ export const runtime = "nodejs";
 let watcherStarted = false;
 
 export const GET = async (request: NextRequest) => {
+  const authError = await requireAuth(request);
+  if (authError) return authError;
+
   const liveUpdatesEnabled = process.env.LIVE_UPDATES !== "false";
 
   if (!liveUpdatesEnabled) {

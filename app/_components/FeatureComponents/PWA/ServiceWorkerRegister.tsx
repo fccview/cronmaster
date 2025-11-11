@@ -14,7 +14,7 @@ export const ServiceWorkerRegister = (): null => {
         );
         if (alreadyRegistered) return;
         await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      } catch (_err) { }
+      } catch (_err) {}
     };
     register();
   }, []);

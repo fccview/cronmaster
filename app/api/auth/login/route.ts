@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  createSession,
+  getSessionCookieName,
+} from "@/app/_utils/session-utils";
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -20,16 +24,20 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
+    const sessionId = await createSession("password");
+
     const response = NextResponse.json(
       { success: true, message: "Login successful" },
       { status: 200 }
     );
 
-    response.cookies.set("cronmaster-auth", "authenticated", {
+    const cookieName = getSessionCookieName();
+    response.cookies.set(cookieName, sessionId, {
       httpOnly: true,
-      secure: request.url.startsWith("https://"),
+      secure:
+        process.env.NODE_ENV === "production" && process.env.HTTPS === "true",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 30,
       path: "/",
     });
 

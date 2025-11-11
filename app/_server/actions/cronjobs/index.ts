@@ -16,7 +16,10 @@ import { getScriptPathForCron } from "@/app/_server/actions/scripts";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { isDocker } from "@/app/_server/actions/global";
-import { runJobSynchronously, runJobInBackground } from "@/app/_utils/job-execution-utils";
+import {
+  runJobSynchronously,
+  runJobInBackground,
+} from "@/app/_utils/job-execution-utils";
 
 const execAsync = promisify(exec);
 
@@ -318,7 +321,10 @@ export const runCronJob = async (
     }
 
     const docker = await isDocker();
-    const liveUpdatesEnabled = typeof process.env.LIVE_UPDATES === "boolean" && process.env.LIVE_UPDATES === true || process.env.LIVE_UPDATES !== "false";
+    const liveUpdatesEnabled =
+      (typeof process.env.LIVE_UPDATES === "boolean" &&
+        process.env.LIVE_UPDATES === true) ||
+      process.env.LIVE_UPDATES !== "false";
 
     if (job.logsEnabled && liveUpdatesEnabled) {
       return runJobInBackground(job, docker);
@@ -327,6 +333,49 @@ export const runCronJob = async (
     return runJobSynchronously(job, docker);
   } catch (error: any) {
     console.error("Error running cron job:", error);
+    const errorMessage =
+      error.stderr || error.message || "Unknown error occurred";
+    return {
+      success: false,
+      message: "Failed to execute cron job",
+      output: errorMessage.trim(),
+      details: error.stack,
+    };
+  }
+};
+
+export const executeJob = async (
+  id: string,
+  runInBackground: boolean = true
+): Promise<{
+  success: boolean;
+  message: string;
+  output?: string;
+  details?: string;
+  runId?: string;
+  mode?: "sync" | "async";
+}> => {
+  try {
+    const cronJobs = await getCronJobs();
+    const job = cronJobs.find((j) => j.id === id);
+
+    if (!job) {
+      return { success: false, message: "Cron job not found" };
+    }
+
+    if (job.paused) {
+      return { success: false, message: "Cannot run paused cron job" };
+    }
+
+    const docker = await isDocker();
+
+    if (runInBackground) {
+      return runJobInBackground(job, docker);
+    }
+
+    return runJobSynchronously(job, docker);
+  } catch (error: any) {
+    console.error("Error executing cron job:", error);
     const errorMessage =
       error.stderr || error.message || "Unknown error occurred";
     return {

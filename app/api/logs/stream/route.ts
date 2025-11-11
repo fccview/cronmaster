@@ -3,10 +3,14 @@ import { getRunningJob } from "@/app/_utils/running-jobs-utils";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
+import { requireAuth } from "@/app/_utils/api-auth-utils";
 
 export const dynamic = "force-dynamic";
 
 export const GET = async (request: NextRequest) => {
+  const authError = await requireAuth(request);
+  if (authError) return authError;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const runId = searchParams.get("runId");
