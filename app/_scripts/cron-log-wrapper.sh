@@ -1,75 +1,69 @@
 #!/bin/bash
 
-# CronMaster Log Wrapper Script
+# Cr*nmaster Log Wrapper Script
 # Captures stdout, stderr, exit code, and timestamps for cronjob executions
-# This script is automatically copied to the data directory when logging is enabled
-# You can customize it by editing ./data/cron-log-wrapper.sh
 #
 # Usage: cron-log-wrapper.sh <logFolderName> <command...>
-#
-# Example: cron-log-wrapper.sh "backup-database_root-0" bash /app/scripts/backup.sh
+# Example: cron-log-wrapper.sh "backup-database" bash /app/scripts/backup.sh
 
-# Exits if no arguments are provided
+set -u
+
 if [ $# -lt 2 ]; then
     echo "ERROR: Usage: $0 <logFolderName> <command...>" >&2
     exit 1
 fi
 
-# Extracts the log folder name from the first argument
 LOG_FOLDER_NAME="$1"
-shift  # Remove logFolderName from arguments, rest is the command
+shift
 
-# Determines the base directory (Docker vs non-Docker)
-if [ -d "/app/data" ]; then
-    # Docker environment
-    BASE_DIR="/app/data"
-else
-    # Non-Docker environment - script is in app/_scripts, we need to go up two levels to project root
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
-    BASE_DIR="${PROJECT_ROOT}/data"
-fi
+# Get the script's absolute directory path (e.g., ./data)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_DIR="${SCRIPT_DIR}/logs/${LOG_FOLDER_NAME}"
 
-# Creates the logs directory structure
-LOG_DIR="${BASE_DIR}/logs/${LOG_FOLDER_NAME}"
+# Ensure the log directory exists
 mkdir -p "$LOG_DIR"
 
-# Generates the timestamped log filename
-TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
-LOG_FILE="${LOG_DIR}/${TIMESTAMP}.log"
+TIMESTAMP_FILE=$(date '+%Y-%m-%d_%H-%M-%S')
+HUMAN_START_TIME=$(date '+%Y-%m-%d %H:%M:%S')
+LOG_FILE="${LOG_DIR}/${TIMESTAMP_FILE}.log"
+START_SECONDS=$SECONDS
 
-# Executes the command and captures the output
 {
-    echo "=========================================="
-    echo "====== CronMaster Job Execution Log ======"
-    echo "=========================================="
-    echo "Log Folder: ${LOG_FOLDER_NAME}"
-    echo "Command: $*"
-    echo "Started: $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "=========================================="
+    echo "--- [ JOB START ] ----------------------------------------------------"
+    echo "Command   : $*"
+    echo "Timestamp : ${HUMAN_START_TIME}"
+    echo "Host      : $(hostname)"
+    echo "User      : $(whoami)"
+    echo "--- [ JOB OUTPUT ] ---------------------------------------------------"
     echo ""
 
-    # Executes the command, capturing the start time
-    START_TIME=$(date +%s)
+    # Execute the command, capturing its exit code
     "$@"
     EXIT_CODE=$?
-    END_TIME=$(date +%s)
 
-    # Calculates the duration
-    DURATION=$((END_TIME - START_TIME))
+
+    DURATION=$((SECONDS - START_SECONDS))
+    HUMAN_END_TIME=$(date '+%Y-%m-%d %H:%M:%S')
+
+    if [ $EXIT_CODE -eq 0 ]; then
+        STATUS="SUCCESS"
+    else
+        STATUS="FAILED"
+    fi
 
     echo ""
-    echo "=========================================="
-    echo "====== End log - Execution Summary ======="
-    echo "=========================================="
-    echo "Completed: $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "Duration: ${DURATION} seconds"
-    echo "Exit code: ${EXIT_CODE}"
-    echo "=========================================="
+    echo "--- [ JOB SUMMARY ] --------------------------------------------------"
+    echo "Timestamp : ${HUMAN_END_TIME}"
+    echo "Duration  : ${DURATION}s"
+    # ⚠️ ATTENTION: DO NOT MODIFY THE EXIT CODE LINE ⚠️
+    # The UI reads this exact format to detect job failures. Keep it as: "Exit Code : ${EXIT_CODE}"
+    echo "Exit Code : ${EXIT_CODE}"
+    echo "Status    : ${STATUS}"
+    echo "--- [ JOB END ] ------------------------------------------------------"
 
-    # Exits with the same code as the command
     exit $EXIT_CODE
+
 } >> "$LOG_FILE" 2>&1
 
-# Preserves the exit code for cron
+# Pass the command's exit code back to cron
 exit $?

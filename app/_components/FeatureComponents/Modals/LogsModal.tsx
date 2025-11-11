@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { FileText, Trash2, Eye, X, RefreshCw } from "lucide-react";
+import { FileText, Trash2, Eye, X, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   getJobLogs,
@@ -19,6 +19,8 @@ interface LogEntry {
   fullPath: string;
   size: number;
   dateCreated: Date;
+  exitCode?: number;
+  hasError?: boolean;
 }
 
 interface LogsModalProps {
@@ -26,6 +28,7 @@ interface LogsModalProps {
   onClose: () => void;
   jobId: string;
   jobComment?: string;
+  preSelectedLog?: string;
 }
 
 export const LogsModal = ({
@@ -33,6 +36,7 @@ export const LogsModal = ({
   onClose,
   jobId,
   jobComment,
+  preSelectedLog,
 }: LogsModalProps) => {
   const t = useTranslations();
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -50,9 +54,10 @@ export const LogsModal = ({
     setIsLoadingLogs(true);
     try {
       const [logsData, statsData] = await Promise.all([
-        getJobLogs(jobId),
+        getJobLogs(jobId, false, true),
         getJobLogStats(jobId),
       ]);
+
       setLogs(logsData);
       setStats(statsData);
     } catch (error) {
@@ -64,11 +69,17 @@ export const LogsModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      loadLogs();
-      setSelectedLog(null);
-      setLogContent("");
+      loadLogs().then(() => {
+        if (preSelectedLog) {
+          handleViewLog(preSelectedLog);
+        }
+      });
+      if (!preSelectedLog) {
+        setSelectedLog(null);
+        setLogContent("");
+      }
     }
-  }, [isOpen, jobId]);
+  }, [isOpen, jobId, preSelectedLog]);
 
   const handleViewLog = async (filename: string) => {
     setIsLoadingContent(true);
@@ -163,9 +174,8 @@ export const LogsModal = ({
               size="sm"
             >
               <RefreshCw
-                className={`w-4 h-4 mr-2 ${
-                  isLoadingLogs ? "animate-spin" : ""
-                }`}
+                className={`w-4 h-4 mr-2 ${isLoadingLogs ? "animate-spin" : ""
+                  }`}
               />
               {t("refresh")}
             </Button>
@@ -198,24 +208,43 @@ export const LogsModal = ({
                 logs.map((log) => (
                   <div
                     key={log.filename}
-                    className={`p-3 rounded border cursor-pointer transition-colors ${
-                      selectedLog === log.filename
-                        ? "border-primary bg-primary/10"
+                    className={`p-3 rounded border cursor-pointer transition-colors ${selectedLog === log.filename
+                      ? "border-primary bg-primary/10"
+                      : log.hasError
+                        ? "border-red-500/50 hover:border-red-500"
                         : "border-border hover:border-primary/50"
-                    }`}
+                      }`}
                     onClick={() => handleViewLog(log.filename)}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <FileText className="w-4 h-4 flex-shrink-0" />
+                          {log.hasError ? (
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                          ) : log.exitCode === 0 ? (
+                            <CheckCircle className="w-4 h-4 flex-shrink-0 text-green-500" />
+                          ) : (
+                            <FileText className="w-4 h-4 flex-shrink-0" />
+                          )}
                           <span className="text-sm font-medium truncate">
                             {formatTimestamp(log.timestamp)}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(log.size)}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(log.size)}
+                          </p>
+                          {log.exitCode !== undefined && (
+                            <span
+                              className={`text-xs px-1.5 py-0.5 rounded ${log.hasError
+                                ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                                : "bg-green-500/10 text-green-600 dark:text-green-400"
+                                }`}
+                            >
+                              Exit: {log.exitCode}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Button
                         onClick={(e) => {

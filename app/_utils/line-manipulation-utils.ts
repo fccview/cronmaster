@@ -162,14 +162,22 @@ export const parseCommentMetadata = (
   }
 
   const parts = commentText.split("|").map((p) => p.trim());
-  const comment = parts[0] || "";
+  let comment = parts[0] || "";
   let logsEnabled = false;
 
   if (parts.length > 1) {
+    // Format: "fccview absolutely rocks | logsEnabled: true"
     const metadata = parts[1];
     const logsMatch = metadata.match(/logsEnabled:\s*(true|false)/i);
     if (logsMatch) {
       logsEnabled = logsMatch[1].toLowerCase() === "true";
+    }
+  } else {
+    // Format: logsEnabled: true
+    const logsMatch = commentText.match(/^logsEnabled:\s*(true|false)$/i);
+    if (logsMatch) {
+      logsEnabled = logsMatch[1].toLowerCase() === "true";
+      comment = "";
     }
   }
 

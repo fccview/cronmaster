@@ -2,7 +2,6 @@
 
 import { readdir, readFile, unlink, stat } from "fs/promises";
 import path from "path";
-import { isDocker } from "@/app/_server/actions/global";
 import { existsSync } from "fs";
 import { DATA_DIR } from "@/app/_consts/file";
 
@@ -12,6 +11,17 @@ export interface LogEntry {
   fullPath: string;
   size: number;
   dateCreated: Date;
+  exitCode?: number;
+  hasError?: boolean;
+}
+
+export interface JobLogError {
+  hasError: boolean;
+  lastFailedLog?: string;
+  lastFailedTimestamp?: Date;
+  exitCode?: number;
+  latestExitCode?: number;
+  hasHistoricalFailures?: boolean;
 }
 
 const MAX_LOGS_PER_JOB = process.env.MAX_LOGS_PER_JOB
@@ -52,7 +62,8 @@ const getJobLogPath = async (jobId: string): Promise<string | null> => {
 
 export const getJobLogs = async (
   jobId: string,
-  skipCleanup: boolean = false
+  skipCleanup: boolean = false,
+  includeExitCodes: boolean = false
 ): Promise<LogEntry[]> => {
   try {
     const logDir = await getJobLogPath(jobId);
@@ -73,16 +84,28 @@ export const getJobLogs = async (
       const fullPath = path.join(logDir, file);
       const stats = await stat(fullPath);
 
+      let exitCode: number | undefined;
+      let hasError: boolean | undefined;
+
+      if (includeExitCodes) {
+        const exitCodeValue = await getExitCodeForLog(fullPath);
+        if (exitCodeValue !== null) {
+          exitCode = exitCodeValue;
+          hasError = exitCode !== 0;
+        }
+      }
+
       entries.push({
         filename: file,
-        timestamp: file.replace(".log", ""), // Parse timestamp from filename
+        timestamp: file.replace(".log", ""),
         fullPath,
         size: stats.size,
         dateCreated: stats.birthtime,
+        exitCode,
+        hasError,
       });
     }
 
-    // Sort by date (newest first)
     return entries.sort(
       (a, b) => b.dateCreated.getTime() - a.dateCreated.getTime()
     );
@@ -247,4 +270,85 @@ export const getJobLogStats = async (
       totalSizeMB: 0,
     };
   }
+};
+
+const getExitCodeForLog = async (logPath: string): Promise<number | null> => {
+  try {
+    const content = await readFile(logPath, "utf-8");
+    const exitCodeMatch = content.match(/Exit Code\s*:\s*(-?\d+)/i);
+    if (exitCodeMatch) {
+      return parseInt(exitCodeMatch[1]);
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error getting exit code for ${logPath}:`, error);
+    return null;
+  }
+};
+
+export const getJobLogError = async (jobId: string): Promise<JobLogError> => {
+  try {
+    const logs = await getJobLogs(jobId);
+
+    if (logs.length === 0) {
+      return { hasError: false };
+    }
+
+    const latestLog = logs[0];
+    const latestExitCode = await getExitCodeForLog(latestLog.fullPath);
+
+    if (latestExitCode !== null && latestExitCode !== 0) {
+      return {
+        hasError: true,
+        lastFailedLog: latestLog.filename,
+        lastFailedTimestamp: latestLog.dateCreated,
+        exitCode: latestExitCode,
+        latestExitCode,
+        hasHistoricalFailures: false,
+      };
+    }
+
+    let hasHistoricalFailures = false;
+    let lastFailedLog: string | undefined;
+    let lastFailedTimestamp: Date | undefined;
+    let failedExitCode: number | undefined;
+
+    for (let i = 1; i < logs.length; i++) {
+      const exitCode = await getExitCodeForLog(logs[i].fullPath);
+      if (exitCode !== null && exitCode !== 0) {
+        hasHistoricalFailures = true;
+        lastFailedLog = logs[i].filename;
+        lastFailedTimestamp = logs[i].dateCreated;
+        failedExitCode = exitCode;
+        break;
+      }
+    }
+
+    return {
+      hasError: false,
+      latestExitCode: latestExitCode ?? undefined,
+      hasHistoricalFailures,
+      lastFailedLog,
+      lastFailedTimestamp,
+      exitCode: failedExitCode,
+    };
+  } catch (error) {
+    console.error(`Error checking log errors for job ${jobId}:`, error);
+    return { hasError: false };
+  }
+};
+
+export const getAllJobLogErrors = async (
+  jobIds: string[]
+): Promise<Map<string, JobLogError>> => {
+  const errorMap = new Map<string, JobLogError>();
+
+  await Promise.all(
+    jobIds.map(async (jobId) => {
+      const error = await getJobLogError(jobId);
+      errorMap.set(jobId, error);
+    })
+  );
+
+  return errorMap;
 };

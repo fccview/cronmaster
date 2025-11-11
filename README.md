@@ -89,8 +89,8 @@ services:
 
       # --- MOUNT DATA
       # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
-      # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
-      # will target this folder (thanks to the HOST_PROJECT_DIR variable set above)
+      # DO NOT change the location of ./scripts once you create crons as all cronjobs that use custom
+      # scripts created via the app will target this folder
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
@@ -158,17 +158,6 @@ The following environment variables can be configured:
 | `HOST_CRONTAB_USER`                 | `root`  | Comma separated list of users that run cronjobs on your host machine                        |
 | `AUTH_PASSWORD`                     | `N/A`   | If you set a password the application will be password protected with basic next-auth       |
 
-**Example**: To change the clock update interval to 60 seconds:
-
-```bash
-NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=60000 docker-compose up
-```
-
-**Example**: Your `docker-compose.yml` file or repository are in `~/homelab/cronmaster/`
-
-```bash
-HOST_PROJECT_DIR=/home/<your_user_here>/homelab/cronmaster
-```
 
 ### Important Notes for Docker
 

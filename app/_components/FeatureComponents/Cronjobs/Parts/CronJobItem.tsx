@@ -14,6 +14,9 @@ import {
   FileOutput,
   FileX,
   FileText,
+  AlertCircle,
+  CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { JobError } from "@/app/_utils/error-utils";
@@ -103,26 +106,67 @@ export const CronJobItem = ({
             </div>
           )}
 
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <User className="h-3 w-3" />
               <span>{job.user}</span>
             </div>
+
             {job.paused && (
               <span className="text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/20">
                 {t("cronjobs.paused")}
               </span>
             )}
+
             {job.logsEnabled && (
               <span className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">
                 {t("cronjobs.logged")}
               </span>
             )}
-            <ErrorBadge
-              errors={errors}
-              onErrorClick={onErrorClick}
-              onErrorDismiss={onErrorDismiss}
-            />
+
+            {job.logsEnabled && job.logError?.hasError && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewLogs(job);
+                }}
+                className="flex items-center gap-1 text-xs bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-0.5 rounded border border-red-500/30 hover:bg-red-500/20 transition-colors cursor-pointer"
+                title="Latest execution failed - Click to view error log"
+              >
+                <AlertCircle className="h-3 w-3" />
+                <span>{t("cronjobs.failed", { exitCode: job.logError?.exitCode?.toString() ?? "" })}</span>
+              </button>
+            )}
+
+            {job.logsEnabled && !job.logError?.hasError && job.logError?.hasHistoricalFailures && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewLogs(job);
+                }}
+                className="flex items-center gap-1 text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors cursor-pointer"
+                title="Latest execution succeeded, but has historical failures - Click to view logs"
+              >
+                <CheckCircle className="h-3 w-3" />
+                <span>{t("cronjobs.healthy")}</span>
+                <AlertTriangle className="h-3 w-3" />
+              </button>
+            )}
+
+            {job.logsEnabled && !job.logError?.hasError && !job.logError?.hasHistoricalFailures && job.logError?.latestExitCode === 0 && (
+              <div className="flex items-center gap-1 text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded border border-green-500/30">
+                <CheckCircle className="h-3 w-3" />
+                <span>{t("cronjobs.healthy")}</span>
+              </div>
+            )}
+
+            {!job.logsEnabled && (
+              <ErrorBadge
+                errors={errors}
+                onErrorClick={onErrorClick}
+                onErrorDismiss={onErrorDismiss}
+              />
+            )}
           </div>
 
           {job.comment && (
@@ -198,11 +242,10 @@ export const CronJobItem = ({
             variant="outline"
             size="sm"
             onClick={() => onToggleLogging(job.id)}
-            className={`h-8 px-3 ${
-              job.logsEnabled
-                ? "btn-outline border-blue-500/50 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
-                : "btn-outline"
-            }`}
+            className={`h-8 px-3 ${job.logsEnabled
+              ? "btn-outline border-blue-500/50 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
+              : "btn-outline"
+              }`}
             title={
               job.logsEnabled
                 ? t("cronjobs.disableLogging")

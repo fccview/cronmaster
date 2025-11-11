@@ -182,6 +182,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
           onClose={() => setIsLogsModalOpen(false)}
           jobId={jobForLogs.id}
           jobComment={jobForLogs.comment}
+          preSelectedLog={jobForLogs.logError?.lastFailedLog}
         />
       )}
     </>

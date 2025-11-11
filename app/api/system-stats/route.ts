@@ -1,43 +1,67 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import * as si from "systeminformation";
 import { getTranslations } from "@/app/_utils/global-utils";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+const formatBytes = (bytes: number): string => {
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  if (bytes === 0) return "0 B";
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+};
+
+const formatUptime = (seconds: number): string => {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  if (days > 0) {
+    return `${days} days, ${hours} hours`;
+  } else if (hours > 0) {
+    return `${hours} hours, ${minutes} minutes`;
+  } else {
+    return `${minutes} minutes`;
+  }
+};
+
+async function getPing(): Promise<number> {
+  try {
+    const { stdout } = await execAsync(
+      'ping -c 1 -W 1000 8.8.8.8 2>/dev/null || echo "timeout"'
+    );
+    const match = stdout.match(/time=(\d+\.?\d*)/);
+    if (match) {
+      return Math.round(parseFloat(match[1]));
+    }
+  } catch (error) {
+  }
+  return 0;
+}
+
+export async function GET() {
   try {
     const t = await getTranslations();
 
-    const [memInfo, cpuInfo, diskInfo, loadInfo, uptimeInfo, networkInfo] =
-      await Promise.all([
+    const [
+      [memInfo, cpuInfo, loadInfo, uptimeInfo, networkInfo],
+      latency,
+      graphics,
+    ] = await Promise.all([
+      Promise.all([
         si.mem(),
         si.cpu(),
-        si.fsSize(),
         si.currentLoad(),
         si.time(),
         si.networkStats(),
-      ]);
-
-    const formatBytes = (bytes: number) => {
-      const sizes = ["B", "KB", "MB", "GB", "TB"];
-      if (bytes === 0) return "0 B";
-      const i = Math.floor(Math.log(bytes) / Math.log(1024));
-      return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-    };
-
-    const formatUptime = (seconds: number): string => {
-      const days = Math.floor(seconds / 86400);
-      const hours = Math.floor((seconds % 86400) / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-
-      if (days > 0) {
-        return `${days} days, ${hours} hours`;
-      } else if (hours > 0) {
-        return `${hours} hours, ${minutes} minutes`;
-      } else {
-        return `${minutes} minutes`;
-      }
-    };
+      ]),
+      getPing(),
+      si.graphics().catch(() => null),
+    ]);
 
     const actualUsed = memInfo.active || memInfo.used;
     const actualFree = memInfo.available || memInfo.free;
@@ -47,14 +71,12 @@ export async function GET(request: NextRequest) {
     else if (memUsage > 80) memStatus = t("system.high");
     else if (memUsage > 70) memStatus = t("system.moderate");
 
-    const rootDisk = diskInfo.find((disk) => disk.mount === "/") || diskInfo[0];
-
     const cpuStatus =
       loadInfo.currentLoad > 80
         ? t("system.high")
         : loadInfo.currentLoad > 60
-        ? t("system.moderate")
-        : t("system.optimal");
+          ? t("system.moderate")
+          : t("system.optimal");
 
     const criticalThreshold = 90;
     const warningThreshold = 80;
@@ -77,7 +99,7 @@ export async function GET(request: NextRequest) {
       statusDetails = t("system.moderateResourceUsageMonitoringRecommended");
     }
 
-    let mainInterface: any = null;
+    let mainInterface: si.Systeminformation.NetworkStatsData | null = null;
     if (Array.isArray(networkInfo) && networkInfo.length > 0) {
       mainInterface =
         networkInfo.find(
@@ -89,29 +111,15 @@ export async function GET(request: NextRequest) {
     }
 
     const networkSpeed =
-      mainInterface && "rx_sec" in mainInterface && "tx_sec" in mainInterface
+      mainInterface &&
+        mainInterface.rx_sec != null &&
+        mainInterface.tx_sec != null
         ? `${Math.round(
-            ((mainInterface.rx_sec || 0) + (mainInterface.tx_sec || 0)) /
-              1024 /
-              1024
-          )} Mbps`
+          ((mainInterface.rx_sec || 0) + (mainInterface.tx_sec || 0)) /
+          1024 /
+          1024
+        )} Mbps`
         : t("system.unknown");
-
-    let latency = 0;
-    try {
-      const { exec } = require("child_process");
-      const { promisify } = require("util");
-      const execAsync = promisify(exec);
-      const { stdout } = await execAsync(
-        'ping -c 1 -W 1000 8.8.8.8 2>/dev/null || echo "timeout"'
-      );
-      const match = stdout.match(/time=(\d+\.?\d*)/);
-      if (match) {
-        latency = Math.round(parseFloat(match[1]));
-      }
-    } catch (error) {
-      latency = 0;
-    }
 
     const systemStats: any = {
       uptime: formatUptime(uptimeInfo.uptime),
@@ -131,18 +139,14 @@ export async function GET(request: NextRequest) {
       network: {
         speed: networkSpeed,
         latency: latency,
-        downloadSpeed:
-          mainInterface && "rx_sec" in mainInterface
-            ? Math.round((mainInterface.rx_sec || 0) / 1024 / 1024)
-            : 0,
-        uploadSpeed:
-          mainInterface && "tx_sec" in mainInterface
-            ? Math.round((mainInterface.tx_sec || 0) / 1024 / 1024)
-            : 0,
+        downloadSpeed: mainInterface
+          ? Math.round((mainInterface.rx_sec || 0) / 1024 / 1024)
+          : 0,
+        uploadSpeed: mainInterface
+          ? Math.round((mainInterface.tx_sec || 0) / 1024 / 1024)
+          : 0,
         status:
-          mainInterface &&
-          "operstate" in mainInterface &&
-          mainInterface.operstate === "up"
+          mainInterface && mainInterface.operstate === "up"
             ? t("system.connected")
             : t("system.unknown"),
       },
@@ -152,22 +156,19 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    try {
-      const graphics = await si.graphics();
-      if (graphics.controllers && graphics.controllers.length > 0) {
-        const gpu = graphics.controllers[0];
-        systemStats.gpu = {
-          model: gpu.model || t("system.unknownGPU"),
-          memory: gpu.vram ? `${gpu.vram} MB` : undefined,
-          status: t("system.available"),
-        };
-      } else {
-        systemStats.gpu = {
-          model: t("system.noGPUDetected"),
-          status: t("system.unknown"),
-        };
-      }
-    } catch (error) {
+    if (graphics && graphics.controllers && graphics.controllers.length > 0) {
+      const gpu = graphics.controllers[0];
+      systemStats.gpu = {
+        model: gpu.model || t("system.unknownGPU"),
+        memory: gpu.vram ? `${gpu.vram} MB` : undefined,
+        status: t("system.available"),
+      };
+    } else if (graphics) {
+      systemStats.gpu = {
+        model: t("system.noGPUDetected"),
+        status: t("system.unknown"),
+      };
+    } else {
       systemStats.gpu = {
         model: t("system.gpuDetectionFailed"),
         status: t("system.unknown"),

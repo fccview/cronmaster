@@ -50,7 +50,9 @@
         "deleteAll": "Elimina Tutto",
         "refresh": "Aggiorna",
         "loading": "Caricamento",
-        "close": "Chiudi"
+        "close": "Chiudi",
+        "healthy": "Sano",
+        "failed": "Fallito (Exit: {exitCode})"
     },
     "scripts": {
         "scripts": "Script",

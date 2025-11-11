@@ -50,7 +50,9 @@
         "deleteAll": "Delete All",
         "refresh": "Refresh",
         "loading": "Loading",
-        "close": "Close"
+        "close": "Close",
+        "healthy": "Healthy",
+        "failed": "Failed (Exit: {exitCode})"
     },
     "scripts": {
         "scripts": "Scripts",

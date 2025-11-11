@@ -35,6 +35,14 @@ export interface CronJob {
   user: string;
   paused?: boolean;
   logsEnabled?: boolean;
+  logError?: {
+    hasError: boolean;
+    lastFailedLog?: string;
+    lastFailedTimestamp?: Date;
+    exitCode?: number;
+    latestExitCode?: number;
+    hasHistoricalFailures?: boolean;
+  };
 }
 
 const readUserCrontab = async (user: string): Promise<string> => {
@@ -93,7 +101,7 @@ const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
   }
 };
 
-export const getCronJobs = async (): Promise<CronJob[]> => {
+export const getCronJobs = async (includeLogErrors: boolean = true): Promise<CronJob[]> => {
   try {
     const userCrontabs = await getAllUsers();
     let allJobs: CronJob[] = [];
@@ -104,6 +112,17 @@ export const getCronJobs = async (): Promise<CronJob[]> => {
       const lines = content.split("\n");
       const jobs = parseJobsFromLines(lines, user);
       allJobs.push(...jobs);
+    }
+
+    if (includeLogErrors) {
+      const { getAllJobLogErrors } = await import("@/app/_server/actions/logs");
+      const jobIds = allJobs.map(job => job.id);
+      const errorMap = await getAllJobLogErrors(jobIds);
+
+      allJobs = allJobs.map(job => ({
+        ...job,
+        logError: errorMap.get(job.id),
+      }));
     }
 
     return allJobs;
@@ -130,9 +149,11 @@ export const addCronJob = async (
       const jobId = `${user}-${nextJobIndex}`;
 
       let finalCommand = command;
-      if (logsEnabled) {
+      if (logsEnabled && !isCommandWrapped(command)) {
         const docker = await isDocker();
         finalCommand = await wrapCommandWithLogger(jobId, command, docker, comment);
+      } else if (logsEnabled && isCommandWrapped(command)) {
+        finalCommand = command;
       }
 
       const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
@@ -160,9 +181,11 @@ export const addCronJob = async (
       const jobId = `${currentUser}-${nextJobIndex}`;
 
       let finalCommand = command;
-      if (logsEnabled) {
+      if (logsEnabled && !isCommandWrapped(command)) {
         const docker = await isDocker();
         finalCommand = await wrapCommandWithLogger(jobId, command, docker, comment);
+      } else if (logsEnabled && isCommandWrapped(command)) {
+        finalCommand = command;
       }
 
       const formattedComment = formatCommentWithMetadata(comment, logsEnabled);
@@ -225,19 +248,24 @@ export const updateCronJob = async (
       return false;
     }
 
-    const wasLogsEnabled = currentJob.logsEnabled || false;
+    const isWrappd = isCommandWrapped(command);
 
     let finalCommand = command;
 
-    if (!wasLogsEnabled && logsEnabled) {
+    if (logsEnabled && !isWrappd) {
       const docker = await isDocker();
       finalCommand = await wrapCommandWithLogger(id, command, docker, comment);
-    } else if (wasLogsEnabled && !logsEnabled) {
+    }
+    else if (!logsEnabled && isWrappd) {
       finalCommand = unwrapCommand(command);
-    } else if (wasLogsEnabled && logsEnabled) {
+    }
+    else if (logsEnabled && isWrappd) {
       const unwrapped = unwrapCommand(command);
       const docker = await isDocker();
       finalCommand = await wrapCommandWithLogger(id, unwrapped, docker, comment);
+    }
+    else {
+      finalCommand = command;
     }
 
     const newCronEntries = updateJobInLines(
