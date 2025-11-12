@@ -3,25 +3,27 @@
 import {
   getCronJobs,
   addCronJob,
-  deleteCronJob,
-  updateCronJob,
-  pauseCronJob,
-  resumeCronJob,
   cleanupCrontab,
+  readUserCrontab,
+  writeUserCrontab,
+  findJobIndex,
+  updateCronJob,
   type CronJob,
 } from "@/app/_utils/cronjob-utils";
-import { getAllTargetUsers, getUserInfo } from "@/app/_utils/crontab-utils";
+import { getAllTargetUsers } from "@/app/_utils/crontab-utils";
 import { revalidatePath } from "next/cache";
 import { getScriptPathForCron } from "@/app/_server/actions/scripts";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { isDocker } from "@/app/_server/actions/global";
 import {
   runJobSynchronously,
   runJobInBackground,
 } from "@/app/_utils/job-execution-utils";
-
-const execAsync = promisify(exec);
+import {
+  pauseJobInLines,
+  resumeJobInLines,
+  deleteJobInLines,
+} from "@/app/_utils/line-manipulation-utils";
+import { cleanCrontabContent } from "@/app/_utils/files-manipulation-utils";
 
 export const fetchCronJobs = async (): Promise<CronJob[]> => {
   try {
@@ -90,10 +92,22 @@ export const createCronJob = async (
 };
 
 export const removeCronJob = async (
-  id: string
+  jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
-    const success = await deleteCronJob(id);
+    const cronContent = await readUserCrontab(jobData.user);
+    const lines = cronContent.split("\n");
+
+    const jobIndex = findJobIndex(jobData, lines, jobData.user);
+
+    if (jobIndex === -1) {
+      return { success: false, message: "Cron job not found in crontab" };
+    }
+
+    const newCronEntries = deleteJobInLines(lines, jobIndex);
+    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
+    const success = await writeUserCrontab(jobData.user, newCron);
+
     if (success) {
       revalidatePath("/");
       return { success: true, message: "Cron job deleted successfully" };
@@ -124,8 +138,15 @@ export const editCronJob = async (
       return { success: false, message: "Missing required fields" };
     }
 
+    const cronJobs = await getCronJobs(false);
+    const job = cronJobs.find((j) => j.id === id);
+
+    if (!job) {
+      return { success: false, message: "Cron job not found" };
+    }
+
     const success = await updateCronJob(
-      id,
+      job,
       schedule,
       command,
       comment,
@@ -152,7 +173,7 @@ export const cloneCronJob = async (
   newComment: string
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
-    const cronJobs = await getCronJobs();
+    const cronJobs = await getCronJobs(false);
     const originalJob = cronJobs.find((job) => job.id === id);
 
     if (!originalJob) {
@@ -183,10 +204,22 @@ export const cloneCronJob = async (
 };
 
 export const pauseCronJobAction = async (
-  id: string
+  jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
-    const success = await pauseCronJob(id);
+    const cronContent = await readUserCrontab(jobData.user);
+    const lines = cronContent.split("\n");
+
+    const jobIndex = findJobIndex(jobData, lines, jobData.user);
+
+    if (jobIndex === -1) {
+      return { success: false, message: "Cron job not found in crontab" };
+    }
+
+    const newCronEntries = pauseJobInLines(lines, jobIndex, jobData.id);
+    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
+    const success = await writeUserCrontab(jobData.user, newCron);
+
     if (success) {
       revalidatePath("/");
       return { success: true, message: "Cron job paused successfully" };
@@ -204,10 +237,22 @@ export const pauseCronJobAction = async (
 };
 
 export const resumeCronJobAction = async (
-  id: string
+  jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
-    const success = await resumeCronJob(id);
+    const cronContent = await readUserCrontab(jobData.user);
+    const lines = cronContent.split("\n");
+
+    const jobIndex = findJobIndex(jobData, lines, jobData.user);
+
+    if (jobIndex === -1) {
+      return { success: false, message: "Cron job not found in crontab" };
+    }
+
+    const newCronEntries = resumeJobInLines(lines, jobIndex, jobData.id);
+    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
+    const success = await writeUserCrontab(jobData.user, newCron);
+
     if (success) {
       revalidatePath("/");
       return { success: true, message: "Cron job resumed successfully" };
@@ -257,23 +302,16 @@ export const cleanupCrontabAction = async (): Promise<{
 };
 
 export const toggleCronJobLogging = async (
-  id: string
+  jobData: { id: string; schedule: string; command: string; comment?: string; user: string; logsEnabled?: boolean }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
-    const cronJobs = await getCronJobs();
-    const job = cronJobs.find((j) => j.id === id);
-
-    if (!job) {
-      return { success: false, message: "Cron job not found" };
-    }
-
-    const newLogsEnabled = !job.logsEnabled;
+    const newLogsEnabled = !jobData.logsEnabled;
 
     const success = await updateCronJob(
-      id,
-      job.schedule,
-      job.command,
-      job.comment || "",
+      jobData,
+      jobData.schedule,
+      jobData.command,
+      jobData.comment || "",
       newLogsEnabled
     );
 
@@ -309,7 +347,7 @@ export const runCronJob = async (
   mode?: "sync" | "async";
 }> => {
   try {
-    const cronJobs = await getCronJobs();
+    const cronJobs = await getCronJobs(false);
     const job = cronJobs.find((j) => j.id === id);
 
     if (!job) {
@@ -356,7 +394,7 @@ export const executeJob = async (
   mode?: "sync" | "async";
 }> => {
   try {
-    const cronJobs = await getCronJobs();
+    const cronJobs = await getCronJobs(false);
     const job = cronJobs.find((j) => j.id === id);
 
     if (!job) {
@@ -388,13 +426,13 @@ export const executeJob = async (
 };
 
 export const backupCronJob = async (
-  id: string
+  job: CronJob
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const {
       backupJobToFile,
     } = await import("@/app/_utils/backup-utils");
-    const success = await backupJobToFile(id);
+    const success = await backupJobToFile(job);
     if (success) {
       return { success: true, message: "Cron job backed up successfully" };
     } else {

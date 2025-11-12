@@ -127,7 +127,10 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const handleDeleteLocal = async (id: string) => {
-        await handleDelete(id, getHelperState());
+        const job = cronJobs.find(j => j.id === id);
+        if (job) {
+            await handleDelete(job, getHelperState());
+        }
     };
 
     const handleCloneLocal = async (newComment: string) => {
@@ -135,11 +138,17 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const handlePauseLocal = async (id: string) => {
-        await handlePause(id);
+        const job = cronJobs.find(j => j.id === id);
+        if (job) {
+            await handlePause(job);
+        }
     };
 
     const handleResumeLocal = async (id: string) => {
-        await handleResume(id);
+        const job = cronJobs.find(j => j.id === id);
+        if (job) {
+            await handleResume(job);
+        }
     };
 
     const handleRunLocal = async (id: string) => {
@@ -149,7 +158,10 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const handleToggleLoggingLocal = async (id: string) => {
-        await handleToggleLogging(id);
+        const job = cronJobs.find(j => j.id === id);
+        if (job) {
+            await handleToggleLogging(job);
+        }
     };
 
     const handleViewLogs = (job: CronJob) => {
@@ -187,7 +199,10 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const handleBackupLocal = async (id: string) => {
-        await handleBackup(id);
+        const job = cronJobs.find(j => j.id === id);
+        if (job) {
+            await handleBackup(job);
+        }
     };
 
     return {

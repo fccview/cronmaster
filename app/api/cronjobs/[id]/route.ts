@@ -87,7 +87,7 @@ export async function DELETE(
   if (authError) return authError;
 
   try {
-    const result = await removeCronJob(params.id);
+    const result = await removeCronJob({ id: params.id, schedule: "", command: "", user: "" });
 
     if (result.success) {
       return NextResponse.json(result);

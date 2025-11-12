@@ -1,4 +1,4 @@
-'use server';
+export const dynamic = "force-dynamic";
 
 import { LoginForm } from "@/app/_components/FeatureComponents/LoginForm/LoginForm";
 

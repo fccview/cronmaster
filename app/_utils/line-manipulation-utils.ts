@@ -175,17 +175,34 @@ export const parseCommentMetadata = (
   let uuid: string | undefined;
 
   if (parts.length > 1) {
-    comment = parts[0] || "";
-    const metadata = parts.slice(1).join("|").trim();
+    const firstPartIsMetadata = parts[0].match(/logsEnabled:\s*(true|false)/i) || parts[0].match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
 
-    const logsMatch = metadata.match(/logsEnabled:\s*(true|false)/i);
-    if (logsMatch) {
-      logsEnabled = logsMatch[1].toLowerCase() === "true";
-    }
+    if (firstPartIsMetadata) {
+      comment = "";
+      const metadata = parts.join("|").trim();
 
-    const uuidMatch = metadata.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
-    if (uuidMatch) {
-      uuid = uuidMatch[1].toLowerCase();
+      const logsMatch = metadata.match(/logsEnabled:\s*(true|false)/i);
+      if (logsMatch) {
+        logsEnabled = logsMatch[1].toLowerCase() === "true";
+      }
+
+      const uuidMatch = metadata.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
+      if (uuidMatch) {
+        uuid = uuidMatch[1].toLowerCase();
+      }
+    } else {
+      comment = parts[0] || "";
+      const metadata = parts.slice(1).join("|").trim();
+
+      const logsMatch = metadata.match(/logsEnabled:\s*(true|false)/i);
+      if (logsMatch) {
+        logsEnabled = logsMatch[1].toLowerCase() === "true";
+      }
+
+      const uuidMatch = metadata.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
+      if (uuidMatch) {
+        uuid = uuidMatch[1].toLowerCase();
+      }
     }
   } else {
     const logsMatch = commentText.match(/logsEnabled:\s*(true|false)/i);

@@ -17,17 +17,9 @@ const sanitizeFilename = (id: string): string => {
   return id.replace(/[^a-zA-Z0-9_-]/g, "_");
 };
 
-export const backupJobToFile = async (id: string): Promise<boolean> => {
+export const backupJobToFile = async (job: CronJob): Promise<boolean> => {
   try {
     await ensureBackupDirectoryExists();
-
-    const cronJobs = await getCronJobs(false);
-    const job = cronJobs.find((j) => j.id === id);
-
-    if (!job) {
-      console.error(`Job with id ${id} not found`);
-      return false;
-    }
 
     const jobData = {
       id: job.id,
@@ -40,14 +32,14 @@ export const backupJobToFile = async (id: string): Promise<boolean> => {
       backedUpAt: new Date().toISOString(),
     };
 
-    const filename = `${sanitizeFilename(id)}.job`;
+    const filename = `${sanitizeFilename(job.id)}.job`;
     const filepath = path.join(BACKUP_DIR, filename);
 
     await fs.writeFile(filepath, JSON.stringify(jobData, null, 2), "utf8");
 
     return true;
   } catch (error) {
-    console.error(`Error backing up job ${id}:`, error);
+    console.error(`Error backing up job ${job.id}:`, error);
     return false;
   }
 };
@@ -64,7 +56,7 @@ export const backupAllJobsToFiles = async (): Promise<{
     let successCount = 0;
 
     for (const job of cronJobs) {
-      const success = await backupJobToFile(job.id);
+      const success = await backupJobToFile(job);
       if (success) {
         successCount++;
       }

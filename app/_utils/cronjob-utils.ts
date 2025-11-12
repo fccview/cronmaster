@@ -46,7 +46,7 @@ export interface CronJob {
   };
 }
 
-const readUserCrontab = async (user: string): Promise<string> => {
+export const readUserCrontab = async (user: string): Promise<string> => {
   const docker = await isDocker();
 
   if (docker) {
@@ -59,7 +59,7 @@ const readUserCrontab = async (user: string): Promise<string> => {
   }
 };
 
-const writeUserCrontab = async (
+export const writeUserCrontab = async (
   user: string,
   content: string
 ): Promise<boolean> => {
@@ -114,33 +114,6 @@ export const getCronJobs = async (
 
       const lines = content.split("\n");
       const jobs = parseJobsFromLines(lines, user);
-
-      let needsUpdate = false;
-      let updatedLines = [...lines];
-
-      for (let jobIndex = 0; jobIndex < jobs.length; jobIndex++) {
-        const job = jobs[jobIndex];
-
-        const cronContent = lines.join("\n");
-        if (!cronContent.includes(`id: ${job.id}`)) {
-          needsUpdate = true;
-
-          updatedLines = updateJobInLines(
-            updatedLines,
-            jobIndex,
-            job.schedule,
-            job.command,
-            job.comment || "",
-            job.logsEnabled || false,
-            job.id
-          );
-        }
-      }
-
-      if (needsUpdate) {
-        const newCron = await cleanCrontabContent(updatedLines.join("\n"));
-        await writeUserCrontab(user, newCron);
-      }
 
       allJobs.push(...jobs);
     }
@@ -278,46 +251,38 @@ export const deleteCronJob = async (id: string): Promise<boolean> => {
 };
 
 export const updateCronJob = async (
-  id: string,
+  jobData: { id: string; schedule: string; command: string; comment?: string; user: string },
   schedule: string,
   command: string,
   comment: string = "",
   logsEnabled: boolean = false
 ): Promise<boolean> => {
   try {
-    const allJobs = await getCronJobs(false);
-    const targetJob = allJobs.find((j) => j.id === id);
-
-    if (!targetJob) {
-      console.error(`Job with id ${id} not found`);
-      return false;
-    }
-
-    const user = targetJob.user;
+    const user = jobData.user;
     const cronContent = await readUserCrontab(user);
     const lines = cronContent.split("\n");
-    const userJobs = parseJobsFromLines(lines, user);
-    const jobIndex = userJobs.findIndex((j) => j.id === id);
+
+    const jobIndex = findJobIndex(jobData, lines, user);
 
     if (jobIndex === -1) {
-      console.error(`Job with id ${id} not found in parsed jobs`);
+      console.error(`Job not found in crontab`);
       return false;
     }
 
-    const isWrappd = isCommandWrapped(command);
+    const isWrapped = isCommandWrapped(command);
 
     let finalCommand = command;
 
-    if (logsEnabled && !isWrappd) {
+    if (logsEnabled && !isWrapped) {
       const docker = await isDocker();
-      finalCommand = await wrapCommandWithLogger(id, command, docker, comment);
-    } else if (!logsEnabled && isWrappd) {
+      finalCommand = await wrapCommandWithLogger(jobData.id, command, docker, comment);
+    } else if (!logsEnabled && isWrapped) {
       finalCommand = unwrapCommand(command);
-    } else if (logsEnabled && isWrappd) {
+    } else if (logsEnabled && isWrapped) {
       const unwrapped = unwrapCommand(command);
       const docker = await isDocker();
       finalCommand = await wrapCommandWithLogger(
-        id,
+        jobData.id,
         unwrapped,
         docker,
         comment
@@ -333,7 +298,7 @@ export const updateCronJob = async (
       finalCommand,
       comment,
       logsEnabled,
-      id
+      jobData.id
     );
     const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
 
@@ -422,4 +387,25 @@ export const cleanupCrontab = async (): Promise<boolean> => {
     console.error("Error cleaning crontab:", error);
     return false;
   }
+};
+
+export const findJobIndex = (
+  jobData: { id: string; schedule: string; command: string; comment?: string; user: string; paused?: boolean },
+  lines: string[],
+  user: string
+): number => {
+  const cronContentStr = lines.join("\n");
+  const userJobs = parseJobsFromLines(lines, user);
+
+  if (cronContentStr.includes(`id: ${jobData.id}`)) {
+    return userJobs.findIndex((j) => j.id === jobData.id);
+  }
+
+  return userJobs.findIndex(
+    (j) =>
+      j.schedule === jobData.schedule &&
+      j.command === jobData.command &&
+      j.user === jobData.user &&
+      (j.comment || "") === (jobData.comment || "")
+  );
 };
