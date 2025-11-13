@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/app/_components/FeatureComponents/Theme/ThemeTogg
 import { LogoutButton } from "@/app/_components/FeatureComponents/LoginForm/LogoutButton";
 import { ToastContainer } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { PWAInstallPrompt } from "@/app/_components/FeatureComponents/PWA/PWAInstallPrompt";
-import { getTranslations } from "@/app/_utils/global-utils";
+import { getTranslations } from "@/app/_server/actions/translations";
 import { SSEProvider } from "@/app/_contexts/SSEContext";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,10 @@ export const maxDuration = 300;
 
 export default async function Home() {
   const t = await getTranslations();
-  const liveUpdatesEnabled = (typeof process.env.LIVE_UPDATES === "boolean" && process.env.LIVE_UPDATES === true) || process.env.LIVE_UPDATES !== "false";
+  const liveUpdatesEnabled =
+    (typeof process.env.LIVE_UPDATES === "boolean" &&
+      process.env.LIVE_UPDATES === true) ||
+    process.env.LIVE_UPDATES !== "false";
 
   const [cronJobs, scripts] = await Promise.all([
     getCronJobs(),

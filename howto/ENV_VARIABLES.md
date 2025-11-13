@@ -15,9 +15,34 @@ This document provides a comprehensive reference for all environment variables u
 | Variable        | Default       | Description                                                                  |
 | --------------- | ------------- | ---------------------------------------------------------------------------- |
 | `APP_URL`       | Auto-detected | Public URL of your Cronmaster instance (e.g., `https://cron.yourdomain.com`) |
-| `LOCALE`        | `en`          | Application locale/language setting                                          |
+| `LOCALE`        | `en`          | Application locale/language setting (supports custom translations)           |
 | `HOME`          | `/home`       | Path to home directory (optional override)                                   |
 | `AUTH_PASSWORD` | `N/A`         | Password for authentication (can be used alone or with SSO)                  |
+
+## Custom Translations
+
+CronMaster supports custom user-made translations. You can create your own translation files and use them by setting the `LOCALE` environment variable.
+
+**For detailed instructions on creating custom translations or contributing official translations, see [TRANSLATIONS.md](TRANSLATIONS.md).**
+
+### Quick Setup for Custom Translations
+
+```bash
+# Create translations directory
+mkdir -p ./data/translations
+
+# Copy template and customize
+cp app/_translations/en.json ./data/translations/your-locale.json
+
+# Set locale and restart
+export LOCALE=your-locale
+```
+
+Translation loading priority:
+
+1. Custom: `./data/translations/{locale}.json`
+2. Built-in: `app/_translations/{locale}.json`
+3. Fallback: `app/_translations/en.json`
 
 ## Docker Configuration
 
@@ -34,11 +59,11 @@ This document provides a comprehensive reference for all environment variables u
 
 ## Logging Configuration
 
-| Variable                        | Default | Description                                                          |
-| ------------------------------- | ------- | -------------------------------------------------------------------- |
-| `MAX_LOG_AGE_DAYS`              | `30`    | Days to keep job execution logs before cleanup                       |
-| `NEXT_PUBLIC_MAX_LOG_AGE_DAYS`  | `30`    | Days to keep error history in browser localStorage (client-side)     |
-| `MAX_LOGS_PER_JOB`              | `50`    | Maximum number of log files to keep per job                          |
+| Variable                       | Default | Description                                                      |
+| ------------------------------ | ------- | ---------------------------------------------------------------- |
+| `MAX_LOG_AGE_DAYS`             | `30`    | Days to keep job execution logs before cleanup                   |
+| `NEXT_PUBLIC_MAX_LOG_AGE_DAYS` | `30`    | Days to keep error history in browser localStorage (client-side) |
+| `MAX_LOGS_PER_JOB`             | `50`    | Maximum number of log files to keep per job                      |
 
 ## Authentication & Security
 
@@ -109,7 +134,7 @@ services:
       - AUTH_PASSWORD=your_secure_password
       - HOST_CRONTAB_USER=root
       - APP_URL=https://cron.yourdomain.com
-      - LOCALE=en
+      - LOCALE=en # Can be any locale code, including custom ones
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       - LIVE_UPDATES=true
       - MAX_LOG_AGE_DAYS=30

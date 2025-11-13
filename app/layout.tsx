@@ -3,7 +3,7 @@ import { JetBrains_Mono, Inter } from "next/font/google";
 import "@/app/globals.css";
 import { ThemeProvider } from "@/app/_providers/ThemeProvider";
 import { ServiceWorkerRegister } from "@/app/_components/FeatureComponents/PWA/ServiceWorkerRegister";
-import { Locales } from "@/app/_consts/global";
+import { loadTranslationMessages } from "@/app/_server/actions/translations";
 
 import { NextIntlClientProvider } from "next-intl";
 
@@ -21,7 +21,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Cr*nMaster - Cron Management made easy",
-  description: "The ultimate cron job management platform with intelligent scheduling, real-time monitoring, and powerful automation tools",
+  description:
+    "The ultimate cron job management platform with intelligent scheduling, real-time monitoring, and powerful automation tools",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -54,12 +55,7 @@ export default async function RootLayout({
   let locale = process.env.LOCALE || "en";
   let messages;
 
-
-  if (!Locales.some((item) => item.locale === locale)) {
-    locale = "en";
-  }
-
-  messages = (await import(`./_translations/${locale}.json`)).default;
+  messages = await loadTranslationMessages(locale);
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -72,7 +68,6 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
-
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider
             attribute="class"

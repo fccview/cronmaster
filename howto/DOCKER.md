@@ -52,7 +52,7 @@ environment:
 #### Localization
 
 ```yaml
-- LOCALE=en # or other supported locales (see /app/_translations/)
+- LOCALE=en # or any locale code (supports custom translations in ./data/translations/)
 ```
 
 #### Logging Configuration

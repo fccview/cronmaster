@@ -1,24 +1,24 @@
 import { getRequestConfig } from "next-intl/server";
-import { Locales } from "@/app/_consts/global";
-
-const validLocales = Locales.map((item) => item.locale);
+import { loadTranslationMessages } from "@/app/_server/actions/translations";
 
 export default getRequestConfig(async ({ locale }) => {
-    const safeLocale = locale && validLocales.includes(locale) ? locale : "en";
+  const safeLocale = locale || "en";
 
-    try {
-        return {
-            locale: safeLocale,
-            messages: (await import(`./_translations/${safeLocale}.json`)).default,
-        };
-    } catch (error) {
-        console.error(
-            `Failed to load translations for locale: ${safeLocale}`,
-            error
-        );
-        return {
-            locale: "en",
-            messages: (await import("./_translations/en.json")).default,
-        };
-    }
+  try {
+    const messages = await loadTranslationMessages(safeLocale);
+    return {
+      locale: safeLocale,
+      messages,
+    };
+  } catch (error) {
+    console.error(
+      `Failed to load translations for locale: ${safeLocale}`,
+      error
+    );
+    const fallbackMessages = await loadTranslationMessages("en");
+    return {
+      locale: "en",
+      messages: fallbackMessages,
+    };
+  }
 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTranslations } from "@/app/_utils/global-utils";
+import { getTranslations } from "@/app/_server/actions/translations";
 import * as si from "systeminformation";
 import {
   getPing,
