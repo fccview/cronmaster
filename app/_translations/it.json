@@ -9,7 +9,8 @@
         "optional": "Opzionale",
         "cancel": "Annulla",
         "refresh": "Aggiorna",
-        "close": "Chiudi"
+        "close": "Chiudi",
+        "version": "{version}"
     },
     "cronjobs": {
         "cronJobs": "Operazioni Cron",
@@ -142,5 +143,24 @@
         "available": "Disponibile",
         "systemStatus": "Stato del Sistema",
         "lastUpdated": "Ultimo aggiornamento"
+    },
+    "login": {
+        "welcomeTitle": "Benvenuto in Cr*nMaster",
+        "signInWithPasswordOrSSO": "Accedi con password o SSO",
+        "signInWithSSO": "Accedi con SSO",
+        "enterPasswordToContinue": "Inserisci la tua password per continuare",
+        "authenticationNotConfigured": "Autenticazione Non Configurata",
+        "noAuthMethodsEnabled": "Né l'autenticazione password né l'OIDC SSO sono abilitati. Si prega di configurare almeno un metodo di autenticazione nelle variabili d'ambiente per poter effettuare il login.",
+        "enterPassword": "Inserisci password",
+        "signingIn": "Accesso in corso...",
+        "signIn": "Accedi",
+        "redirecting": "Reindirizzamento...",
+        "orContinueWith": "Oppure continua con",
+        "loginFailed": "Accesso fallito",
+        "genericError": "Si è verificato un errore. Riprova."
+    },
+    "warnings": {
+        "wrapperScriptModified": "Script Wrapper Modificato",
+        "wrapperScriptModifiedDescription": "Il tuo script cron-log-wrapper.sh è stato modificato dalla versione ufficiale. Questo potrebbe influenzare la funzionalità di logging. Considera di ripristinare la versione ufficiale o assicurati che le tue modifiche non interrompano il formato richiesto per l'analisi dei log."
     }
 }

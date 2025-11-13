@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/app/_components/FeatureComponents/Theme/ThemeTogg
 import { LogoutButton } from "@/app/_components/FeatureComponents/LoginForm/LogoutButton";
 import { ToastContainer } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { PWAInstallPrompt } from "@/app/_components/FeatureComponents/PWA/PWAInstallPrompt";
+import { WrapperScriptWarning } from "@/app/_components/FeatureComponents/System/WrapperScriptWarning";
 import { getTranslations } from "@/app/_server/actions/translations";
 import { SSEProvider } from "@/app/_contexts/SSEContext";
 
@@ -93,6 +94,7 @@ export default async function Home() {
 
           <main className="lg:ml-80 transition-all duration-300 ml-0 sidebar-collapsed:lg:ml-16">
             <div className="container mx-auto px-4 py-8 lg:px-8">
+              <WrapperScriptWarning />
               <TabbedInterface cronJobs={cronJobs} scripts={scripts} />
             </div>
           </main>

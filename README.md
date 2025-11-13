@@ -9,6 +9,7 @@
   - [Using Docker (Recommended)](#using-docker-recommended)
   - [API](#api)
   - [Single Sign-On (SSO) with OIDC](#single-sign-on-sso-with-oidc)
+  - [Localization](#localization)
   - [Local Development](#local-development)
   - [Environment Variables](howto/ENV_VARIABLES.md)
 - [Authentication](#authentication)
@@ -68,8 +69,8 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 </p>
 
 <div align="center">
-  <img width="500px" src="screenshots/jobs-view.png">
-  <img width="500px" src="screenshots/scripts-view.png" />
+  <img width="500px" src="screenshots/home.png">
+  <img width="500px" src="screenshots/live-running.png" />
 </div>
 
 <a id="quick-start"></a>
@@ -108,7 +109,7 @@ services:
     init: true
 ```
 
-**📖 For all available configuration options, see [`howto/DOCKER.md`](howto/DOCKER.md)**
+📖 **For all available configuration options, see [`howto/DOCKER.md`](howto/DOCKER.md)**
 
 <a id="api"></a>
 
@@ -125,6 +126,14 @@ services:
 `cr*nmaster` supports any OIDC provider (Authentik, Auth0, Keycloak, Okta, Google, EntraID, etc.)
 
 📖 **For the complete SSO documentation, see [howto/SSO.md](howto/SSO.md)**
+
+<a id="localization"></a>
+
+## Localization
+
+`cr*nmaster` officially support [some languages](app/_transations) and allows you to create your custom translations locally on your own machine.
+
+📖 **For the complete Translations documentation, see [howto/TRANSLATIONS.md](howto/TRANSLATIONS.md)**
 
 ### ARM64 Support
 
@@ -281,7 +290,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
   https://your-domain.com/api/cronjobs
 ```
 
-For complete API documentation with examples, see **[README_API.md](README_API.md)**
+For complete API documentation with examples, see **[howto/API.md](howto/API.md)**
 
 ### Available Endpoints
 
@@ -484,10 +493,9 @@ The application uses standard cron format: `* * * * *`
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch from the `develop` branch
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Submit a pull request to the `develop` branch
 
 ## Community shouts
 

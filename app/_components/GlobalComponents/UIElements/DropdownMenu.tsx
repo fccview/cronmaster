@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, ReactNode } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { MoreVertical } from "lucide-react";
 
+const DROPDOWN_HEIGHT = 200; // Approximate max height of dropdown
+
 interface DropdownMenuItem {
   label: string;
   icon?: ReactNode;
@@ -28,9 +30,21 @@ export const DropdownMenu = ({
   onOpenChange,
 }: DropdownMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [positionAbove, setPositionAbove] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const handleOpenChange = (open: boolean) => {
+    if (open && triggerRef.current) {
+      // Calculate if dropdown should be positioned above or below
+      const rect = triggerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Position above if there's not enough space below
+      setPositionAbove(spaceBelow < DROPDOWN_HEIGHT && spaceAbove > spaceBelow);
+    }
     setIsOpen(open);
     onOpenChange?.(open);
   };
@@ -72,6 +86,7 @@ export const DropdownMenu = ({
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       <Button
+        ref={triggerRef}
         variant="outline"
         size="sm"
         onClick={() => handleOpenChange(!isOpen)}
@@ -84,7 +99,11 @@ export const DropdownMenu = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-lg border border-border/50 bg-background shadow-lg z-50 overflow-hidden">
+        <div
+          className={`absolute right-0 w-56 rounded-lg border border-border/50 bg-background shadow-lg z-[9999] overflow-hidden ${
+            positionAbove ? "bottom-full mb-2" : "top-full mt-2"
+          }`}
+        >
           <div className="py-1">
             {items.map((item, index) => (
               <button
@@ -99,7 +118,9 @@ export const DropdownMenu = ({
                     : "text-foreground hover:bg-accent"
                 }`}
               >
-                {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
+                {item.icon && (
+                  <span className="flex-shrink-0">{item.icon}</span>
+                )}
                 <span className="flex-1 text-left">{item.label}</span>
               </button>
             ))}

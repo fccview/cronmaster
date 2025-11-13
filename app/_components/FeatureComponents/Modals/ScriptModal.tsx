@@ -110,7 +110,7 @@ export const ScriptModal = ({
               <Code className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-medium text-foreground">Snippets</h3>
             </div>
-            <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="flex-1 overflow-y-auto min-h-0 !pr-0">
               <BashSnippetHelper onInsertSnippet={handleInsertSnippet} />
             </div>
           </div>
@@ -150,4 +150,4 @@ export const ScriptModal = ({
       </form>
     </Modal>
   );
-}
+};

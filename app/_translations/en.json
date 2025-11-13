@@ -10,7 +10,8 @@
         "cancel": "Cancel",
         "close": "Close",
         "refresh": "Refresh",
-        "loading": "Loading"
+        "loading": "Loading",
+        "version": "{version}"
     },
     "cronjobs": {
         "cronJobs": "Cron Jobs",
@@ -143,5 +144,24 @@
         "available": "Available",
         "systemStatus": "System Status",
         "lastUpdated": "Last updated"
+    },
+    "login": {
+        "welcomeTitle": "Welcome to Cr*nMaster",
+        "signInWithPasswordOrSSO": "Sign in with password or SSO",
+        "signInWithSSO": "Sign in with SSO",
+        "enterPasswordToContinue": "Enter your password to continue",
+        "authenticationNotConfigured": "Authentication Not Configured",
+        "noAuthMethodsEnabled": "Neither password authentication nor OIDC SSO is enabled. Please configure at least one authentication method in your environment variables to be able to log in.",
+        "enterPassword": "Enter password",
+        "signingIn": "Signing in...",
+        "signIn": "Sign In",
+        "redirecting": "Redirecting...",
+        "orContinueWith": "Or continue with",
+        "loginFailed": "Login failed",
+        "genericError": "An error occurred. Please try again."
+    },
+    "warnings": {
+        "wrapperScriptModified": "Wrapper Script Modified",
+        "wrapperScriptModifiedDescription": "Your cron-log-wrapper.sh script has been modified from the official version. This may affect logging functionality. Consider reverting to the official version or ensure your changes don't break the required format for log parsing."
     }
 }

@@ -46,7 +46,7 @@ export const FiltersModal = ({
       size="md"
     >
       <div className="space-y-6">
-        <div className="space-y-4">
+        <div className="space-y-4 min-h-[200px]">
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
               {t("cronjobs.filterByUser")}

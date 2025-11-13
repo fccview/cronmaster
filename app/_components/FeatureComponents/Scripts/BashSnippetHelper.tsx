@@ -34,7 +34,9 @@ const categoryIcons = {
   "Custom Scripts": Code,
 };
 
-export const BashSnippetHelper = ({ onInsertSnippet }: BashSnippetHelperProps) => {
+export const BashSnippetHelper = ({
+  onInsertSnippet,
+}: BashSnippetHelperProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -161,7 +163,7 @@ export const BashSnippetHelper = ({ onInsertSnippet }: BashSnippetHelperProps) =
         </div>
       )}
 
-      <div className="space-y-2 overflow-y-auto custom-scrollbar">
+      <div className="space-y-2 overflow-y-auto !pr-0 custom-scrollbar">
         {filteredSnippets.map((snippet) => {
           const Icon =
             categoryIcons[snippet.category as keyof typeof categoryIcons] ||
@@ -243,4 +245,4 @@ export const BashSnippetHelper = ({ onInsertSnippet }: BashSnippetHelperProps) =
       </div>
     </div>
   );
-}
+};

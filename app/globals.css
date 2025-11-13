@@ -324,3 +324,17 @@
     margin-left: 4rem !important; /* 64px */
   }
 }
+
+.dropdown-overflow-fix {
+  overflow: visible;
+  position: relative;
+}
+
+.dropdown-overflow-fix > * {
+  position: relative;
+}
+
+.dropdown-overflow-fix .dropdown-container,
+.dropdown-overflow-fix [class*="dropdown"] {
+  overflow: visible !important;
+}
