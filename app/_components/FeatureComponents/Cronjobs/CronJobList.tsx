@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Settings,
   Loader2,
+  Filter,
 } from "lucide-react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
@@ -260,15 +261,15 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                   className="btn-outline"
                   title={t("cronjobs.filters")}
                 >
-                  <Settings className="h-4 w-4" />
+                  <Filter className="h-4 w-4" />
                 </Button>
                 <Button
                   onClick={() => setIsBackupModalOpen(true)}
                   variant="outline"
                   className="btn-outline"
+                  title={t("cronjobs.backups")}
                 >
-                  <Archive className="h-4 w-4 mr-2" />
-                  {t("cronjobs.backups")}
+                  <Archive className="h-4 w-4" />
                 </Button>
               </div>
               <Button

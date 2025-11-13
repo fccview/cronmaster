@@ -7,7 +7,9 @@
         "change": "Modifica",
         "description": "Descrizione",
         "optional": "Opzionale",
-        "cancel": "Annulla"
+        "cancel": "Annulla",
+        "refresh": "Aggiorna",
+        "close": "Chiudi"
     },
     "cronjobs": {
         "cronJobs": "Operazioni Cron",

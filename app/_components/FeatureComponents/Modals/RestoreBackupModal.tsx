@@ -79,7 +79,12 @@ export const RestoreBackupModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t("cronjobs.backups")}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t("cronjobs.backups")}
+      size="xl"
+    >
       <div className="space-y-4">
         <div className="flex gap-2">
           <Button
@@ -115,80 +120,73 @@ export const RestoreBackupModal = ({
             <p>{t("cronjobs.noBackupsFound")}</p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          <div className="space-y-2 max-h-[500px] overflow-y-auto">
             {backups.map((backup) => (
               <div
                 key={backup.filename}
-                className="glass-card p-4 border border-border/50 rounded-lg"
+                className="glass-card p-3 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
               >
-                <div className="flex flex-col gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
-                        {backup.job.schedule}
-                      </code>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          {commandCopied === backup.filename && (
-                            <Check className="h-3 w-3 text-green-600" />
-                          )}
-                          <pre
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyToClipboard(
-                                unwrapCommand(backup.job.command)
-                              );
-                              setCommandCopied(backup.filename);
-                              setTimeout(() => setCommandCopied(null), 3000);
-                            }}
-                            className="w-full cursor-pointer overflow-x-auto text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border/30 hide-scrollbar"
-                          >
-                            {unwrapCommand(backup.job.command)}
-                          </pre>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        <span>{backup.job.user}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          {t("cronjobs.backedUpAt")}:{" "}
-                          {formatDate(backup.backedUpAt)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {backup.job.comment && (
-                      <p className="text-xs text-muted-foreground italic mt-1">
-                        {backup.job.comment}
-                      </p>
-                    )}
+                <div className="flex items-center gap-3">
+                  {/* Schedule */}
+                  <div className="flex-shrink-0">
+                    <code className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded font-mono border border-purple-500/20">
+                      {backup.job.schedule}
+                    </code>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  {/* Command */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      {commandCopied === backup.filename && (
+                        <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
+                      )}
+                      <pre
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard(unwrapCommand(backup.job.command));
+                          setCommandCopied(backup.filename);
+                          setTimeout(() => setCommandCopied(null), 3000);
+                        }}
+                        className="flex-1 cursor-pointer overflow-hidden text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border/30 truncate"
+                        title={unwrapCommand(backup.job.command)}
+                      >
+                        {unwrapCommand(backup.job.command)}
+                      </pre>
+                    </div>
+                  </div>
+
+                  {/* User & Date */}
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-shrink-0">
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      <span>{backup.job.user}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>{formatDate(backup.backedUpAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => {
                         onRestore(backup.filename);
                         onClose();
                       }}
-                      className="btn-primary h-8 px-3 flex-1"
+                      className="h-7 w-7 p-0"
+                      title={t("cronjobs.restoreThisBackup")}
                     >
-                      <Upload className="h-3 w-3 mr-2" />
-                      {t("cronjobs.restoreThisBackup")}
+                      <Upload className="h-3 w-3" />
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(backup.filename)}
                       disabled={deletingFilename === backup.filename}
-                      className="btn-destructive h-8 px-3"
+                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
                       title={t("cronjobs.deleteBackup")}
                     >
                       {deletingFilename === backup.filename ? (
@@ -199,6 +197,13 @@ export const RestoreBackupModal = ({
                     </Button>
                   </div>
                 </div>
+
+                {/* Comment (if present) */}
+                {backup.job.comment && (
+                  <p className="text-xs text-muted-foreground italic mt-2 ml-0">
+                    {backup.job.comment}
+                  </p>
+                )}
               </div>
             ))}
           </div>
