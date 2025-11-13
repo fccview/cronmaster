@@ -1,169 +1,106 @@
-import { NextRequest, NextResponse } from 'next/server';
-import * as si from 'systeminformation';
-export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from "next/server";
+import { getTranslations } from "@/app/_server/actions/translations";
+import * as si from "systeminformation";
+import {
+  getPing,
+  formatBytes,
+  formatUptime,
+  findMainInterface,
+  getStatus,
+  getOverallStatus,
+  formatGpuInfo,
+} from "@/app/_utils/system-stats-utils";
+import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
+import { requireAuth } from "@/app/_utils/api-auth-utils";
 
-export async function GET(request: NextRequest) {
-    try {
-        const [
-            osInfo,
-            memInfo,
-            cpuInfo,
-            diskInfo,
-            loadInfo,
-            uptimeInfo,
-            networkInfo
-        ] = await Promise.all([
-            si.osInfo(),
-            si.mem(),
-            si.cpu(),
-            si.fsSize(),
-            si.currentLoad(),
-            si.time(),
-            si.networkStats()
-        ]);
+export const dynamic = "force-dynamic";
 
-        const formatBytes = (bytes: number) => {
-            const sizes = ["B", "KB", "MB", "GB", "TB"];
-            if (bytes === 0) return "0 B";
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
-            return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-        };
+export const GET = async (request: NextRequest) => {
+  const authError = await requireAuth(request);
+  if (authError) return authError;
+  try {
+    const t = await getTranslations();
 
-        const formatUptime = (seconds: number): string => {
-            const days = Math.floor(seconds / 86400);
-            const hours = Math.floor((seconds % 86400) / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
+    const [
+      [memInfo, cpuInfo, loadInfo, uptimeInfo, networkInfo],
+      latency,
+      graphics,
+    ] = await Promise.all([
+      Promise.all([
+        si.mem(),
+        si.cpu(),
+        si.currentLoad(),
+        si.time(),
+        si.networkStats(),
+      ]),
+      getPing(),
+      si.graphics().catch(() => null),
+    ]);
 
-            if (days > 0) {
-                return `${days} days, ${hours} hours`;
-            } else if (hours > 0) {
-                return `${hours} hours, ${minutes} minutes`;
-            } else {
-                return `${minutes} minutes`;
-            }
-        };
+    const actualUsed = memInfo.active || memInfo.used;
+    const memUsage = (actualUsed / memInfo.total) * 100;
+    const cpuLoad = loadInfo.currentLoad;
 
-        const actualUsed = memInfo.active || memInfo.used;
-        const actualFree = memInfo.available || memInfo.free;
-        const memUsage = ((actualUsed / memInfo.total) * 100);
-        let memStatus = "Optimal";
-        if (memUsage > 90) memStatus = "Critical";
-        else if (memUsage > 80) memStatus = "High";
-        else if (memUsage > 70) memStatus = "Moderate";
+    const mainInterface = findMainInterface(networkInfo);
+    const rxSpeed = mainInterface
+      ? (mainInterface.rx_sec || 0) / 1024 / 1024
+      : 0;
+    const txSpeed = mainInterface
+      ? (mainInterface.tx_sec || 0) / 1024 / 1024
+      : 0;
 
-        const rootDisk = diskInfo.find(disk => disk.mount === '/') || diskInfo[0];
-        const diskUsage = rootDisk ? ((rootDisk.used / rootDisk.size) * 100) : 0;
-        let diskStatus = "Optimal";
-        if (diskUsage > 90) diskStatus = "Critical";
-        else if (diskUsage > 80) diskStatus = "High";
-        else if (diskUsage > 70) diskStatus = "Moderate";
+    const systemStats = {
+      uptime: formatUptime(uptimeInfo.uptime),
+      memory: {
+        total: formatBytes(memInfo.total),
+        used: formatBytes(actualUsed),
+        free: formatBytes(memInfo.available || memInfo.free),
+        usage: Math.round(memUsage),
+        status: getStatus(
+          memUsage,
+          { critical: 90, high: 80, moderate: 70 },
+          t
+        ),
+      },
+      cpu: {
+        model: `${cpuInfo.manufacturer} ${cpuInfo.brand}`,
+        cores: cpuInfo.cores,
+        usage: Math.round(cpuLoad),
+        status: getStatus(cpuLoad, { high: 80, moderate: 60 }, t),
+      },
+      network: {
+        speed:
+          mainInterface &&
+          mainInterface.rx_sec != null &&
+          mainInterface.tx_sec != null
+            ? `${Math.round(rxSpeed + txSpeed)} Mbps`
+            : t("system.unknown"),
+        latency: latency,
+        downloadSpeed: Math.round(rxSpeed),
+        uploadSpeed: Math.round(txSpeed),
+        status:
+          mainInterface && mainInterface.operstate === "up"
+            ? t("system.connected")
+            : t("system.unknown"),
+      },
+      systemStatus: getOverallStatus(memUsage, cpuLoad, t),
+      gpu: formatGpuInfo(graphics, t),
+    };
 
-        const cpuStatus = loadInfo.currentLoad > 80 ? "High" :
-            loadInfo.currentLoad > 60 ? "Moderate" : "Optimal";
-
-        const criticalThreshold = 90;
-        const warningThreshold = 80;
-        let overallStatus = "Optimal";
-        let statusDetails = "All systems running normally";
-
-        if (memUsage > criticalThreshold || loadInfo.currentLoad > criticalThreshold || diskUsage > criticalThreshold) {
-            overallStatus = "Critical";
-            statusDetails = "High resource usage detected - immediate attention required";
-        } else if (memUsage > warningThreshold || loadInfo.currentLoad > warningThreshold || diskUsage > warningThreshold) {
-            overallStatus = "Warning";
-            statusDetails = "Moderate resource usage - monitoring recommended";
-        }
-
-        let mainInterface: any = null;
-        if (Array.isArray(networkInfo) && networkInfo.length > 0) {
-            mainInterface = networkInfo.find(net =>
-                net.iface && !net.iface.includes('lo') && net.operstate === 'up'
-            ) || networkInfo.find(net =>
-                net.iface && !net.iface.includes('lo')
-            ) || networkInfo[0];
-        }
-
-        const networkSpeed = mainInterface && 'rx_sec' in mainInterface && 'tx_sec' in mainInterface
-            ? `${Math.round(((mainInterface.rx_sec || 0) + (mainInterface.tx_sec || 0)) / 1024 / 1024)} Mbps`
-            : "Unknown";
-
-        let latency = 0;
-        try {
-            const { exec } = require('child_process');
-            const { promisify } = require('util');
-            const execAsync = promisify(exec);
-            const { stdout } = await execAsync('ping -c 1 -W 1000 8.8.8.8 2>/dev/null || echo "timeout"');
-            const match = stdout.match(/time=(\d+\.?\d*)/);
-            if (match) {
-                latency = Math.round(parseFloat(match[1]));
-            }
-        } catch (error) {
-            latency = 0;
-        }
-
-        const systemStats: any = {
-            uptime: formatUptime(uptimeInfo.uptime),
-            memory: {
-                total: formatBytes(memInfo.total),
-                used: formatBytes(actualUsed),
-                free: formatBytes(actualFree),
-                usage: Math.round(memUsage),
-                status: memStatus,
-            },
-            cpu: {
-                model: `${cpuInfo.manufacturer} ${cpuInfo.brand}`,
-                cores: cpuInfo.cores,
-                usage: Math.round(loadInfo.currentLoad),
-                status: cpuStatus,
-            },
-            disk: {
-                total: rootDisk ? formatBytes(rootDisk.size) : "Unknown",
-                used: rootDisk ? formatBytes(rootDisk.used) : "Unknown",
-                free: rootDisk ? formatBytes(rootDisk.available) : "Unknown",
-                usage: Math.round(diskUsage),
-                status: diskStatus,
-            },
-            network: {
-                speed: networkSpeed,
-                latency: latency,
-                downloadSpeed: mainInterface && 'rx_sec' in mainInterface ? Math.round((mainInterface.rx_sec || 0) / 1024 / 1024) : 0,
-                uploadSpeed: mainInterface && 'tx_sec' in mainInterface ? Math.round((mainInterface.tx_sec || 0) / 1024 / 1024) : 0,
-                status: mainInterface && 'operstate' in mainInterface && mainInterface.operstate === 'up' ? "Connected" : "Unknown",
-            },
-            systemStatus: {
-                overall: overallStatus,
-                details: statusDetails,
-            },
-        };
-
-        try {
-            const graphics = await si.graphics();
-            if (graphics.controllers && graphics.controllers.length > 0) {
-                const gpu = graphics.controllers[0];
-                systemStats.gpu = {
-                    model: gpu.model || "Unknown GPU",
-                    memory: gpu.vram ? `${gpu.vram} MB` : undefined,
-                    status: "Available",
-                };
-            } else {
-                systemStats.gpu = {
-                    model: "No GPU detected",
-                    status: "Unknown",
-                };
-            }
-        } catch (error) {
-            systemStats.gpu = {
-                model: "GPU detection failed",
-                status: "Unknown",
-            };
-        }
-
-        return NextResponse.json(systemStats);
-    } catch (error) {
-        console.error('Error fetching system stats:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch system stats' },
-            { status: 500 }
-        );
+    if (sseBroadcaster.hasClients()) {
+      sseBroadcaster.broadcast({
+        type: "system-stats",
+        timestamp: new Date().toISOString(),
+        data: systemStats,
+      });
     }
-}
+
+    return NextResponse.json(systemStats);
+  } catch (error) {
+    console.error("Error fetching system stats:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch system stats" },
+      { status: 500 }
+    );
+  }
+};

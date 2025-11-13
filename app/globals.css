@@ -68,6 +68,32 @@
   }
 }
 
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.overflow-y-auto {
+  padding-right: 1em;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary) / 0.8);
+  border-radius: 3px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--primary) / 0.1);
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -297,4 +323,18 @@
   body.sidebar-collapsed main.lg\:ml-80 {
     margin-left: 4rem !important; /* 64px */
   }
+}
+
+.dropdown-overflow-fix {
+  overflow: visible;
+  position: relative;
+}
+
+.dropdown-overflow-fix > * {
+  position: relative;
+}
+
+.dropdown-overflow-fix .dropdown-container,
+.dropdown-overflow-fix [class*="dropdown"] {
+  overflow: visible !important;
 }

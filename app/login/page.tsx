@@ -1,14 +1,28 @@
-'use server';
+export const dynamic = "force-dynamic";
 
-import { LoginForm } from "../_components/features/LoginForm/LoginForm";
+import { LoginForm } from "@/app/_components/FeatureComponents/LoginForm/LoginForm";
+import { readFileSync } from "fs";
+import path from "path";
 
 export default async function LoginPage() {
-    return (
-        <div className="min-h-screen relative">
-            <div className="hero-gradient absolute inset-0 -z-10"></div>
-            <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-                <LoginForm />
-            </div>
-        </div>
-    );
+  const hasPassword = !!process.env.AUTH_PASSWORD;
+  const hasOIDC = process.env.SSO_MODE === "oidc";
+
+  // Read package.json to get version
+  const packageJsonPath = path.join(process.cwd(), "package.json");
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+  const version = packageJson.version;
+
+  return (
+    <div className="min-h-screen relative">
+      <div className="hero-gradient absolute inset-0 -z-10"></div>
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+        <LoginForm
+          hasPassword={hasPassword}
+          hasOIDC={hasOIDC}
+          version={version}
+        />
+      </div>
+    </div>
+  );
 }

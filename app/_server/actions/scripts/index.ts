@@ -6,12 +6,40 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { SCRIPTS_DIR, normalizeLineEndings } from "@/app/_utils/scripts";
-import { loadAllScripts, type Script } from "@/app/_utils/scriptScanner";
+import { SCRIPTS_DIR } from "@/app/_consts/file";
+import { loadAllScripts, Script } from "@/app/_utils/scripts-utils";
+import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
+import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
 
 const execAsync = promisify(exec);
 
-export type { Script } from "@/app/_utils/scriptScanner";
+export const getScriptPath = (filename: string): string => {
+  return join(process.cwd(), SCRIPTS_DIR, filename);
+};
+
+export const getScriptPathForCron = async (
+  filename: string
+): Promise<string> => {
+  const docker = await isDocker();
+
+  if (docker) {
+    const hostScriptsPath = await getHostScriptsPath();
+    if (hostScriptsPath) {
+      return `bash ${join(hostScriptsPath, filename)}`;
+    }
+    console.warn("Could not determine host scripts path, using container path");
+  }
+
+  return `bash ${join(process.cwd(), SCRIPTS_DIR, filename)}`;
+};
+
+export const getHostScriptPath = (filename: string): string => {
+  return `bash ${join(process.cwd(), SCRIPTS_DIR, filename)}`;
+};
+
+export const normalizeLineEndings = (content: string): string => {
+  return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+};
 
 const sanitizeScriptName = (name: string): string => {
   return name
@@ -37,40 +65,34 @@ const generateUniqueFilename = async (baseName: string): Promise<string> => {
 };
 
 const ensureScriptsDirectory = async () => {
-  const scriptsDir = await SCRIPTS_DIR();
+  const scriptsDir = join(process.cwd(), SCRIPTS_DIR);
   if (!existsSync(scriptsDir)) {
     await mkdir(scriptsDir, { recursive: true });
   }
 };
 
 const ensureHostScriptsDirectory = async () => {
-  const hostProjectDir = process.env.HOST_PROJECT_DIR || process.cwd();
-
-  const hostScriptsDir = join(hostProjectDir, "scripts");
+  const hostScriptsDir = join(process.cwd(), SCRIPTS_DIR);
   if (!existsSync(hostScriptsDir)) {
     await mkdir(hostScriptsDir, { recursive: true });
   }
 };
 
 const saveScriptFile = async (filename: string, content: string) => {
-  const isDocker = process.env.DOCKER === "true";
-  const scriptsDir = isDocker ? "/app/scripts" : await SCRIPTS_DIR();
   await ensureScriptsDirectory();
 
-  const scriptPath = join(scriptsDir, filename);
+  const scriptPath = getScriptPath(filename);
   await writeFile(scriptPath, content, "utf8");
 
   try {
-    await execAsync(`chmod +x "${scriptPath}"`);
+    await execAsync(MAKE_SCRIPT_EXECUTABLE(scriptPath));
   } catch (error) {
     console.error(`Failed to set execute permissions on ${scriptPath}:`, error);
   }
 };
 
 const deleteScriptFile = async (filename: string) => {
-  const isDocker = process.env.DOCKER === "true";
-  const scriptsDir = isDocker ? "/app/scripts" : await SCRIPTS_DIR();
-  const scriptPath = join(scriptsDir, filename);
+  const scriptPath = getScriptPath(filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
   }
@@ -240,10 +262,7 @@ export const cloneScript = async (
 
 export const getScriptContent = async (filename: string): Promise<string> => {
   try {
-    const isDocker = process.env.DOCKER === "true";
-    const scriptPath = isDocker
-      ? join("/app/scripts", filename)
-      : join(process.cwd(), "scripts", filename);
+    const scriptPath = getScriptPath(filename);
 
     if (existsSync(scriptPath)) {
       const content = await readFile(scriptPath, "utf8");
@@ -280,10 +299,7 @@ export const executeScript = async (
 }> => {
   try {
     await ensureHostScriptsDirectory();
-    const isDocker = process.env.DOCKER === "true";
-    const hostScriptPath = isDocker
-      ? join("/app/scripts", filename)
-      : join(process.cwd(), "scripts", filename);
+    const hostScriptPath = getHostScriptPath(filename);
 
     if (!existsSync(hostScriptPath)) {
       return {
@@ -293,7 +309,7 @@ export const executeScript = async (
       };
     }
 
-    const { stdout, stderr } = await execAsync(`bash "${hostScriptPath}"`, {
+    const { stdout, stderr } = await execAsync(RUN_SCRIPT(hostScriptPath), {
       timeout: 30000,
     });
 

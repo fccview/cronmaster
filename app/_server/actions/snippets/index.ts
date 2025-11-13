@@ -6,9 +6,9 @@ import {
   getSnippetCategories,
   getSnippetById,
   type BashSnippet,
-} from "@/app/_utils/snippetScanner";
+} from "@/app/_utils/snippets-utils";
 
-export { type BashSnippet } from "@/app/_utils/snippetScanner";
+export { type BashSnippet } from "@/app/_utils/snippets-utils";
 
 export const fetchSnippets = async (): Promise<BashSnippet[]> => {
   try {

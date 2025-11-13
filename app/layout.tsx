@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "./_components/ui/ThemeProvider";
-import { ServiceWorkerRegister } from "./_components/ui/ServiceWorkerRegister";
+import "@/app/globals.css";
+import { ThemeProvider } from "@/app/_providers/ThemeProvider";
+import { ServiceWorkerRegister } from "@/app/_components/FeatureComponents/PWA/ServiceWorkerRegister";
+import { loadTranslationMessages } from "@/app/_server/actions/translations";
+
+import { NextIntlClientProvider } from "next-intl";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -18,7 +21,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Cr*nMaster - Cron Management made easy",
-  description: "The ultimate cron job management platform with intelligent scheduling, real-time monitoring, and powerful automation tools",
+  description:
+    "The ultimate cron job management platform with intelligent scheduling, real-time monitoring, and powerful automation tools",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -43,11 +47,16 @@ export const viewport = {
   themeColor: "#3b82f6",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let locale = process.env.LOCALE || "en";
+  let messages;
+
+  messages = await loadTranslationMessages(locale);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -59,15 +68,17 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-        <ServiceWorkerRegister />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+          <ServiceWorkerRegister />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

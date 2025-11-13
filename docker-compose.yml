@@ -1,47 +1,24 @@
+# For all configuration options, see howto/DOCKER.md
+
 services:
-  cronjob-manager:
+  cronmaster:
     image: ghcr.io/fccview/cronmaster:latest
     container_name: cronmaster
     user: "root"
     ports:
-      # Feel free to change port, 3000 is very common so I like to map it to something else
       - "40123:3000"
     environment:
       - NODE_ENV=production
       - DOCKER=true
-
-      # --- MAP HOST PROJECT DIRECTORY, THIS IS MANDATORY FOR SCRIPTS TO WORK
-      - HOST_PROJECT_DIR=/path/to/cronmaster/directory
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
-
-      # --- PASSWORD PROTECTION
-      # Uncomment to enable password protection (replace "password" with your own)
       - AUTH_PASSWORD=very_strong_password
-
-      # --- CRONTAB USERS
-      # This is used to read the crontabs for the specific user.
-      # replace root with your user - find it with: ls -asl /var/spool/cron/crontabs/
-      # For multiple users, use comma-separated values: HOST_CRONTAB_USER=root,user1,user2
       - HOST_CRONTAB_USER=root
     volumes:
-      # --- MOUNT DOCKER SOCKET
-      # Mount Docker socket to execute commands on host
       - /var/run/docker.sock:/var/run/docker.sock
-
-      # --- MOUNT DATA
-      # These are needed if you want to keep your data on the host machine and not wihin the docker volume.
-      # DO NOT change the location of ./scripts as all cronjobs that use custom scripts created via the app
-      # will target this folder (thanks to the HOST_PROJECT_DIR variable set above)
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./snippets:/app/snippets
-
-    # --- USE HOST PID NAMESPACE FOR HOST COMMAND EXECUTION
-    # --- RUN IN PRIVILEGED MODE FOR NSENTER ACCESS
     pid: "host"
     privileged: true
     restart: always
     init: true
-
-    # --- DEFAULT PLATFORM IS SET TO AMD64, UNCOMMENT TO USE ARM64.
-    #platform: linux/arm64
