@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
+import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
 
 interface LiveLogModalProps {
   isOpen: boolean;
@@ -22,21 +23,45 @@ export const LiveLogModal = ({
   jobComment,
 }: LiveLogModalProps) => {
   const [logContent, setLogContent] = useState<string>("");
-  const [status, setStatus] = useState<"running" | "completed" | "failed">("running");
+  const [status, setStatus] = useState<"running" | "completed" | "failed">(
+    "running"
+  );
   const [exitCode, setExitCode] = useState<number | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const { subscribe } = useSSEContext();
+  const isPageVisible = usePageVisibility();
+  const lastOffsetRef = useRef<number>(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (!isOpen || !runId) return;
+    if (!isOpen || !runId || !isPageVisible) return;
+
+    lastOffsetRef.current = 0;
+    setLogContent("");
 
     const fetchLogs = async () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
       try {
-        const response = await fetch(`/api/logs/stream?runId=${runId}`);
+        const url = `/api/logs/stream?runId=${runId}&offset=${lastOffsetRef.current}`;
+        const response = await fetch(url, {
+          signal: abortController.signal,
+        });
         const data = await response.json();
 
-        if (data.content) {
+        if (data.fileSize !== undefined) {
+          lastOffsetRef.current = data.fileSize;
+        }
+
+        if (lastOffsetRef.current === 0 && data.content) {
           setLogContent(data.content);
+        } else if (data.newContent) {
+          setLogContent((prev) => prev + data.newContent);
         }
 
         setStatus(data.status || "running");
@@ -44,17 +69,29 @@ export const LiveLogModal = ({
         if (data.exitCode !== undefined) {
           setExitCode(data.exitCode);
         }
-      } catch (error) {
-        console.error("Failed to fetch logs:", error);
+      } catch (error: any) {
+        if (error.name !== "AbortError") {
+          console.error("Failed to fetch logs:", error);
+        }
       }
     };
 
     fetchLogs();
 
-    const interval = setInterval(fetchLogs, 2000);
+    let interval: NodeJS.Timeout | null = null;
+    if (isPageVisible) {
+      interval = setInterval(fetchLogs, 2000);
+    }
 
-    return () => clearInterval(interval);
-  }, [isOpen, runId]);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [isOpen, runId, isPageVisible]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -65,8 +102,8 @@ export const LiveLogModal = ({
         setExitCode(event.data.exitCode);
 
         fetch(`/api/logs/stream?runId=${runId}`)
-          .then(res => res.json())
-          .then(data => {
+          .then((res) => res.json())
+          .then((data) => {
             if (data.content) {
               setLogContent(data.content);
             }
@@ -76,8 +113,8 @@ export const LiveLogModal = ({
         setExitCode(event.data.exitCode);
 
         fetch(`/api/logs/stream?runId=${runId}`)
-          .then(res => res.json())
-          .then(data => {
+          .then((res) => res.json())
+          .then((data) => {
             if (data.content) {
               setLogContent(data.content);
             }
@@ -127,7 +164,8 @@ export const LiveLogModal = ({
       <div className="space-y-4">
         <div className="bg-black/90 dark:bg-black/60 rounded-lg p-4 max-h-[60vh] overflow-auto">
           <pre className="text-xs font-mono text-green-400 whitespace-pre-wrap break-words">
-            {logContent || "Waiting for job to start...\n\nLogs will appear here in real-time."}
+            {logContent ||
+              "Waiting for job to start...\n\nLogs will appear here in real-time."}
             <div ref={logEndRef} />
           </pre>
         </div>

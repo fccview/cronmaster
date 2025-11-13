@@ -50,32 +50,33 @@ export const UserFilter = ({
 
   return (
     <div className={`relative ${className}`}>
-      <Button
-        variant="outline"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full justify-between"
-      >
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4" />
-          <span className="text-sm">
-            {selectedUser ? `${t("common.userWithUsername", { user: selectedUser })}` : t("common.allUsers")}
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          {selectedUser && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onUserChange(null);
-              }}
-              className="p-1 hover:bg-accent rounded"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex-1 justify-between"
+        >
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            <span className="text-sm">
+              {selectedUser
+                ? `${t("common.userWithUsername", { user: selectedUser })}`
+                : t("common.allUsers")}
+            </span>
+          </div>
           <ChevronDown className="h-4 w-4" />
-        </div>
-      </Button>
+        </Button>
+        {selectedUser && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onUserChange(null)}
+            className="p-2 h-8 w-8 flex-shrink-0"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
 
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
@@ -84,8 +85,9 @@ export const UserFilter = ({
               onUserChange(null);
               setIsOpen(false);
             }}
-            className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${!selectedUser ? "bg-accent text-accent-foreground" : ""
-              }`}
+            className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
+              !selectedUser ? "bg-accent text-accent-foreground" : ""
+            }`}
           >
             {t("common.allUsers")}
           </button>
@@ -96,8 +98,9 @@ export const UserFilter = ({
                 onUserChange(user);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${selectedUser === user ? "bg-accent text-accent-foreground" : ""
-                }`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
+                selectedUser === user ? "bg-accent text-accent-foreground" : ""
+              }`}
             >
               {user}
             </button>
@@ -106,4 +109,4 @@ export const UserFilter = ({
       )}
     </div>
   );
-}
+};

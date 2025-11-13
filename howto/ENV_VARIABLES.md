@@ -34,10 +34,11 @@ This document provides a comprehensive reference for all environment variables u
 
 ## Logging Configuration
 
-| Variable           | Default | Description                                    |
-| ------------------ | ------- | ---------------------------------------------- |
-| `MAX_LOG_AGE_DAYS` | `30`    | Days to keep job execution logs before cleanup |
-| `MAX_LOGS_PER_JOB` | `50`    | Maximum number of log files to keep per job    |
+| Variable                        | Default | Description                                                          |
+| ------------------------------- | ------- | -------------------------------------------------------------------- |
+| `MAX_LOG_AGE_DAYS`              | `30`    | Days to keep job execution logs before cleanup                       |
+| `NEXT_PUBLIC_MAX_LOG_AGE_DAYS`  | `30`    | Days to keep error history in browser localStorage (client-side)     |
+| `MAX_LOGS_PER_JOB`              | `50`    | Maximum number of log files to keep per job                          |
 
 ## Authentication & Security
 

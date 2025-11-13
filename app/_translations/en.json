@@ -76,7 +76,17 @@
         "restoreThisBackup": "Restore this backup",
         "deleteBackup": "Delete backup",
         "confirmDeleteBackup": "Are you sure you want to delete this backup? This action cannot be undone.",
-        "backupDeleted": "Backup deleted successfully"
+        "backupDeleted": "Backup deleted successfully",
+        "filters": "Filters",
+        "filtersAndDisplay": "Filters & Display Options",
+        "filterByUser": "Filter by User",
+        "scheduleDisplay": "Schedule Display",
+        "cronSyntax": "Cron Syntax",
+        "humanReadable": "Human Readable",
+        "both": "Both",
+        "minimalMode": "Minimal Mode",
+        "minimalModeDescription": "Show compact view with icons instead of full text",
+        "applyFilters": "Apply Filters"
     },
     "scripts": {
         "scripts": "Scripts",

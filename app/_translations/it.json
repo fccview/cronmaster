@@ -73,7 +73,17 @@
         "restoreThisBackup": "Ripristina questo backup",
         "deleteBackup": "Elimina backup",
         "confirmDeleteBackup": "Sei sicuro di voler eliminare questo backup? Questa azione non può essere annullata.",
-        "backupDeleted": "Backup eliminato con successo"
+        "backupDeleted": "Backup eliminato con successo",
+        "filters": "Filtri",
+        "filtersAndDisplay": "Filtri e Opzioni di Visualizzazione",
+        "filterByUser": "Filtra per Utente",
+        "scheduleDisplay": "Visualizzazione Pianificazione",
+        "cronSyntax": "Sintassi Cron",
+        "humanReadable": "Comprensibile",
+        "both": "Entrambi",
+        "minimalMode": "Modalità Minima",
+        "minimalModeDescription": "Mostra vista compatta con icone invece del testo completo",
+        "applyFilters": "Applica Filtri"
     },
     "scripts": {
         "scripts": "Script",

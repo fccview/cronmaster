@@ -7,18 +7,30 @@ import {
   CardTitle,
 } from "@/app/_components/GlobalComponents/Cards/Card";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { Clock, Plus, Archive } from "lucide-react";
+import { Switch } from "@/app/_components/GlobalComponents/UIElements/Switch";
+import {
+  Clock,
+  Plus,
+  Archive,
+  ChevronDown,
+  Code,
+  MessageSquare,
+  Settings,
+  Loader2,
+} from "lucide-react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
 import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
 
 import { useCronJobState } from "@/app/_hooks/useCronJobState";
 import { CronJobItem } from "@/app/_components/FeatureComponents/Cronjobs/Parts/CronJobItem";
+import { MinimalCronJobItem } from "@/app/_components/FeatureComponents/Cronjobs/Parts/MinimalCronJobItem";
 import { CronJobEmptyState } from "@/app/_components/FeatureComponents/Cronjobs/Parts/CronJobEmptyState";
 import { CronJobListModals } from "@/app/_components/FeatureComponents/Modals/CronJobListsModals";
 import { LogsModal } from "@/app/_components/FeatureComponents/Modals/LogsModal";
 import { LiveLogModal } from "@/app/_components/FeatureComponents/Modals/LiveLogModal";
 import { RestoreBackupModal } from "@/app/_components/FeatureComponents/Modals/RestoreBackupModal";
+import { FiltersModal } from "@/app/_components/FeatureComponents/Modals/FiltersModal";
 import { useTranslations } from "next-intl";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { useEffect, useState } from "react";
@@ -49,6 +61,39 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
       backedUpAt: string;
     }>
   >([]);
+  const [scheduleDisplayMode, setScheduleDisplayMode] = useState<
+    "cron" | "human" | "both"
+  >("both");
+  const [loadedSettings, setLoadedSettings] = useState<boolean>(false);
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+  const [minimalMode, setMinimalMode] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+
+    try {
+      const savedScheduleMode = localStorage.getItem(
+        "cronjob-schedule-display-mode"
+      );
+      if (
+        savedScheduleMode === "cron" ||
+        savedScheduleMode === "human" ||
+        savedScheduleMode === "both"
+      ) {
+        setScheduleDisplayMode(savedScheduleMode);
+      }
+
+      const savedMinimalMode = localStorage.getItem("cronjob-minimal-mode");
+      if (savedMinimalMode === "true") {
+        setMinimalMode(true);
+      }
+
+      setLoadedSettings(true);
+    } catch (error) {
+      console.warn("Failed to load settings from localStorage:", error);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = subscribe((event) => {
@@ -59,6 +104,32 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
 
     return unsubscribe;
   }, [subscribe, router]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    try {
+      localStorage.setItem(
+        "cronjob-schedule-display-mode",
+        scheduleDisplayMode
+      );
+    } catch (error) {
+      console.warn(
+        "Failed to save schedule display mode to localStorage:",
+        error
+      );
+    }
+  }, [scheduleDisplayMode, isClient]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    try {
+      localStorage.setItem("cronjob-minimal-mode", minimalMode.toString());
+    } catch (error) {
+      console.warn("Failed to save minimal mode to localStorage:", error);
+    }
+  }, [minimalMode, isClient]);
 
   const loadBackupFiles = async () => {
     const backups = await fetchBackupFiles();
@@ -182,14 +253,24 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
               </div>
             </div>
             <div className="flex gap-2 w-full justify-between sm:w-auto">
-              <Button
-                onClick={() => setIsBackupModalOpen(true)}
-                variant="outline"
-                className="btn-outline"
-              >
-                <Archive className="h-4 w-4 mr-2" />
-                {t("cronjobs.backups")}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setIsFiltersModalOpen(true)}
+                  variant="outline"
+                  className="btn-outline"
+                  title={t("cronjobs.filters")}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={() => setIsBackupModalOpen(true)}
+                  variant="outline"
+                  className="btn-outline"
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  {t("cronjobs.backups")}
+                </Button>
+              </div>
               <Button
                 onClick={() => setIsNewCronModalOpen(true)}
                 className="btn-primary glow-primary"
@@ -201,12 +282,16 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <UserFilter
-              selectedUser={selectedUser}
-              onUserChange={setSelectedUser}
-              className="w-full sm:w-64"
-            />
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <label
+                className="text-sm font-medium text-foreground cursor-pointer"
+                onClick={() => setMinimalMode(!minimalMode)}
+              >
+                {t("cronjobs.minimalMode")}
+              </label>
+              <Switch checked={minimalMode} onCheckedChange={setMinimalMode} />
+            </div>
           </div>
 
           {filteredJobs.length === 0 ? (
@@ -215,27 +300,55 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
               onNewTaskClick={() => setIsNewCronModalOpen(true)}
             />
           ) : (
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-              {filteredJobs.map((job) => (
-                <CronJobItem
-                  key={job.id}
-                  job={job}
-                  errors={jobErrors[job.id] || []}
-                  runningJobId={runningJobId}
-                  deletingId={deletingId}
-                  onRun={handleRunLocal}
-                  onEdit={handleEdit}
-                  onClone={confirmClone}
-                  onResume={handleResumeLocal}
-                  onPause={handlePauseLocal}
-                  onToggleLogging={handleToggleLoggingLocal}
-                  onViewLogs={handleViewLogs}
-                  onDelete={confirmDelete}
-                  onBackup={handleBackupLocal}
-                  onErrorClick={handleErrorClickLocal}
-                  onErrorDismiss={refreshJobErrorsLocal}
-                />
-              ))}
+            <div className="space-y-3 max-h-[55vh] overflow-y-auto">
+              {loadedSettings ? (
+                filteredJobs.map((job) =>
+                  minimalMode ? (
+                    <MinimalCronJobItem
+                      key={job.id}
+                      job={job}
+                      errors={jobErrors[job.id] || []}
+                      runningJobId={runningJobId}
+                      deletingId={deletingId}
+                      scheduleDisplayMode={scheduleDisplayMode}
+                      onRun={handleRunLocal}
+                      onEdit={handleEdit}
+                      onClone={confirmClone}
+                      onResume={handleResumeLocal}
+                      onPause={handlePauseLocal}
+                      onToggleLogging={handleToggleLoggingLocal}
+                      onViewLogs={handleViewLogs}
+                      onDelete={confirmDelete}
+                      onBackup={handleBackupLocal}
+                      onErrorClick={handleErrorClickLocal}
+                    />
+                  ) : (
+                    <CronJobItem
+                      key={job.id}
+                      job={job}
+                      errors={jobErrors[job.id] || []}
+                      runningJobId={runningJobId}
+                      deletingId={deletingId}
+                      scheduleDisplayMode={scheduleDisplayMode}
+                      onRun={handleRunLocal}
+                      onEdit={handleEdit}
+                      onClone={confirmClone}
+                      onResume={handleResumeLocal}
+                      onPause={handlePauseLocal}
+                      onToggleLogging={handleToggleLoggingLocal}
+                      onViewLogs={handleViewLogs}
+                      onDelete={confirmDelete}
+                      onBackup={handleBackupLocal}
+                      onErrorClick={handleErrorClickLocal}
+                      onErrorDismiss={refreshJobErrorsLocal}
+                    />
+                  )
+                )
+              ) : (
+                <div className="flex items-center justify-center h-full min-h-[55vh]">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -304,6 +417,15 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         onBackupAll={handleBackupAll}
         onDelete={handleDeleteBackup}
         onRefresh={loadBackupFiles}
+      />
+
+      <FiltersModal
+        isOpen={isFiltersModalOpen}
+        onClose={() => setIsFiltersModalOpen(false)}
+        selectedUser={selectedUser}
+        onUserChange={setSelectedUser}
+        scheduleDisplayMode={scheduleDisplayMode}
+        onScheduleDisplayModeChange={setScheduleDisplayMode}
       />
     </>
   );

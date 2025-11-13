@@ -28,10 +28,11 @@ export const TabbedInterface = ({
         <div className="flex">
           <button
             onClick={() => setActiveTab("cronjobs")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${activeTab === "cronjobs"
-              ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${
+              activeTab === "cronjobs"
+                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
           >
             <Clock className="h-4 w-4" />
             {t("cronjobs.cronJobs")}
@@ -41,10 +42,11 @@ export const TabbedInterface = ({
           </button>
           <button
             onClick={() => setActiveTab("scripts")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${activeTab === "scripts"
-              ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${
+              activeTab === "scripts"
+                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
           >
             <FileText className="h-4 w-4" />
             {t("scripts.scripts")}
@@ -55,7 +57,7 @@ export const TabbedInterface = ({
         </div>
       </div>
 
-      <div className="min-h-[400px]">
+      <div className="min-h-[60vh]">
         {activeTab === "cronjobs" ? (
           <CronJobList cronJobs={cronJobs} scripts={scripts} />
         ) : (

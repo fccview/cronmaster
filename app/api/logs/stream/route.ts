@@ -14,6 +14,8 @@ export const GET = async (request: NextRequest) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const runId = searchParams.get("runId");
+    const offsetStr = searchParams.get("offset");
+    const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
 
     if (!runId) {
       return NextResponse.json(
@@ -68,14 +70,33 @@ export const GET = async (request: NextRequest) => {
     const sortedFiles = files.sort().reverse();
     const latestLogFile = path.join(logDir, sortedFiles[0]);
 
-    const content = await readFile(latestLogFile, "utf-8");
+    const fullContent = await readFile(latestLogFile, "utf-8");
+    const fileSize = Buffer.byteLength(fullContent, "utf-8");
+
+    let content = fullContent;
+    let newContent = "";
+
+    if (offset > 0 && offset < fileSize) {
+      newContent = fullContent.slice(offset);
+      content = newContent;
+    } else if (offset === 0) {
+      content = fullContent;
+      newContent = fullContent;
+    } else if (offset >= fileSize) {
+      content = "";
+      newContent = "";
+    }
 
     return NextResponse.json({
       status: job.status,
       content,
+      newContent,
+      fullContent: offset === 0 ? fullContent : undefined,
       logFile: sortedFiles[0],
       isComplete: job.status !== "running",
       exitCode: job.exitCode,
+      fileSize,
+      offset,
     });
   } catch (error: any) {
     console.error("Error streaming log:", error);

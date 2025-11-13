@@ -39,6 +39,7 @@ interface CronJobItemProps {
   errors: JobError[];
   runningJobId: string | null;
   deletingId: string | null;
+  scheduleDisplayMode: "cron" | "human" | "both";
   onRun: (id: string) => void;
   onEdit: (job: CronJob) => void;
   onClone: (job: CronJob) => void;
@@ -57,6 +58,7 @@ export const CronJobItem = ({
   errors,
   runningJobId,
   deletingId,
+  scheduleDisplayMode,
   onRun,
   onEdit,
   onClone,
@@ -142,6 +144,7 @@ export const CronJobItem = ({
       disabled: deletingId === job.id,
     },
   ];
+
   return (
     <div
       key={job.id}
@@ -152,9 +155,20 @@ export const CronJobItem = ({
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
-            <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
-              {job.schedule}
-            </code>
+            {(scheduleDisplayMode === "cron" ||
+              scheduleDisplayMode === "both") && (
+              <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
+                {job.schedule}
+              </code>
+            )}
+            {scheduleDisplayMode === "human" && cronExplanation?.isValid && (
+              <div className="flex items-start gap-1.5 border-b border-primary/30 bg-primary/10 rounded text-primary px-2 py-0.5">
+                <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-sm italic">
+                  {cronExplanation.humanReadable}
+                </p>
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0 w-full">
                 {commandCopied === job.id && (
@@ -173,6 +187,26 @@ export const CronJobItem = ({
                 </pre>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 pb-2 pt-4">
+            {scheduleDisplayMode === "both" && cronExplanation?.isValid && (
+              <div className="flex items-start gap-1.5 border-b border-primary/30 bg-primary/10 rounded text-primary px-2 py-0.5">
+                <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs italic">
+                  {cronExplanation.humanReadable}
+                </p>
+              </div>
+            )}
+
+            {job.comment && (
+              <p
+                className="text-xs text-muted-foreground italic truncate"
+                title={job.comment}
+              >
+                {job.comment}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 py-3">
@@ -265,26 +299,6 @@ export const CronJobItem = ({
               />
             )}
           </div>
-
-          {job.comment && (
-            <div className="flex items-center gap-2 pb-2 pt-4">
-              {cronExplanation?.isValid && (
-                <div className="flex items-start gap-1.5 border-b border-primary/30 bg-primary/10 rounded text-primary px-2 py-0.5">
-                  <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="text-xs italic">
-                    {cronExplanation.humanReadable}
-                  </p>
-                </div>
-              )}
-
-              <p
-                className="text-xs text-muted-foreground italic truncate"
-                title={job.comment}
-              >
-                {job.comment}
-              </p>
-            </div>
-          )}
         </div>
 
         <div className="flex items-center gap-2 justify-between sm:justify-end">
@@ -329,21 +343,27 @@ export const CronJobItem = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onToggleLogging(job.id)}
+              onClick={() => {
+                if (job.logsEnabled) {
+                  onViewLogs(job);
+                } else {
+                  onToggleLogging(job.id);
+                }
+              }}
               className="btn-outline h-8 px-3"
               title={
                 job.logsEnabled
-                  ? t("cronjobs.disableLogging")
+                  ? t("cronjobs.viewLogs")
                   : t("cronjobs.enableLogging")
               }
               aria-label={
                 job.logsEnabled
-                  ? t("cronjobs.disableLogging")
+                  ? t("cronjobs.viewLogs")
                   : t("cronjobs.enableLogging")
               }
             >
               {job.logsEnabled ? (
-                <FileX className="h-3 w-3" />
+                <FileText className="h-3 w-3" />
               ) : (
                 <FileOutput className="h-3 w-3" />
               )}
