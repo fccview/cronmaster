@@ -160,6 +160,8 @@
         "signingIn": "Signing in...",
         "signIn": "Sign In",
         "redirecting": "Redirecting...",
+        "redirectingToOIDC": "Redirecting to OIDC provider",
+        "pleaseWait": "Please wait...",
         "orContinueWith": "Or continue with",
         "loginFailed": "Login failed",
         "genericError": "An error occurred. Please try again."

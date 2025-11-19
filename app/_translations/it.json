@@ -159,6 +159,8 @@
         "signingIn": "Accesso in corso...",
         "signIn": "Accedi",
         "redirecting": "Reindirizzamento...",
+        "redirectingToOIDC": "Reindirizzamento al provider OIDC",
+        "pleaseWait": "Attendere prego...",
         "orContinueWith": "Oppure continua con",
         "loginFailed": "Accesso fallito",
         "genericError": "Si è verificato un errore. Riprova."
