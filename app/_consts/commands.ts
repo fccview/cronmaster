@@ -1,6 +1,5 @@
 export const WRITE_CRONTAB = (content: string, user: string) => {
-  const escapedContent = content.replace(/'/g, "'\\''");
-  return `crontab -u ${user} - << 'EOF'\n${escapedContent}\nEOF`;
+  return `crontab -u ${user} - << 'EOF'\n${content}\nEOF`;
 };
 
 export const READ_CRONTAB = (user: string) =>
@@ -9,8 +8,7 @@ export const READ_CRONTAB = (user: string) =>
 export const READ_CRON_FILE = () => 'crontab -l 2>/dev/null || echo ""';
 
 export const WRITE_CRON_FILE = (content: string) => {
-  const escapedContent = content.replace(/"/g, '\\"');
-  return `echo "${escapedContent}" | crontab -`;
+  return `crontab - << 'EOF'\n${content}\nEOF`;
 };
 
 export const WRITE_HOST_CRONTAB = (base64Content: string, user: string) => {
