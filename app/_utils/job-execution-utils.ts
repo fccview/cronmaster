@@ -7,9 +7,10 @@ import {
   saveRunningJob,
   updateRunningJob,
   getRunningJob,
+  removeRunningJob,
 } from "./running-jobs-utils";
 import { sseBroadcaster } from "./sse-broadcaster";
-import { generateLogFolderName } from "./wrapper-utils";
+import { generateLogFolderName, cleanupOldLogFiles } from "./wrapper-utils";
 
 const execAsync = promisify(exec);
 
@@ -129,6 +130,15 @@ const monitorRunningJob = (runId: string, pid: number): void => {
           status: exitCode === 0 ? "completed" : "failed",
           exitCode,
         });
+
+        setTimeout(async () => {
+          try {
+            removeRunningJob(runId);
+            await cleanupOldLogFiles(runningJob?.cronJobId || "");
+          } catch (error) {
+            console.error(`Error cleaning up job ${runId}:`, error);
+          }
+        }, 5000);
 
         const runningJob = getRunningJob(runId);
 

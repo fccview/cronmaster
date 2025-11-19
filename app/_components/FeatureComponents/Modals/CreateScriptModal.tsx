@@ -15,6 +15,8 @@ interface CreateScriptModalProps {
     content: string;
   };
   onFormChange: (updates: Partial<CreateScriptModalProps["form"]>) => void;
+  isDraft?: boolean;
+  onClearDraft?: () => void;
 }
 
 export const CreateScriptModal = ({
@@ -23,6 +25,8 @@ export const CreateScriptModal = ({
   onSubmit,
   form,
   onFormChange,
+  isDraft,
+  onClearDraft,
 }: CreateScriptModalProps) => {
   return (
     <ScriptModal
@@ -34,6 +38,8 @@ export const CreateScriptModal = ({
       submitButtonIcon={<Plus className="h-4 w-4 mr-2" />}
       form={form}
       onFormChange={onFormChange}
+      isDraft={isDraft}
+      onClearDraft={onClearDraft}
     />
   );
 }

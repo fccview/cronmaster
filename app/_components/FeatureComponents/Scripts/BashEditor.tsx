@@ -22,7 +22,7 @@ export const BashEditor = ({
   onChange,
   placeholder = "#!/bin/bash\n# Your bash script here\necho 'Hello World'",
   className = "",
-  label = "Bash Script",
+  label,
 }: BashEditorProps) => {
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -185,6 +185,7 @@ export const BashEditor = ({
             <span className="text-sm font-medium">{label}</span>
           </div>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handleCopy}

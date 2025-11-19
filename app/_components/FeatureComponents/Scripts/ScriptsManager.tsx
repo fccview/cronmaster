@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/_components/GlobalComponents/Cards/Card";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import {
@@ -32,6 +32,8 @@ interface ScriptsManagerProps {
   scripts: Script[];
 }
 
+const DRAFT_STORAGE_KEY = "cronjob_script_draft";
+
 export const ScriptsManager = ({
   scripts: initialScripts,
 }: ScriptsManagerProps) => {
@@ -46,17 +48,50 @@ export const ScriptsManager = ({
   const [isCloning, setIsCloning] = useState(false);
   const t = useTranslations();
 
-  const [createForm, setCreateForm] = useState({
+  const defaultFormValues = {
     name: "",
     description: "",
     content: "#!/bin/bash\n# Your script here\necho 'Hello World'",
-  });
+  };
+
+  const [createForm, setCreateForm] = useState(defaultFormValues);
 
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
     content: "",
   });
+
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (savedDraft) {
+        const parsedDraft = JSON.parse(savedDraft);
+        setCreateForm(parsedDraft);
+      }
+    } catch (error) {
+      console.error("Failed to load draft from localStorage:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(createForm));
+    } catch (error) {
+      console.error("Failed to save draft to localStorage:", error);
+    }
+  }, [createForm]);
+
+  const isDraft =
+    createForm.name.trim() !== "" ||
+    createForm.description.trim() !== "" ||
+    createForm.content !== defaultFormValues.content;
+
+  const handleClearDraft = () => {
+    setCreateForm(defaultFormValues);
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    showToast("success", t("scripts.draftCleared"));
+  };
 
   const refreshScripts = async () => {
     try {
@@ -78,6 +113,8 @@ export const ScriptsManager = ({
     if (result.success) {
       await refreshScripts();
       setIsCreateModalOpen(false);
+      setCreateForm(defaultFormValues);
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
       showToast("success", "Script created successfully");
     } else {
       showToast("error", "Failed to create script", result.message);
@@ -318,6 +355,8 @@ export const ScriptsManager = ({
         onFormChange={(updates) =>
           setCreateForm((prev) => ({ ...prev, ...updates }))
         }
+        isDraft={isDraft}
+        onClearDraft={handleClearDraft}
       />
 
       <EditScriptModal

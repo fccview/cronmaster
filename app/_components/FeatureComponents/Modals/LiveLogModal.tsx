@@ -61,7 +61,17 @@ export const LiveLogModal = ({
         if (lastOffsetRef.current === 0 && data.content) {
           setLogContent(data.content);
         } else if (data.newContent) {
-          setLogContent((prev) => prev + data.newContent);
+          setLogContent((prev) => {
+            const newContent = prev + data.newContent;
+            const maxLength = 2 * 1024 * 1024;
+            if (newContent.length > maxLength) {
+              return (
+                "[LOG CONTENT TRUNCATED FOR PERFORMANCE]\n\n" +
+                newContent.slice(-maxLength + 100)
+              );
+            }
+            return newContent;
+          });
         }
 
         setStatus(data.status || "running");
@@ -80,7 +90,7 @@ export const LiveLogModal = ({
 
     let interval: NodeJS.Timeout | null = null;
     if (isPageVisible) {
-      interval = setInterval(fetchLogs, 2000);
+      interval = setInterval(fetchLogs, 3000);
     }
 
     return () => {

@@ -109,7 +109,11 @@
         "commandPreview": "Command Preview",
         "scriptContent": "Script Content",
         "selectScriptToPreview": "Select a script to preview",
-        "searchScripts": "Search scripts..."
+        "searchScripts": "Search scripts...",
+        "draft": "Draft",
+        "clearDraft": "Clear Draft",
+        "close": "Close",
+        "draftCleared": "Draft cleared"
     },
     "sidebar": {
         "systemOverview": "System Overview",

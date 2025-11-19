@@ -6,7 +6,8 @@ import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { BashEditor } from "@/app/_components/FeatureComponents/Scripts/BashEditor";
 import { BashSnippetHelper } from "@/app/_components/FeatureComponents/Scripts/BashSnippetHelper";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
-import { FileText, Code } from "lucide-react";
+import { FileText, Code, Info, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ScriptModalProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ interface ScriptModalProps {
   };
   onFormChange: (updates: Partial<ScriptModalProps["form"]>) => void;
   additionalFormData?: Record<string, string>;
+  isDraft?: boolean;
+  onClearDraft?: () => void;
 }
 
 export const ScriptModal = ({
@@ -36,7 +39,11 @@ export const ScriptModal = ({
   form,
   onFormChange,
   additionalFormData = {},
+  isDraft = false,
+  onClearDraft,
 }: ScriptModalProps) => {
+  const t = useTranslations();
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -72,7 +79,7 @@ export const ScriptModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="2xl">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -121,6 +128,11 @@ export const ScriptModal = ({
               <h3 className="text-sm font-medium text-foreground">
                 Script Content <span className="text-red-500">*</span>
               </h3>
+              {isDraft && (
+                <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded-full">
+                  {t("scripts.draft")}
+                </span>
+              )}
             </div>
             <div className="flex-1 min-h-0">
               <BashEditor
@@ -133,19 +145,34 @@ export const ScriptModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-border/30">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            className="btn-outline"
-          >
-            Cancel
-          </Button>
-          <Button type="submit" className="btn-primary glow-primary">
-            {submitButtonIcon}
-            {submitButtonText}
-          </Button>
+        <div className="flex justify-between items-center gap-3 pt-4 border-t border-border/30">
+          <div>
+            {isDraft && onClearDraft && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClearDraft}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {t("scripts.clearDraft")}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="btn-outline"
+            >
+              {t("scripts.close")}
+            </Button>
+            <Button type="submit" className="btn-primary glow-primary">
+              {submitButtonIcon}
+              {submitButtonText}
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>
