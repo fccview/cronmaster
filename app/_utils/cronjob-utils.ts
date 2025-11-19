@@ -251,7 +251,13 @@ export const deleteCronJob = async (id: string): Promise<boolean> => {
 };
 
 export const updateCronJob = async (
-  jobData: { id: string; schedule: string; command: string; comment?: string; user: string },
+  jobData: {
+    id: string;
+    schedule: string;
+    command: string;
+    comment?: string;
+    user: string;
+  },
   schedule: string,
   command: string,
   comment: string = "",
@@ -275,7 +281,12 @@ export const updateCronJob = async (
 
     if (logsEnabled && !isWrapped) {
       const docker = await isDocker();
-      finalCommand = await wrapCommandWithLogger(jobData.id, command, docker, comment);
+      finalCommand = await wrapCommandWithLogger(
+        jobData.id,
+        command,
+        docker,
+        comment
+      );
     } else if (!logsEnabled && isWrapped) {
       finalCommand = unwrapCommand(command);
     } else if (logsEnabled && isWrapped) {
@@ -390,7 +401,14 @@ export const cleanupCrontab = async (): Promise<boolean> => {
 };
 
 export const findJobIndex = (
-  jobData: { id: string; schedule: string; command: string; comment?: string; user: string; paused?: boolean },
+  jobData: {
+    id: string;
+    schedule: string;
+    command: string;
+    comment?: string;
+    user: string;
+    paused?: boolean;
+  },
   lines: string[],
   user: string
 ): number => {

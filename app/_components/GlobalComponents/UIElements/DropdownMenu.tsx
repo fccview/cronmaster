@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, ReactNode } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { MoreVertical } from "lucide-react";
 
-const DROPDOWN_HEIGHT = 200; // Approximate max height of dropdown
+const DROPDOWN_HEIGHT = 200;
 
 interface DropdownMenuItem {
   label: string;
@@ -36,13 +36,11 @@ export const DropdownMenu = ({
 
   const handleOpenChange = (open: boolean) => {
     if (open && triggerRef.current) {
-      // Calculate if dropdown should be positioned above or below
       const rect = triggerRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
 
-      // Position above if there's not enough space below
       setPositionAbove(spaceBelow < DROPDOWN_HEIGHT && spaceAbove > spaceBelow);
     }
     setIsOpen(open);
