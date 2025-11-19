@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, AlertTriangle, Minimize2, Maximize2 } from "lucide-react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
+import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
@@ -14,6 +15,9 @@ interface LiveLogModalProps {
   jobId: string;
   jobComment?: string;
 }
+
+const MAX_LINES_FULL_RENDER = 10000;
+const TAIL_LINES = 5000;
 
 export const LiveLogModal = ({
   isOpen,
@@ -27,17 +31,29 @@ export const LiveLogModal = ({
     "running"
   );
   const [exitCode, setExitCode] = useState<number | null>(null);
+  const [tailMode, setTailMode] = useState<boolean>(false);
+  const [showSizeWarning, setShowSizeWarning] = useState<boolean>(false);
   const logEndRef = useRef<HTMLDivElement>(null);
   const { subscribe } = useSSEContext();
   const isPageVisible = usePageVisibility();
   const lastOffsetRef = useRef<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [fileSize, setFileSize] = useState<number>(0);
+  const [lineCount, setLineCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      lastOffsetRef.current = 0;
+      setLogContent("");
+      setTailMode(false);
+      setShowSizeWarning(false);
+      setFileSize(0);
+      setLineCount(0);
+    }
+  }, [isOpen, runId]);
 
   useEffect(() => {
     if (!isOpen || !runId || !isPageVisible) return;
-
-    lastOffsetRef.current = 0;
-    setLogContent("");
 
     const fetchLogs = async () => {
       if (abortControllerRef.current) {
@@ -56,20 +72,49 @@ export const LiveLogModal = ({
 
         if (data.fileSize !== undefined) {
           lastOffsetRef.current = data.fileSize;
+          setFileSize(data.fileSize);
+
+          if (data.fileSize > 10 * 1024 * 1024 && !showSizeWarning) {
+            setShowSizeWarning(true);
+          }
         }
 
         if (lastOffsetRef.current === 0 && data.content) {
-          setLogContent(data.content);
+          const lines = data.content.split("\n");
+          setLineCount(lines.length);
+
+          if (lines.length > MAX_LINES_FULL_RENDER) {
+            setTailMode(true);
+            setShowSizeWarning(true);
+            setLogContent(lines.slice(-TAIL_LINES).join("\n"));
+          } else {
+            setLogContent(data.content);
+          }
         } else if (data.newContent) {
           setLogContent((prev) => {
             const newContent = prev + data.newContent;
-            const maxLength = 2 * 1024 * 1024;
-            if (newContent.length > maxLength) {
-              return (
-                "[LOG CONTENT TRUNCATED FOR PERFORMANCE]\n\n" +
-                newContent.slice(-maxLength + 100)
-              );
+            const lines = newContent.split("\n");
+            setLineCount(lines.length);
+
+            if (lines.length > MAX_LINES_FULL_RENDER && !tailMode) {
+              setTailMode(true);
+              setShowSizeWarning(true);
+              return lines.slice(-TAIL_LINES).join("\n");
             }
+
+            if (tailMode && lines.length > TAIL_LINES) {
+              return lines.slice(-TAIL_LINES).join("\n");
+            }
+
+            const maxLength = 50 * 1024 * 1024;
+            if (newContent.length > maxLength) {
+              setTailMode(true);
+              setShowSizeWarning(true);
+              const truncated = newContent.slice(-maxLength + 200);
+              const truncatedLines = truncated.split("\n");
+              return truncatedLines.slice(-TAIL_LINES).join("\n");
+            }
+
             return newContent;
           });
         }
@@ -101,7 +146,7 @@ export const LiveLogModal = ({
         abortControllerRef.current.abort();
       }
     };
-  }, [isOpen, runId, isPageVisible]);
+  }, [isOpen, runId, isPageVisible, showSizeWarning, tailMode]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -111,33 +156,63 @@ export const LiveLogModal = ({
         setStatus("completed");
         setExitCode(event.data.exitCode);
 
-        fetch(`/api/logs/stream?runId=${runId}`)
+        fetch(`/api/logs/stream?runId=${runId}&offset=0`)
           .then((res) => res.json())
           .then((data) => {
             if (data.content) {
-              setLogContent(data.content);
+              const lines = data.content.split("\n");
+              setLineCount(lines.length);
+              if (tailMode && lines.length > TAIL_LINES) {
+                setLogContent(lines.slice(-TAIL_LINES).join("\n"));
+              } else {
+                setLogContent(data.content);
+              }
             }
           });
       } else if (event.type === "job-failed" && event.data.runId === runId) {
         setStatus("failed");
         setExitCode(event.data.exitCode);
 
-        fetch(`/api/logs/stream?runId=${runId}`)
+        fetch(`/api/logs/stream?runId=${runId}&offset=0`)
           .then((res) => res.json())
           .then((data) => {
             if (data.content) {
-              setLogContent(data.content);
+              const lines = data.content.split("\n");
+              setLineCount(lines.length);
+              if (tailMode && lines.length > TAIL_LINES) {
+                setLogContent(lines.slice(-TAIL_LINES).join("\n"));
+              } else {
+                setLogContent(data.content);
+              }
             }
           });
       }
     });
 
     return unsubscribe;
-  }, [isOpen, runId, subscribe]);
+  }, [isOpen, runId, subscribe, tailMode]);
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [logContent]);
+
+  const toggleTailMode = () => {
+    setTailMode(!tailMode);
+    if (!tailMode) {
+      const lines = logContent.split("\n");
+      if (lines.length > TAIL_LINES) {
+        setLogContent(lines.slice(-TAIL_LINES).join("\n"));
+      }
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   const titleWithStatus = (
     <div className="flex items-center gap-3">
@@ -172,6 +247,28 @@ export const LiveLogModal = ({
       preventCloseOnClickOutside={status === "running"}
     >
       <div className="space-y-4">
+        {showSizeWarning && (
+          <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 flex items-start gap-3">
+            <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-foreground">
+                <span className="font-medium">Large log file detected</span> ({formatFileSize(fileSize)})
+                {tailMode && ` - Tail mode enabled, showing last ${TAIL_LINES.toLocaleString()} lines`}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={toggleTailMode}
+              className="text-orange-500 hover:text-orange-400 hover:bg-orange-500/10 h-auto py-1 px-2 text-xs"
+              title={tailMode ? "Show all lines" : "Enable tail mode"}
+            >
+              {tailMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+            </Button>
+          </div>
+        )}
+
         <div className="bg-black/90 dark:bg-black/60 rounded-lg p-4 max-h-[60vh] overflow-auto">
           <pre className="text-xs font-mono text-green-400 whitespace-pre-wrap break-words">
             {logContent ||
@@ -180,8 +277,15 @@ export const LiveLogModal = ({
           </pre>
         </div>
 
-        <div className="text-xs text-muted-foreground">
-          Run ID: {runId} | Job ID: {jobId}
+        <div className="flex justify-between items-center text-xs text-muted-foreground">
+          <span>
+            Run ID: {runId} | Job ID: {jobId}
+          </span>
+          <span>
+            {lineCount.toLocaleString()} lines
+            {tailMode && ` (showing last ${TAIL_LINES.toLocaleString()})`}
+            {fileSize > 0 && ` • ${formatFileSize(fileSize)}`}
+          </span>
         </div>
       </div>
     </Modal>

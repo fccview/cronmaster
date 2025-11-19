@@ -42,11 +42,7 @@ export const loadTranslationMessages = async (locale: string): Promise<any> => {
 
 type TranslationFunction = (key: string) => string;
 
-/**
- * Get a translation function for a given locale.
- * This function is server-only and should only be called from server components
- * or server actions.
- */
+
 export const getTranslations = async (
   locale: string = process.env.LOCALE || "en"
 ): Promise<TranslationFunction> => {

@@ -3,10 +3,6 @@ import { validateSession, getSessionCookieName } from "@/app/_utils/session-util
 
 export const dynamic = "force-dynamic";
 
-/**
- * Validate session for middleware
- * This runs in Node.js runtime so it can access the filesystem
- */
 export async function GET(request: NextRequest) {
   const cookieName = getSessionCookieName();
   const sessionId = request.cookies.get(cookieName)?.value;

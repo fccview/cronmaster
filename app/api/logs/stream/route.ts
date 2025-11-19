@@ -72,31 +72,54 @@ export const GET = async (request: NextRequest) => {
     let latestLogFile: string | null = null;
     let latestStats: any = null;
     const jobStartTime = new Date(job.startTime);
+    const TIME_TOLERANCE_MS = 5000;
 
-    for (const file of sortedFiles) {
-      const filePath = path.join(logDir, file);
-      try {
-        const { stat } = await import("fs/promises");
-        const stats = await stat(filePath);
-        const fileCreateTime = stats.birthtime || stats.mtime;
-
-        if (fileCreateTime >= jobStartTime) {
-          latestLogFile = filePath;
-          latestStats = stats;
-          break;
+    if (job.logFileName) {
+      const cachedFilePath = path.join(logDir, job.logFileName);
+      if (existsSync(cachedFilePath)) {
+        try {
+          const { stat } = await import("fs/promises");
+          latestLogFile = cachedFilePath;
+          latestStats = await stat(latestLogFile);
+        } catch (error) {
+          console.error(`Error reading cached log file ${job.logFileName}:`, error);
         }
-      } catch (error) {
-        console.error(`Error checking file ${file}:`, error);
       }
     }
 
-    if (!latestLogFile && sortedFiles.length > 0) {
-      try {
-        const { stat } = await import("fs/promises");
-        latestLogFile = path.join(logDir, sortedFiles[0]);
-        latestStats = await stat(latestLogFile);
-      } catch (error) {
-        console.error(`Error stat-ing fallback file:`, error);
+    if (!latestLogFile) {
+      for (const file of sortedFiles) {
+        const filePath = path.join(logDir, file);
+        try {
+          const { stat } = await import("fs/promises");
+          const stats = await stat(filePath);
+          const fileCreateTime = stats.birthtime || stats.mtime;
+
+          if (fileCreateTime.getTime() >= jobStartTime.getTime() - TIME_TOLERANCE_MS) {
+            latestLogFile = filePath;
+            latestStats = stats;
+            break;
+          }
+        } catch (error) {
+          console.error(`Error checking file ${file}:`, error);
+        }
+      }
+
+      if (!latestLogFile && sortedFiles.length > 0) {
+        try {
+          const { stat } = await import("fs/promises");
+          const fallbackPath = path.join(logDir, sortedFiles[0]);
+          const fallbackStats = await stat(fallbackPath);
+          const now = new Date();
+          const fileAge = now.getTime() - (fallbackStats.birthtime || fallbackStats.mtime).getTime();
+
+          if (fileAge <= TIME_TOLERANCE_MS) {
+            latestLogFile = fallbackPath;
+            latestStats = fallbackStats;
+          }
+        } catch (error) {
+          console.error(`Error stat-ing fallback file:`, error);
+        }
       }
     }
 

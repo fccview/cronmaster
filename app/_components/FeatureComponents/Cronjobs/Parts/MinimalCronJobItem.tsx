@@ -99,12 +99,12 @@ export const MinimalCronJobItem = ({
     },
     ...(job.logsEnabled
       ? [
-          {
-            label: t("cronjobs.viewLogs"),
-            icon: <Code className="h-3 w-3" />,
-            onClick: () => onViewLogs(job),
-          },
-        ]
+        {
+          label: t("cronjobs.viewLogs"),
+          icon: <Code className="h-3 w-3" />,
+          onClick: () => onViewLogs(job),
+        },
+      ]
       : []),
     {
       label: job.paused
@@ -139,12 +139,10 @@ export const MinimalCronJobItem = ({
   return (
     <div
       key={job.id}
-      className={`glass-card p-3 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors ${
-        isDropdownOpen ? "relative z-10" : ""
-      }`}
+      className={`glass-card p-3 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors ${isDropdownOpen ? "relative z-10" : ""
+        }`}
     >
       <div className="flex items-center gap-3">
-        {/* Schedule display - minimal */}
         <div className="flex items-center gap-1 flex-shrink-0">
           {scheduleDisplayMode === "cron" && (
             <code className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded font-mono border border-purple-500/20">

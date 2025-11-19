@@ -113,9 +113,6 @@ export const runJobInBackground = async (
   };
 };
 
-/**
- * Monitor a running job and update status when complete
- */
 const monitorRunningJob = (runId: string, pid: number): void => {
   const checkInterval = setInterval(async () => {
     try {
