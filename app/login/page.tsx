@@ -8,7 +8,6 @@ export default async function LoginPage() {
   const hasPassword = !!process.env.AUTH_PASSWORD;
   const hasOIDC = process.env.SSO_MODE === "oidc";
 
-  // Read package.json to get version
   const packageJsonPath = path.join(process.cwd(), "package.json");
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
   const version = packageJson.version;
