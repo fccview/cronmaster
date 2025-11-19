@@ -127,14 +127,12 @@ export const RestoreBackupModal = ({
                 className="glass-card p-3 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  {/* Schedule */}
                   <div className="flex-shrink-0">
                     <code className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded font-mono border border-purple-500/20">
                       {backup.job.schedule}
                     </code>
                   </div>
 
-                  {/* Command */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {commandCopied === backup.filename && (
@@ -155,7 +153,6 @@ export const RestoreBackupModal = ({
                     </div>
                   </div>
 
-                  {/* User & Date */}
                   <div className="flex items-center gap-3 text-xs text-muted-foreground flex-shrink-0">
                     <div className="flex items-center gap-1">
                       <User className="h-3 w-3" />
@@ -167,7 +164,6 @@ export const RestoreBackupModal = ({
                     </div>
                   </div>
 
-                  {/* Action buttons */}
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
                       variant="ghost"
@@ -198,7 +194,6 @@ export const RestoreBackupModal = ({
                   </div>
                 </div>
 
-                {/* Comment (if present) */}
                 {backup.job.comment && (
                   <p className="text-xs text-muted-foreground italic mt-2 ml-0">
                     {backup.job.comment}

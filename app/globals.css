@@ -107,31 +107,26 @@
     font-variation-settings: normal;
   }
   
-  /* Terminal-style fonts for code elements */
   code, pre, .font-mono {
     font-family: var(--font-mono);
     font-feature-settings: "liga" 1, "calt" 1;
   }
   
-  /* Brand styling */
   .brand-text {
     font-family: var(--font-mono);
     font-weight: 600;
     letter-spacing: -0.025em;
   }
   
-  /* Terminal-style headings */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sans);
     font-weight: 600;
   }
   
-  /* Terminal-style buttons and inputs */
   button, input, textarea, select {
     font-family: var(--font-sans);
   }
   
-  /* Code blocks and terminal areas */
   .terminal-text {
     font-family: var(--font-mono);
     font-size: 0.875rem;
@@ -139,7 +134,6 @@
   }
 }
 
-/* Cyberpunk-inspired gradient background */
 @layer components {
   .hero-gradient {
     background: linear-gradient(135deg, 
@@ -171,7 +165,6 @@
       radial-gradient(circle at 40% 40%, hsl(340 100% 45% / 0.06) 0%, transparent 50%);
   }
 
-  /* Glass morphism cards */
   .glass-card {
     @apply backdrop-blur-md bg-card/80 border border-border/50;
   }
@@ -184,7 +177,6 @@
     @apply glass-card;
   }
 
-  /* Vibrant gradient text */
   .brand-gradient {
     @apply bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 bg-clip-text text-transparent;
   }
@@ -201,7 +193,6 @@
     @apply bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent;
   }
 
-  /* Neon glow effects */
   .glow-primary {
     box-shadow: none;
   }
@@ -222,12 +213,10 @@
     box-shadow: none;
   }
 
-  /* Status indicators */
   .status-error {
     @apply bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30;
   }
 
-  /* Custom scrollbar */
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
@@ -250,7 +239,6 @@
     background-color: hsl(var(--muted-foreground) / 0.5);
   }
 
-  /* Tooltip styles */
   .tooltip {
     @apply absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg opacity-0 invisible transition-all duration-200;
   }
@@ -259,7 +247,6 @@
     @apply opacity-100 visible;
   }
 
-  /* Responsive text utilities */
   .text-responsive {
     @apply text-sm sm:text-base lg:text-lg;
   }
@@ -272,7 +259,6 @@
     @apply text-lg sm:text-xl lg:text-2xl;
   }
 
-  /* Button variants with new colors */
   .btn-primary {
     @apply bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all;
   }
@@ -305,7 +291,6 @@
     @apply bg-gradient-to-r from-red-600 to-pink-600 text-white hover:from-red-700 hover:to-pink-700 transition-all;
   }
 
-  /* Neon accent borders */
   .neon-border {
     border: 1px solid transparent;
     background: linear-gradient(white, white) padding-box,
@@ -321,7 +306,7 @@
 
 @layer utilities {
   body.sidebar-collapsed main.lg\:ml-80 {
-    margin-left: 4rem !important; /* 64px */
+    margin-left: 4rem !important;
   }
 }
 

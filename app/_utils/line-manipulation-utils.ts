@@ -1,5 +1,20 @@
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { generateShortUUID } from "@/app/_utils/uuid-utils";
+import { createHash } from "crypto";
+
+const generateStableJobId = (
+  schedule: string,
+  command: string,
+  user: string,
+  comment?: string,
+  lineIndex?: number
+): string => {
+  const content = `${schedule}|${command}|${user}|${comment || ""}|${
+    lineIndex || 0
+  }`;
+  const hash = createHash("md5").update(content).digest("hex");
+  return hash.substring(0, 8);
+};
 
 export const pauseJobInLines = (
   lines: string[],
@@ -55,7 +70,11 @@ export const pauseJobInLines = (
         if (currentJobIndex === targetJobIndex) {
           const commentText = trimmedLine.substring(1).trim();
           const { comment, logsEnabled } = parseCommentMetadata(commentText);
-          const formattedComment = formatCommentWithMetadata(comment, logsEnabled, uuid);
+          const formattedComment = formatCommentWithMetadata(
+            comment,
+            logsEnabled,
+            uuid
+          );
           const nextLine = lines[i + 1].trim();
           const pausedEntry = `# PAUSED: ${formattedComment}\n# ${nextLine}`;
           newCronEntries.push(pausedEntry);
@@ -128,8 +147,14 @@ export const resumeJobInLines = (
         const { comment, logsEnabled } = parseCommentMetadata(commentText);
         if (i + 1 < lines.length && lines[i + 1].trim().startsWith("# ")) {
           const cronLine = lines[i + 1].trim().substring(2);
-          const formattedComment = formatCommentWithMetadata(comment, logsEnabled, uuid);
-          const resumedEntry = formattedComment ? `# ${formattedComment}\n${cronLine}` : cronLine;
+          const formattedComment = formatCommentWithMetadata(
+            comment,
+            logsEnabled,
+            uuid
+          );
+          const resumedEntry = formattedComment
+            ? `# ${formattedComment}\n${cronLine}`
+            : cronLine;
           newCronEntries.push(resumedEntry);
           i += 2;
         } else {
@@ -175,7 +200,9 @@ export const parseCommentMetadata = (
   let uuid: string | undefined;
 
   if (parts.length > 1) {
-    const firstPartIsMetadata = parts[0].match(/logsEnabled:\s*(true|false)/i) || parts[0].match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
+    const firstPartIsMetadata =
+      parts[0].match(/logsEnabled:\s*(true|false)/i) ||
+      parts[0].match(/id:\s*([a-z0-9]{8}|[a-z0-9]{4}-[a-z0-9]{4})/i);
 
     if (firstPartIsMetadata) {
       comment = "";
@@ -186,9 +213,11 @@ export const parseCommentMetadata = (
         logsEnabled = logsMatch[1].toLowerCase() === "true";
       }
 
-      const uuidMatch = metadata.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
-      if (uuidMatch) {
-        uuid = uuidMatch[1].toLowerCase();
+      const uuidMatches = Array.from(
+        metadata.matchAll(/id:\s*([a-z0-9]{8}|[a-z0-9]{4}-[a-z0-9]{4})/gi)
+      );
+      if (uuidMatches.length > 0) {
+        uuid = uuidMatches[uuidMatches.length - 1][1].toLowerCase();
       }
     } else {
       comment = parts[0] || "";
@@ -199,14 +228,18 @@ export const parseCommentMetadata = (
         logsEnabled = logsMatch[1].toLowerCase() === "true";
       }
 
-      const uuidMatch = metadata.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
-      if (uuidMatch) {
-        uuid = uuidMatch[1].toLowerCase();
+      const uuidMatches = Array.from(
+        metadata.matchAll(/id:\s*([a-z0-9]{8}|[a-z0-9]{4}-[a-z0-9]{4})/gi)
+      );
+      if (uuidMatches.length > 0) {
+        uuid = uuidMatches[uuidMatches.length - 1][1].toLowerCase();
       }
     }
   } else {
     const logsMatch = commentText.match(/logsEnabled:\s*(true|false)/i);
-    const uuidMatch = commentText.match(/id:\s*([a-z0-9]{4}-[a-z0-9]{4})/i);
+    const uuidMatch = commentText.match(
+      /id:\s*([a-z0-9]{8}|[a-z0-9]{4}-[a-z0-9]{4})/i
+    );
 
     if (logsMatch || uuidMatch) {
       if (logsMatch) {
@@ -288,7 +321,8 @@ export const parseJobsFromLines = (
             const schedule = parts.slice(0, 5).join(" ");
             const command = parts.slice(5).join(" ");
 
-            const jobId = uuid || generateShortUUID();
+            const jobId =
+              uuid || generateStableJobId(schedule, command, user, comment, i);
 
             jobs.push({
               id: jobId,
@@ -317,7 +351,8 @@ export const parseJobsFromLines = (
         lines[i + 1].trim()
       ) {
         const commentText = trimmedLine.substring(1).trim();
-        const { comment, logsEnabled, uuid } = parseCommentMetadata(commentText);
+        const { comment, logsEnabled, uuid } =
+          parseCommentMetadata(commentText);
         currentComment = comment;
         currentLogsEnabled = logsEnabled;
         currentUuid = uuid;
@@ -343,7 +378,9 @@ export const parseJobsFromLines = (
     }
 
     if (schedule && command) {
-      const jobId = currentUuid || generateShortUUID();
+      const jobId =
+        currentUuid ||
+        generateStableJobId(schedule, command, user, currentComment, i);
 
       jobs.push({
         id: jobId,
@@ -545,7 +582,11 @@ export const updateJobInLines = (
     }
 
     if (currentJobIndex === targetJobIndex) {
-      const formattedComment = formatCommentWithMetadata(comment, logsEnabled, uuid);
+      const formattedComment = formatCommentWithMetadata(
+        comment,
+        logsEnabled,
+        uuid
+      );
       const newEntry = formattedComment
         ? `# ${formattedComment}\n${schedule} ${command}`
         : `${schedule} ${command}`;

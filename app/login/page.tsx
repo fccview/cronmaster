@@ -7,8 +7,8 @@ import path from "path";
 export default async function LoginPage() {
   const hasPassword = !!process.env.AUTH_PASSWORD;
   const hasOIDC = process.env.SSO_MODE === "oidc";
+  const oidcAutoRedirect = process.env.OIDC_AUTO_REDIRECT === "true";
 
-  // Read package.json to get version
   const packageJsonPath = path.join(process.cwd(), "package.json");
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
   const version = packageJson.version;
@@ -20,6 +20,7 @@ export default async function LoginPage() {
         <LoginForm
           hasPassword={hasPassword}
           hasOIDC={hasOIDC}
+          oidcAutoRedirect={oidcAutoRedirect}
           version={version}
         />
       </div>

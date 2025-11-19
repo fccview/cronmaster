@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
@@ -12,25 +12,43 @@ import {
   CardDescription,
   CardContent,
 } from "@/app/_components/GlobalComponents/Cards/Card";
-import { Lock, Eye, EyeOff, Shield, AlertTriangle } from "lucide-react";
+import { Lock, Eye, EyeOff, Shield, AlertTriangle, Loader2 } from "lucide-react";
 
 interface LoginFormProps {
   hasPassword?: boolean;
   hasOIDC?: boolean;
+  oidcAutoRedirect?: boolean;
   version?: string;
 }
 
 export const LoginForm = ({
   hasPassword = false,
   hasOIDC = false,
+  oidcAutoRedirect = false,
   version,
 }: LoginFormProps) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations();
+
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+      return;
+    }
+
+    if (oidcAutoRedirect && !hasPassword && hasOIDC) {
+      setIsRedirecting(true);
+      window.location.href = "/api/oidc/login";
+    }
+  }, [oidcAutoRedirect, hasPassword, hasOIDC, searchParams]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +82,24 @@ export const LoginForm = ({
     setIsLoading(true);
     window.location.href = "/api/oidc/login";
   };
+
+  if (isRedirecting) {
+    return (
+      <Card className="w-full max-w-md shadow-xl">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <div className="text-center">
+              <p className="text-lg font-medium">{t("login.redirectingToOIDC")}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("login.pleaseWait")}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md shadow-xl">

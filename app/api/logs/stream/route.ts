@@ -68,30 +68,118 @@ export const GET = async (request: NextRequest) => {
     }
 
     const sortedFiles = files.sort().reverse();
-    const latestLogFile = path.join(logDir, sortedFiles[0]);
 
-    const fullContent = await readFile(latestLogFile, "utf-8");
-    const fileSize = Buffer.byteLength(fullContent, "utf-8");
+    let latestLogFile: string | null = null;
+    let latestStats: any = null;
+    const jobStartTime = new Date(job.startTime);
+    const TIME_TOLERANCE_MS = 5000;
 
-    let content = fullContent;
+    if (job.logFileName) {
+      const cachedFilePath = path.join(logDir, job.logFileName);
+      if (existsSync(cachedFilePath)) {
+        try {
+          const { stat } = await import("fs/promises");
+          latestLogFile = cachedFilePath;
+          latestStats = await stat(latestLogFile);
+        } catch (error) {
+          console.error(`Error reading cached log file ${job.logFileName}:`, error);
+        }
+      }
+    }
+
+    if (!latestLogFile) {
+      for (const file of sortedFiles) {
+        const filePath = path.join(logDir, file);
+        try {
+          const { stat } = await import("fs/promises");
+          const stats = await stat(filePath);
+          const fileCreateTime = stats.birthtime || stats.mtime;
+
+          if (fileCreateTime.getTime() >= jobStartTime.getTime() - TIME_TOLERANCE_MS) {
+            latestLogFile = filePath;
+            latestStats = stats;
+            break;
+          }
+        } catch (error) {
+          console.error(`Error checking file ${file}:`, error);
+        }
+      }
+
+      if (!latestLogFile && sortedFiles.length > 0) {
+        try {
+          const { stat } = await import("fs/promises");
+          const fallbackPath = path.join(logDir, sortedFiles[0]);
+          const fallbackStats = await stat(fallbackPath);
+          const now = new Date();
+          const fileAge = now.getTime() - (fallbackStats.birthtime || fallbackStats.mtime).getTime();
+
+          if (fileAge <= TIME_TOLERANCE_MS) {
+            latestLogFile = fallbackPath;
+            latestStats = fallbackStats;
+          }
+        } catch (error) {
+          console.error(`Error stat-ing fallback file:`, error);
+        }
+      }
+    }
+
+    if (!latestLogFile || !latestStats) {
+      return NextResponse.json(
+        {
+          status: job.status,
+          content: "",
+          message: "No log file found for this run",
+        },
+        { status: 200 }
+      );
+    }
+
+    const fileSize = latestStats.size;
+
+    const MAX_RESPONSE_SIZE = 1024 * 1024;
+    const MAX_TOTAL_SIZE = 10 * 1024 * 1024;
+
+    let content = "";
     let newContent = "";
 
-    if (offset > 0 && offset < fileSize) {
-      newContent = fullContent.slice(offset);
-      content = newContent;
-    } else if (offset === 0) {
-      content = fullContent;
-      newContent = fullContent;
-    } else if (offset >= fileSize) {
-      content = "";
-      newContent = "";
+    if (fileSize > MAX_TOTAL_SIZE) {
+      const startPos = Math.max(0, fileSize - MAX_TOTAL_SIZE);
+      const buffer = Buffer.alloc(MAX_TOTAL_SIZE);
+      const { open } = await import("fs/promises");
+      const fileHandle = await open(latestLogFile, "r");
+
+      try {
+        await fileHandle.read(buffer, 0, MAX_TOTAL_SIZE, startPos);
+        content = buffer.toString("utf-8");
+        newContent = content.slice(Math.max(0, offset - startPos));
+      } finally {
+        await fileHandle.close();
+      }
+
+      if (startPos > 0) {
+        content = `[LOG TRUNCATED - Showing last ${MAX_TOTAL_SIZE / 1024 / 1024
+          }MB of ${fileSize / 1024 / 1024}MB total]\n\n${content}`;
+      }
+    } else {
+      const fullContent = await readFile(latestLogFile, "utf-8");
+
+      if (offset > 0 && offset < fileSize) {
+        newContent = fullContent.slice(offset);
+        content = newContent;
+      } else if (offset === 0) {
+        content = fullContent;
+        newContent = fullContent;
+      } else if (offset >= fileSize) {
+        content = "";
+        newContent = "";
+      }
     }
 
     return NextResponse.json({
       status: job.status,
       content,
       newContent,
-      fullContent: offset === 0 ? fullContent : undefined,
+      fullContent: offset === 0 ? content : undefined,
       logFile: sortedFiles[0],
       isComplete: job.status !== "running",
       exitCode: job.exitCode,

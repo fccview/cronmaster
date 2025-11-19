@@ -84,6 +84,7 @@ Translation loading priority:
 | `OIDC_CLIENT_SECRET` | `N/A`                   | OIDC client secret (optional, for confidential clients)                                                     |
 | `OIDC_LOGOUT_URL`    | `N/A`                   | Custom logout URL for OIDC provider                                                                         |
 | `OIDC_GROUPS_SCOPE`  | `groups`                | Scope for requesting user groups                                                                            |
+| `OIDC_AUTO_REDIRECT` | `false`                 | Automatically redirect to OIDC provider when it's the only authentication method (no password set)          |
 | `INTERNAL_API_URL`   | `http://localhost:3000` | Internal API URL override for specific nginx configurations with SSO                                        |
 
 ### API Authentication
@@ -134,7 +135,7 @@ services:
       - AUTH_PASSWORD=your_secure_password
       - HOST_CRONTAB_USER=root
       - APP_URL=https://cron.yourdomain.com
-      - LOCALE=en # Can be any locale code, including custom ones
+      - LOCALE=en 
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       - LIVE_UPDATES=true
       - MAX_LOG_AGE_DAYS=30
@@ -144,6 +145,7 @@ services:
       - OIDC_CLIENT_ID=your_client_id
       - OIDC_CLIENT_SECRET=your_client_secret
       - OIDC_LOGOUT_URL=https://auth.yourdomain.com/logout
+      - OIDC_AUTO_REDIRECT=true 
       - API_KEY=your_api_key
 ```
 

@@ -108,7 +108,11 @@
         "commandPreview": "Anteprima Comando",
         "scriptContent": "Contenuto Script",
         "selectScriptToPreview": "Seleziona uno script per l'anteprima",
-        "searchScripts": "Cerca script..."
+        "searchScripts": "Cerca script...",
+        "draft": "Bozza",
+        "clearDraft": "Cancella Bozza",
+        "close": "Chiudi",
+        "draftCleared": "Bozza cancellata"
     },
     "sidebar": {
         "systemOverview": "Panoramica del Sistema",
@@ -155,6 +159,8 @@
         "signingIn": "Accesso in corso...",
         "signIn": "Accedi",
         "redirecting": "Reindirizzamento...",
+        "redirectingToOIDC": "Reindirizzamento al provider OIDC",
+        "pleaseWait": "Attendere prego...",
         "orContinueWith": "Oppure continua con",
         "loginFailed": "Accesso fallito",
         "genericError": "Si è verificato un errore. Riprova."

@@ -109,7 +109,11 @@
         "commandPreview": "Command Preview",
         "scriptContent": "Script Content",
         "selectScriptToPreview": "Select a script to preview",
-        "searchScripts": "Search scripts..."
+        "searchScripts": "Search scripts...",
+        "draft": "Draft",
+        "clearDraft": "Clear Draft",
+        "close": "Close",
+        "draftCleared": "Draft cleared"
     },
     "sidebar": {
         "systemOverview": "System Overview",
@@ -156,6 +160,8 @@
         "signingIn": "Signing in...",
         "signIn": "Sign In",
         "redirecting": "Redirecting...",
+        "redirectingToOIDC": "Redirecting to OIDC provider",
+        "pleaseWait": "Please wait...",
         "orContinueWith": "Or continue with",
         "loginFailed": "Login failed",
         "genericError": "An error occurred. Please try again."
