@@ -52,8 +52,13 @@ export const UserSwitcher = ({
   return (
     <div className={`relative ${className}`}>
       <Button
+        type="button"
         variant="outline"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className="w-full justify-between"
       >
         <div className="flex items-center gap-2">
@@ -67,8 +72,11 @@ export const UserSwitcher = ({
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
           {users.map((user) => (
             <button
+              type="button"
               key={user}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 onUserChange(user);
                 setIsOpen(false);
               }}

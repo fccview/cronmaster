@@ -56,16 +56,19 @@ export async function requireAuth(
     return null;
   }
 
-  const hasValidApiKey = validateApiKey(request);
-  if (hasValidApiKey) {
-    return null;
+  const apiKey = process.env.API_KEY;
+  if (apiKey) {
+    const hasValidApiKey = validateApiKey(request);
+    if (hasValidApiKey) {
+      return null;
+    }
   }
 
   if (process.env.DEBUGGER) {
     console.log("[API Auth] Unauthorized request:", {
       path: request.nextUrl.pathname,
       hasSession: hasValidSession,
-      hasApiKey: hasValidApiKey,
+      apiKeyConfigured: !!process.env.API_KEY,
       hasAuthHeader: !!request.headers.get("authorization"),
     });
   }
