@@ -15,3 +15,4 @@ node_modules
 tsconfig.tsbuildinfo
 docker-compose.test.yml
 /data
+claude.md

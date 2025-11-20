@@ -11,6 +11,7 @@ import {
 } from "./running-jobs-utils";
 import { sseBroadcaster } from "./sse-broadcaster";
 import { generateLogFolderName, cleanupOldLogFiles } from "./wrapper-utils";
+import { watchForLogFile } from "./log-watcher";
 
 const execAsync = promisify(exec);
 
@@ -84,18 +85,29 @@ export const runJobInBackground = async (
 
   child.unref();
 
+  const jobStartTime = new Date();
+
   saveRunningJob({
     id: runId,
     cronJobId: job.id,
     pid: child.pid!,
-    startTime: new Date().toISOString(),
+    startTime: jobStartTime.toISOString(),
     status: "running",
     logFolderName,
   });
 
+  watchForLogFile(runId, logFolderName, jobStartTime, (logFileName) => {
+    try {
+      updateRunningJob(runId, { logFileName });
+      console.log(`[RunningJob] Cached logFileName for ${runId}: ${logFileName}`);
+    } catch (error) {
+      console.error(`[RunningJob] Failed to cache logFileName for ${runId}:`, error);
+    }
+  });
+
   sseBroadcaster.broadcast({
     type: "job-started",
-    timestamp: new Date().toISOString(),
+    timestamp: jobStartTime.toISOString(),
     data: {
       runId,
       cronJobId: job.id,

@@ -17,6 +17,11 @@ export const GET = async (request: NextRequest) => {
     const offsetStr = searchParams.get("offset");
     const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
 
+    const maxLinesStr = searchParams.get("maxLines");
+    const maxLines = maxLinesStr
+      ? Math.min(Math.max(parseInt(maxLinesStr, 10), 100), 5000)
+      : 500;
+
     if (!runId) {
       return NextResponse.json(
         { error: "runId parameter is required" },
@@ -136,42 +141,40 @@ export const GET = async (request: NextRequest) => {
 
     const fileSize = latestStats.size;
 
-    const MAX_RESPONSE_SIZE = 1024 * 1024;
-    const MAX_TOTAL_SIZE = 10 * 1024 * 1024;
+    const fullContent = await readFile(latestLogFile, "utf-8");
+
+    const allLines = fullContent.split("\n");
+    const totalLines = allLines.length;
+
+    let displayedLines: string[];
+    let truncated = false;
+
+    if (totalLines > maxLines) {
+      displayedLines = allLines.slice(-maxLines);
+      truncated = true;
+    } else {
+      displayedLines = allLines;
+    }
 
     let content = "";
     let newContent = "";
 
-    if (fileSize > MAX_TOTAL_SIZE) {
-      const startPos = Math.max(0, fileSize - MAX_TOTAL_SIZE);
-      const buffer = Buffer.alloc(MAX_TOTAL_SIZE);
-      const { open } = await import("fs/promises");
-      const fileHandle = await open(latestLogFile, "r");
-
-      try {
-        await fileHandle.read(buffer, 0, MAX_TOTAL_SIZE, startPos);
-        content = buffer.toString("utf-8");
-        newContent = content.slice(Math.max(0, offset - startPos));
-      } finally {
-        await fileHandle.close();
+    if (offset === 0) {
+      if (truncated) {
+        content = `[LOG TRUNCATED - Showing last ${maxLines} of ${totalLines} lines (${(fileSize / 1024 / 1024).toFixed(2)}MB total)]\n\n` + displayedLines.join("\n");
+      } else {
+        content = displayedLines.join("\n");
       }
-
-      if (startPos > 0) {
-        content = `[LOG TRUNCATED - Showing last ${MAX_TOTAL_SIZE / 1024 / 1024
-          }MB of ${fileSize / 1024 / 1024}MB total]\n\n${content}`;
-      }
+      newContent = content;
     } else {
-      const fullContent = await readFile(latestLogFile, "utf-8");
+      if (offset < fileSize) {
+        const newBytes = fullContent.slice(offset);
+        newContent = newBytes;
 
-      if (offset > 0 && offset < fileSize) {
-        newContent = fullContent.slice(offset);
-        content = newContent;
-      } else if (offset === 0) {
-        content = fullContent;
-        newContent = fullContent;
-      } else if (offset >= fileSize) {
-        content = "";
-        newContent = "";
+        const newLines = newBytes.split("\n").filter(l => l.length > 0);
+        if (newLines.length > 0) {
+          content = newBytes;
+        }
       }
     }
 
@@ -185,6 +188,9 @@ export const GET = async (request: NextRequest) => {
       exitCode: job.exitCode,
       fileSize,
       offset,
+      totalLines,
+      displayedLines: displayedLines.length,
+      truncated,
     });
   } catch (error: any) {
     console.error("Error streaming log:", error);

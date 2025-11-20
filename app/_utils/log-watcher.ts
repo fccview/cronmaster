@@ -95,3 +95,62 @@ export const stopLogWatcher = () => {
     watcher = null;
   }
 };
+
+export const watchForLogFile = (
+  runId: string,
+  logFolderName: string,
+  jobStartTime: Date,
+  callback: (logFileName: string) => void
+): NodeJS.Timeout => {
+  const logDir = path.join(LOGS_DIR, logFolderName);
+  const startTime = jobStartTime.getTime();
+  const maxAttempts = 30;
+  let attempts = 0;
+
+  const checkInterval = setInterval(() => {
+    attempts++;
+
+    if (attempts > maxAttempts) {
+      console.warn(`[LogWatcher] Timeout waiting for log file for ${runId}`);
+      clearInterval(checkInterval);
+      return;
+    }
+
+    try {
+      if (!existsSync(logDir)) {
+        return;
+      }
+
+      const files = readdirSync(logDir);
+      const logFiles = files
+        .filter((f) => f.endsWith(".log"))
+        .map((f) => {
+          const filePath = path.join(logDir, f);
+          try {
+            const stats = statSync(filePath);
+            return {
+              name: f,
+              birthtime: stats.birthtime || stats.mtime,
+            };
+          } catch {
+            return null;
+          }
+        })
+        .filter((f): f is { name: string; birthtime: Date } => f !== null);
+
+      const matchingFile = logFiles.find((f) => {
+        const fileTime = f.birthtime.getTime();
+        return fileTime >= startTime - 5000 && fileTime <= startTime + 30000;
+      });
+
+      if (matchingFile) {
+        clearInterval(checkInterval);
+        callback(matchingFile.name);
+      }
+    } catch (error) {
+      console.error(`[LogWatcher] Error watching for log file ${runId}:`, error);
+    }
+  }, 500);
+
+  return checkInterval;
+};
