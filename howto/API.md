@@ -106,6 +106,104 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ---
 
+### PATCH /api/cronjobs/:id
+
+Update a cron job.
+
+**Parameters:**
+
+- `id` (string) - Cron job ID
+
+**Request:**
+
+```json
+{
+  "schedule": "0 3 * * *",
+  "command": "/usr/bin/echo updated",
+  "comment": "Updated job",
+  "logsEnabled": true
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Cron job updated successfully"
+}
+```
+
+**Example:**
+
+```bash
+curl -X PATCH \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"schedule":"0 3 * * *","command":"/usr/bin/echo updated"}' \
+  https://your-cronmaster-url.com/api/cronjobs/fccview-0
+```
+
+---
+
+### DELETE /api/cronjobs/:id
+
+Delete a cron job.
+
+**Parameters:**
+
+- `id` (string) - Cron job ID
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Cron job deleted successfully"
+}
+```
+
+**Example:**
+
+```bash
+curl -X DELETE \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  https://your-cronmaster-url.com/api/cronjobs/fccview-0
+```
+
+---
+
+### GET /api/cronjobs/:id/execute
+
+Manually execute a cron job.
+
+**Parameters:**
+
+- `id` (string) - Cron job ID
+
+**Query Parameters:**
+
+- `runInBackground` (boolean, optional) - Whether to run the job in background. Defaults to `true`.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "runId": "run-123",
+  "message": "Job execution started"
+}
+```
+
+**Example:**
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://your-cronmaster-url.com/api/cronjobs/fccview-0/execute?runInBackground=true
+```
+
+---
+
 ### GET /api/scripts
 
 List all scripts.
@@ -196,6 +294,127 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ---
 
+### GET /api/logs/stream
+
+Stream job execution logs.
+
+**Query Parameters:**
+
+- `runId` (string, required) - The run ID of the job execution
+- `offset` (number, optional) - Byte offset for streaming new content. Defaults to `0`.
+- `maxLines` (number, optional) - Maximum lines to return. Defaults to `500`, min `100`, max `5000`.
+
+**Note:** When `offset=0`, the endpoint only reads the last `maxLines` from the file for performance. This means `totalLines` is only returned when the file is small enough to read entirely (not truncated).
+
+**Response:**
+
+```json
+{
+  "status": "running",
+  "content": "[log content]",
+  "newContent": "[new log content since offset]",
+  "logFile": "2025-11-10_14-30-00.log",
+  "isComplete": false,
+  "exitCode": null,
+  "fileSize": 1024,
+  "offset": 0,
+  "totalLines": 50,
+  "displayedLines": 50,
+  "truncated": false
+}
+```
+
+**Response Fields:**
+
+- `status` (string) - Job status: "running", "completed", or "failed"
+- `content` (string) - The log content to display
+- `newContent` (string) - New content since the last offset (for streaming)
+- `logFile` (string) - Name of the log file
+- `isComplete` (boolean) - Whether the job has completed
+- `exitCode` (number | null) - Exit code of the job (null if still running)
+- `fileSize` (number) - Total size of the log file in bytes
+- `offset` (number) - Current byte offset
+- `totalLines` (number | undefined) - Total number of lines in the file (only returned when file is small enough to read entirely)
+- `displayedLines` (number) - Number of lines being displayed
+- `truncated` (boolean) - Whether the content is truncated due to maxLines limit
+
+**Example:**
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://your-cronmaster-url.com/api/logs/stream?runId=run-123&offset=0&maxLines=500"
+```
+
+---
+
+### GET /api/system/wrapper-check
+
+Check if the log wrapper script has been modified from the default.
+
+**Response:**
+
+```json
+{
+  "modified": false
+}
+```
+
+**Example:**
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://your-cronmaster-url.com/api/system/wrapper-check
+```
+
+---
+
+### GET /api/oidc/login
+
+Initiate OIDC (SSO) login flow. Redirects to the OIDC provider's authorization endpoint.
+
+**Note:** This endpoint is only available when `SSO_MODE=oidc` is configured.
+
+**Response:** HTTP 302 redirect to OIDC provider
+
+**Example:**
+
+```bash
+curl -L https://your-cronmaster-url.com/api/oidc/login
+```
+
+---
+
+### GET /api/oidc/callback
+
+OIDC callback endpoint. Handles the authorization code from the OIDC provider and creates a session.
+
+**Note:** This endpoint is typically called by the OIDC provider after authentication, not directly by clients.
+
+**Query Parameters:**
+
+- `code` (string) - Authorization code from OIDC provider
+- `state` (string) - State parameter for CSRF protection
+
+**Response:** HTTP 302 redirect to application root
+
+---
+
+### GET /api/oidc/logout
+
+Initiate OIDC logout flow. Redirects to the OIDC provider's logout endpoint.
+
+**Note:** This endpoint is only available when `SSO_MODE=oidc` is configured.
+
+**Response:** HTTP 302 redirect to OIDC provider logout endpoint
+
+**Example:**
+
+```bash
+curl -L https://your-cronmaster-url.com/api/oidc/logout
+```
+
+---
+
 ### POST /api/auth/login
 
 Login with password (alternative to API key).
@@ -263,12 +482,4 @@ Logout and clear session (requires login first).
   "error": "Unauthorized",
   "message": "Authentication required. Use session cookie or API key (Bearer token)."
 }
-```
-
-## Testing
-
-For local testing I have made a node script that checks all available endpoints:
-
-```bash
-AUTH_PASSWORD=your-password node test-api.js https://your-cronmaster-url.com
 ```

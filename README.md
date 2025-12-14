@@ -13,7 +13,6 @@
   - [Local Development](#local-development)
   - [Environment Variables](howto/ENV_VARIABLES.md)
 - [Authentication](#authentication)
-- [REST API](#rest-api)
 - [Usage](#usage)
   - [Viewing System Information](#viewing-system-information)
   - [Managing Cron Jobs](#managing-cron-jobs)
@@ -28,7 +27,7 @@
 ## Features
 
 - **Modern UI**: Beautiful, responsive interface with dark/light mode.
-- **System Information**: Display hostname, IP address, uptime, memory, network and CPU info.
+- **System Information**: Display uptime, memory, network, CPU, and GPU info.
 - **Cron Job Management**: View, create, and delete cron jobs with comments.
 - **Script management**: View, create, and delete bash scripts on the go to use within your cron jobs.
 - **Job Execution Logging**: Optional logging for cronjobs with automatic cleanup, capturing stdout, stderr, exit codes, and timestamps.
@@ -115,7 +114,7 @@ services:
 
 ## API
 
-`cr*nmaster` includes a REST API for programmatic access to your checklists and notes. This is perfect for integrations.
+`cr*nmaster` includes a REST API for programmatic access to your cron jobs and system information. This is perfect for integrations.
 
 📖 **For the complete API documentation, see [howto/API.md](howto/API.md)**
 
@@ -131,7 +130,7 @@ services:
 
 ## Localization
 
-`cr*nmaster` officially support [some languages](app/_transations) and allows you to create your custom translations locally on your own machine.
+`cr*nmaster` officially support [some languages](app/_translations) and allows you to create your custom translations locally on your own machine.
 
 📖 **For the complete Translations documentation, see [howto/TRANSLATIONS.md](howto/TRANSLATIONS.md)**
 
@@ -229,82 +228,11 @@ Cr\*nMaster supports SSO via OIDC (OpenID Connect), compatible with providers li
 - Entra ID (Azure AD)
 - And many more!
 
-For detailed setup instructions, see **[README_SSO.md](README_SSO.md)**
-
-Quick example:
-
-```yaml
-environment:
-  - SSO_MODE=oidc
-  - OIDC_ISSUER=https://your-sso-provider.com
-  - OIDC_CLIENT_ID=your_client_id
-  - APP_URL=https://your-cronmaster-domain.com
-```
-
-### Combined Authentication
-
 You can enable **both** password and SSO authentication simultaneously:
-
-```yaml
-environment:
-  - AUTH_PASSWORD=your_password
-  - SSO_MODE=oidc
-  - OIDC_ISSUER=https://your-sso-provider.com
-  - OIDC_CLIENT_ID=your_client_id
-```
 
 The login page will display both options, allowing users to choose their preferred method.
 
-### Security Features
-
-- ✅ **Secure session management** with cryptographically random session IDs
-- ✅ **30-day session expiration** with automatic cleanup
-- ✅ **HTTP-only cookies** to prevent XSS attacks
-- ✅ **Proper JWT verification** for OIDC tokens using provider's public keys (JWKS)
-- ✅ **PKCE support** for OIDC authentication (or confidential client mode)
-
-<a id="rest-api"></a>
-
-## REST API
-
-Cr\*nMaster provides a full REST API for programmatic access. Perfect for:
-
-- External monitoring tools
-- Automation scripts
-- CI/CD integrations
-- Custom dashboards
-
-### API Authentication
-
-Protect your API with an optional API key:
-
-```yaml
-environment:
-  - API_KEY=your-secret-api-key-here
-```
-
-Use the API key in your requests:
-
-```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" \
-  https://your-domain.com/api/cronjobs
-```
-
-For complete API documentation with examples, see **[howto/API.md](howto/API.md)**
-
-### Available Endpoints
-
-- `GET /api/cronjobs` - List all cron jobs
-- `POST /api/cronjobs` - Create a new cron job
-- `GET /api/cronjobs/:id` - Get a specific cron job
-- `PATCH /api/cronjobs/:id` - Update a cron job
-- `DELETE /api/cronjobs/:id` - Delete a cron job
-- `POST /api/cronjobs/:id/execute` - Manually execute a job
-- `GET /api/scripts` - List all scripts
-- `POST /api/scripts` - Create a new script
-- `GET /api/system-stats` - Get system statistics
-- `GET /api/logs/stream?runId=xxx` - Stream job logs
-- `GET /api/events` - SSE stream for real-time updates
+**For detailed setup instructions, see **[howto/SSO.md](howto/SSO.md)**
 
 <a id="usage"></a>
 
@@ -337,125 +265,7 @@ The application automatically detects your operating system and displays:
 
 ### Job Execution Logging
 
-CronMaster includes an optional logging feature that captures detailed execution information for your cronjobs:
-
-#### How It Works
-
-When you enable logging for a cronjob, CronMaster automatically wraps your command with a log wrapper script. This wrapper:
-
-- Captures **stdout** and **stderr** output
-- Records the **exit code** of your command
-- Timestamps the **start and end** of execution
-- Calculates **execution duration**
-- Stores all this information in organized log files
-
-#### Enabling Logs
-
-1. When creating or editing a cronjob, check the "Enable Logging" checkbox
-2. The wrapper is automatically added to your crontab entry
-3. Jobs run independently - they continue to work even if CronMaster is offline
-
-#### Log Storage
-
-Logs are stored in the `./data/logs/` directory with descriptive folder names:
-
-- If a job has a **description/comment**: `{sanitized-description}_{jobId}/`
-- If a job has **no description**: `{jobId}/`
-
-Example structure:
-
-```
-./data/logs/
-├── backup-database_root-0/
-│   ├── 2025-11-10_14-30-00.log
-│   ├── 2025-11-10_15-30-00.log
-│   └── 2025-11-10_16-30-00.log
-├── daily-cleanup_root-1/
-│   └── 2025-11-10_14-35-00.log
-├── root-2/  (no description provided)
-│   └── 2025-11-10_14-40-00.log
-```
-
-**Note**: Folder names are sanitized to be filesystem-safe (lowercase, alphanumeric with hyphens, max 50 chars for the description part).
-
-#### Log Format
-
-Each log file includes:
-
-```
-==========================================
-=== CronMaster Job Execution Log ===
-==========================================
-Log Folder: backup-database_root-0
-Command: bash /app/scripts/backup.sh
-Started: 2025-11-10 14:30:00
-==========================================
-
-[command output here]
-
-==========================================
-=== Execution Summary ===
-==========================================
-Completed: 2025-11-10 14:30:45
-Duration: 45 seconds
-Exit code: 0
-==========================================
-```
-
-#### Automatic Cleanup
-
-Logs are automatically cleaned up to prevent disk space issues:
-
-- **Maximum logs per job**: 50 log files
-- **Maximum age**: 30 days
-- **Cleanup trigger**: When viewing logs or after manual execution
-- **Method**: Oldest logs are deleted first when limits are exceeded
-
-#### Custom Wrapper Script
-
-You can override the default log wrapper by creating your own at `./data/wrapper-override.sh`. This allows you to:
-
-- Customize log format
-- Add additional metadata
-- Integrate with external logging services
-- Implement custom retention policies
-
-**Example custom wrapper**:
-
-```bash
-#!/bin/bash
-JOB_ID="$1"
-shift
-
-# Your custom logic here
-LOG_FILE="/custom/path/${JOB_ID}_$(date '+%Y%m%d').log"
-
-{
-  echo "=== Custom Log Format ==="
-  echo "Job: $JOB_ID"
-  "$@"
-  echo "Exit: $?"
-} >> "$LOG_FILE" 2>&1
-```
-
-#### Docker Considerations
-
-- Mount the `./data` directory to persist logs on the host
-- The wrapper script location: `./data/cron-log-wrapper.sh`. This will be generated automatically the first time you enable logging.
-
-#### Non-Docker Considerations
-
-- Logs are stored at `./data/logs/` relative to the project directory
-- The codebase wrapper script location: `./app/_scripts/cron-log-wrapper.sh`
-- The running wrapper script location: `./data/cron-log-wrapper.sh`
-
-#### Important Notes
-
-- Logging is **optional** and disabled by default
-- Jobs with logging enabled are marked with a blue "Logged" badge in the UI
-- Logs are captured for both scheduled runs and manual executions
-- Commands with file redirections (>, >>) may conflict with logging
-- The crontab stores the **wrapped command**, so jobs run independently of CronMaster
+📖 **For complete logging documentation, see [howto/LOGS.md](howto/LOGS.md)**
 
 ### Cron Schedule Format
 
@@ -476,26 +286,6 @@ The application uses standard cron format: `* * * * *`
 3. **Quick Snippets**: Pre-set of snippets, with ability to add new ones. Check README.md in [Snippets](snippets/README.md)
 4. **Delete Scripts**: Remove unwanted scripts (this won't delete the cronjob, you will need to manually remove these yourself)
 5. **Clone Scripts**: Clone scripts to quickly edit them in case they are similar to one another.
-
-<a id="technologies-used"></a>
-
-## Technologies Used
-
-- **Next.js 14**: React framework with App Router
-- **TypeScript**: Type-safe JavaScript
-- **Tailwind CSS**: Utility-first CSS framework
-- **Lucide React**: Beautiful icons
-- **next-themes**: Dark/light mode support
-- **Docker**: Containerization
-
-<a id="contributing"></a>
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch from the `develop` branch
-3. Make your changes
-4. Submit a pull request to the `develop` branch
 
 ## Community shouts
 

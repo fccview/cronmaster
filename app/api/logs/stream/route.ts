@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRunningJob } from "@/app/_utils/running-jobs-utils";
-import { readFile } from "fs/promises";
+import { readFile, open } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
@@ -141,39 +141,69 @@ export const GET = async (request: NextRequest) => {
 
     const fileSize = latestStats.size;
 
-    const fullContent = await readFile(latestLogFile, "utf-8");
-
-    const allLines = fullContent.split("\n");
-    const totalLines = allLines.length;
-
-    let displayedLines: string[];
+    let displayedLines: string[] = [];
     let truncated = false;
-
-    if (totalLines > maxLines) {
-      displayedLines = allLines.slice(-maxLines);
-      truncated = true;
-    } else {
-      displayedLines = allLines;
-    }
-
+    let totalLines = 0;
     let content = "";
     let newContent = "";
 
     if (offset === 0) {
+      const AVERAGE_LINE_LENGTH = 100;
+      const ESTIMATED_BYTES = maxLines * AVERAGE_LINE_LENGTH * 2;
+      const bytesToRead = Math.min(ESTIMATED_BYTES, fileSize);
+
+      if (bytesToRead < fileSize) {
+        const fileHandle = await open(latestLogFile, "r");
+        const buffer = Buffer.alloc(bytesToRead);
+        await fileHandle.read(buffer, 0, bytesToRead, fileSize - bytesToRead);
+        await fileHandle.close();
+
+        const tailContent = buffer.toString("utf-8");
+        const lines = tailContent.split("\n");
+
+        if (lines[0] && lines[0].length > 0) {
+          lines.shift();
+        }
+
+        if (lines.length > maxLines) {
+          displayedLines = lines.slice(-maxLines);
+          truncated = true;
+        } else {
+          displayedLines = lines;
+          truncated = true;
+        }
+      } else {
+        const fullContent = await readFile(latestLogFile, "utf-8");
+        const allLines = fullContent.split("\n");
+        totalLines = allLines.length;
+
+        if (totalLines > maxLines) {
+          displayedLines = allLines.slice(-maxLines);
+          truncated = true;
+        } else {
+          displayedLines = allLines;
+        }
+      }
+
       if (truncated) {
-        content = `[LOG TRUNCATED - Showing last ${maxLines} of ${totalLines} lines (${(fileSize / 1024 / 1024).toFixed(2)}MB total)]\n\n` + displayedLines.join("\n");
+        content = `[LOG TRUNCATED - Showing last ${maxLines} lines (${(fileSize / 1024 / 1024).toFixed(2)}MB total)]\n\n` + displayedLines.join("\n");
       } else {
         content = displayedLines.join("\n");
+        totalLines = displayedLines.length;
       }
       newContent = content;
     } else {
       if (offset < fileSize) {
-        const newBytes = fullContent.slice(offset);
-        newContent = newBytes;
+        const fileHandle = await open(latestLogFile, "r");
+        const bytesToRead = fileSize - offset;
+        const buffer = Buffer.alloc(bytesToRead);
+        await fileHandle.read(buffer, 0, bytesToRead, offset);
+        await fileHandle.close();
 
-        const newLines = newBytes.split("\n").filter(l => l.length > 0);
+        newContent = buffer.toString("utf-8");
+        const newLines = newContent.split("\n").filter(l => l.length > 0);
         if (newLines.length > 0) {
-          content = newBytes;
+          content = newContent;
         }
       }
     }
@@ -188,7 +218,7 @@ export const GET = async (request: NextRequest) => {
       exitCode: job.exitCode,
       fileSize,
       offset,
-      totalLines,
+      totalLines: offset === 0 && !truncated ? totalLines : undefined,
       displayedLines: displayedLines.length,
       truncated,
     });

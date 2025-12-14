@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { writeFile, readFile, unlink, mkdir } from "fs/promises";
-import { join } from "path";
+import path from "path";
 import { existsSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -13,10 +13,6 @@ import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
 
 const execAsync = promisify(exec);
 
-export const getScriptPath = (filename: string): string => {
-  return join(process.cwd(), SCRIPTS_DIR, filename);
-};
-
 export const getScriptPathForCron = async (
   filename: string
 ): Promise<string> => {
@@ -25,19 +21,19 @@ export const getScriptPathForCron = async (
   if (docker) {
     const hostScriptsPath = await getHostScriptsPath();
     if (hostScriptsPath) {
-      return `bash ${join(hostScriptsPath, filename)}`;
+      return `bash ${path.join(hostScriptsPath, filename)}`;
     }
     console.warn("Could not determine host scripts path, using container path");
   }
 
-  return `bash ${join(process.cwd(), SCRIPTS_DIR, filename)}`;
+  return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
 };
 
-export const getHostScriptPath = (filename: string): string => {
-  return `bash ${join(process.cwd(), SCRIPTS_DIR, filename)}`;
+export const getHostScriptPath = async (filename: string): Promise<string> => {
+  return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
 };
 
-export const normalizeLineEndings = (content: string): string => {
+export const normalizeLineEndings = async (content: string): Promise<string> => {
   return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 };
 
@@ -65,14 +61,14 @@ const generateUniqueFilename = async (baseName: string): Promise<string> => {
 };
 
 const ensureScriptsDirectory = async () => {
-  const scriptsDir = join(process.cwd(), SCRIPTS_DIR);
+  const scriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
   if (!existsSync(scriptsDir)) {
     await mkdir(scriptsDir, { recursive: true });
   }
 };
 
 const ensureHostScriptsDirectory = async () => {
-  const hostScriptsDir = join(process.cwd(), SCRIPTS_DIR);
+  const hostScriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
   if (!existsSync(hostScriptsDir)) {
     await mkdir(hostScriptsDir, { recursive: true });
   }
@@ -81,7 +77,7 @@ const ensureHostScriptsDirectory = async () => {
 const saveScriptFile = async (filename: string, content: string) => {
   await ensureScriptsDirectory();
 
-  const scriptPath = getScriptPath(filename);
+  const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
   await writeFile(scriptPath, content, "utf8");
 
   try {
@@ -92,7 +88,7 @@ const saveScriptFile = async (filename: string, content: string) => {
 };
 
 const deleteScriptFile = async (filename: string) => {
-  const scriptPath = getScriptPath(filename);
+  const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
   }
@@ -125,7 +121,7 @@ export const createScript = async (
 
 `;
 
-    const normalizedContent = normalizeLineEndings(content);
+    const normalizedContent = await normalizeLineEndings(content);
     const fullContent = metadataHeader + normalizedContent;
 
     await saveScriptFile(filename, fullContent);
@@ -176,7 +172,7 @@ export const updateScript = async (
 
 `;
 
-    const normalizedContent = normalizeLineEndings(content);
+    const normalizedContent = await normalizeLineEndings(content);
     const fullContent = metadataHeader + normalizedContent;
 
     await saveScriptFile(existingScript.filename, fullContent);
@@ -235,7 +231,7 @@ export const cloneScript = async (
 
 `;
 
-    const normalizedContent = normalizeLineEndings(originalContent);
+    const normalizedContent = await normalizeLineEndings(originalContent);
     const fullContent = metadataHeader + normalizedContent;
 
     await saveScriptFile(filename, fullContent);
@@ -262,7 +258,7 @@ export const cloneScript = async (
 
 export const getScriptContent = async (filename: string): Promise<string> => {
   try {
-    const scriptPath = getScriptPath(filename);
+    const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
 
     if (existsSync(scriptPath)) {
       const content = await readFile(scriptPath, "utf8");
@@ -299,7 +295,7 @@ export const executeScript = async (
 }> => {
   try {
     await ensureHostScriptsDirectory();
-    const hostScriptPath = getHostScriptPath(filename);
+    const hostScriptPath = await getHostScriptPath(filename);
 
     if (!existsSync(hostScriptPath)) {
       return {

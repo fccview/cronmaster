@@ -95,8 +95,8 @@ export const LiveLogModal = ({
 
       if (data.totalLines !== undefined) {
         setTotalLines(data.totalLines);
-        setLineCount(data.displayedLines || data.totalLines);
       }
+      setLineCount(data.displayedLines || 0);
 
       if (data.truncated !== undefined) {
         setTruncated(data.truncated);
@@ -287,14 +287,18 @@ export const LiveLogModal = ({
                     }}
                     className="text-xs"
                   >
-                    {t("cronjobs.viewFullLog", { totalLines: totalLines.toLocaleString() })}
+                    {totalLines > 0
+                      ? t("cronjobs.viewFullLog", { totalLines: totalLines.toLocaleString() })
+                      : t("cronjobs.viewFullLogNoCount")}
                   </Button>
                 )}
               </>
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  {t("cronjobs.viewingFullLog", { totalLines: totalLines.toLocaleString() })}
+                  {totalLines > 0
+                    ? t("cronjobs.viewingFullLog", { totalLines: totalLines.toLocaleString() })
+                    : t("cronjobs.viewingFullLogNoCount")}
                 </span>
                 <Button
                   type="button"
@@ -354,11 +358,6 @@ export const LiveLogModal = ({
         <div className="flex justify-between items-center text-xs text-muted-foreground">
           <span>
             {t("cronjobs.runIdJobId", { runId, jobId })}
-          </span>
-          <span>
-            {lineCount.toLocaleString()} lines
-            {tailMode && ` (showing last ${TAIL_LINES.toLocaleString()})`}
-            {fileSize > 0 && ` • ${formatFileSize(fileSize)}`}
           </span>
         </div>
       </div>

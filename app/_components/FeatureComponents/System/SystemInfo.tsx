@@ -65,6 +65,7 @@ export const SystemInfoCard = ({
   const [systemInfo, setSystemInfo] =
     useState<SystemInfoType>(initialSystemInfo);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
   const t = useTranslations();
   const { subscribe } = useSSEContext();
   const isPageVisible = usePageVisibility();
@@ -72,6 +73,10 @@ export const SystemInfoCard = ({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const updateSystemInfo = async () => {
+    if (isDisabled) {
+      return;
+    }
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -88,13 +93,17 @@ export const SystemInfoCard = ({
         throw new Error("Failed to fetch system stats");
       }
       const freshData = await response.json();
+      if (freshData === null) {
+        setIsDisabled(true);
+        return;
+      }
       setSystemInfo(freshData);
     } catch (error: any) {
       if (error.name !== "AbortError") {
         console.error("Failed to update system info:", error);
       }
     } finally {
-      if (!abortController.signal.aborted) {
+      if (!abortControllerRef.current?.signal.aborted) {
         setIsUpdating(false);
       }
     }
@@ -102,7 +111,7 @@ export const SystemInfoCard = ({
 
   useEffect(() => {
     const unsubscribe = subscribe((event: SSEEvent) => {
-      if (event.type === "system-stats") {
+      if (event.type === "system-stats" && event.data !== null) {
         setSystemInfo(event.data);
       }
     });
@@ -129,16 +138,16 @@ export const SystemInfoCard = ({
     let timeoutId: NodeJS.Timeout | null = null;
 
     const doUpdate = () => {
-      if (!mounted || !isPageVisible) return;
+      if (!mounted || !isPageVisible || isDisabled) return;
       updateTime();
       updateSystemInfo().finally(() => {
-        if (mounted && isPageVisible) {
+        if (mounted && isPageVisible && !isDisabled) {
           timeoutId = setTimeout(doUpdate, updateInterval);
         }
       });
     };
 
-    if (isPageVisible) {
+    if (isPageVisible && !isDisabled) {
       timeoutId = setTimeout(doUpdate, updateInterval);
     }
 
@@ -151,7 +160,7 @@ export const SystemInfoCard = ({
         abortControllerRef.current.abort();
       }
     };
-  }, [isPageVisible]);
+  }, [isPageVisible, isDisabled]);
 
   const quickStats = {
     cpu: systemInfo.cpu.usage,
@@ -201,15 +210,15 @@ export const SystemInfoCard = ({
     },
     ...(systemInfo.network
       ? [
-          {
-            icon: Wifi,
-            label: t("sidebar.network"),
-            value: `${systemInfo.network.latency}ms`,
-            detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
-            status: systemInfo.network.status,
-            color: "text-teal-500",
-          },
-        ]
+        {
+          icon: Wifi,
+          label: t("sidebar.network"),
+          value: `${systemInfo.network.latency}ms`,
+          detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
+          status: systemInfo.network.status,
+          color: "text-teal-500",
+        },
+      ]
       : []),
   ];
 
@@ -226,12 +235,12 @@ export const SystemInfoCard = ({
     },
     ...(systemInfo.network
       ? [
-          {
-            label: t("sidebar.networkLatency"),
-            value: `${systemInfo.network.latency}ms`,
-            status: systemInfo.network.status,
-          },
-        ]
+        {
+          label: t("sidebar.networkLatency"),
+          value: `${systemInfo.network.latency}ms`,
+          status: systemInfo.network.status,
+        },
+      ]
       : []),
   ];
 
@@ -290,7 +299,7 @@ export const SystemInfoCard = ({
         {t("sidebar.statsUpdateEvery")}{" "}
         {Math.round(
           parseInt(process.env.NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL || "30000") /
-            1000
+          1000
         )}
         s • {t("sidebar.networkSpeedEstimatedFromLatency")}
         {isUpdating && (

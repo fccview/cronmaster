@@ -64,9 +64,10 @@ export const CreateTaskModal = ({
   }, [selectedScript]);
 
   const handleScriptSelect = async (script: Script) => {
+    const scriptPath = await getHostScriptPath(script.filename);
     onFormChange({
       selectedScriptId: script.id,
-      command: await getHostScriptPath(script.filename),
+      command: scriptPath,
     });
   };
 
@@ -123,11 +124,10 @@ export const CreateTaskModal = ({
               <button
                 type="button"
                 onClick={handleCustomCommand}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  !form.selectedScriptId
+                className={`p-4 rounded-lg border-2 transition-all ${!form.selectedScriptId
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <Terminal className="h-5 w-5" />
@@ -145,11 +145,10 @@ export const CreateTaskModal = ({
               <button
                 type="button"
                 onClick={() => setIsSelectScriptModalOpen(true)}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  form.selectedScriptId
+                className={`p-4 rounded-lg border-2 transition-all ${form.selectedScriptId
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5" />
