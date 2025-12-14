@@ -18,6 +18,11 @@ export const dynamic = "force-dynamic";
 export const GET = async (request: NextRequest) => {
   const authError = await requireAuth(request);
   if (authError) return authError;
+
+  if (process.env.DISABLE_SYSTEM_STATS === "true") {
+    return NextResponse.json(null);
+  }
+
   try {
     const t = await getTranslations();
 
@@ -71,8 +76,8 @@ export const GET = async (request: NextRequest) => {
       network: {
         speed:
           mainInterface &&
-          mainInterface.rx_sec != null &&
-          mainInterface.tx_sec != null
+            mainInterface.rx_sec != null &&
+            mainInterface.tx_sec != null
             ? `${Math.round(rxSpeed + txSpeed)} Mbps`
             : t("system.unknown"),
         latency: latency,

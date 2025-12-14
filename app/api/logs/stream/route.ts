@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRunningJob } from "@/app/_utils/running-jobs-utils";
-import { readFile } from "fs/promises";
+import { readFile, open } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
@@ -16,6 +16,11 @@ export const GET = async (request: NextRequest) => {
     const runId = searchParams.get("runId");
     const offsetStr = searchParams.get("offset");
     const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+
+    const maxLinesStr = searchParams.get("maxLines");
+    const maxLines = maxLinesStr
+      ? Math.min(Math.max(parseInt(maxLinesStr, 10), 100), 5000)
+      : 500;
 
     if (!runId) {
       return NextResponse.json(
@@ -136,42 +141,70 @@ export const GET = async (request: NextRequest) => {
 
     const fileSize = latestStats.size;
 
-    const MAX_RESPONSE_SIZE = 1024 * 1024;
-    const MAX_TOTAL_SIZE = 10 * 1024 * 1024;
-
+    let displayedLines: string[] = [];
+    let truncated = false;
+    let totalLines = 0;
     let content = "";
     let newContent = "";
 
-    if (fileSize > MAX_TOTAL_SIZE) {
-      const startPos = Math.max(0, fileSize - MAX_TOTAL_SIZE);
-      const buffer = Buffer.alloc(MAX_TOTAL_SIZE);
-      const { open } = await import("fs/promises");
-      const fileHandle = await open(latestLogFile, "r");
+    if (offset === 0) {
+      const AVERAGE_LINE_LENGTH = 100;
+      const ESTIMATED_BYTES = maxLines * AVERAGE_LINE_LENGTH * 2;
+      const bytesToRead = Math.min(ESTIMATED_BYTES, fileSize);
 
-      try {
-        await fileHandle.read(buffer, 0, MAX_TOTAL_SIZE, startPos);
-        content = buffer.toString("utf-8");
-        newContent = content.slice(Math.max(0, offset - startPos));
-      } finally {
+      if (bytesToRead < fileSize) {
+        const fileHandle = await open(latestLogFile, "r");
+        const buffer = Buffer.alloc(bytesToRead);
+        await fileHandle.read(buffer, 0, bytesToRead, fileSize - bytesToRead);
         await fileHandle.close();
+
+        const tailContent = buffer.toString("utf-8");
+        const lines = tailContent.split("\n");
+
+        if (lines[0] && lines[0].length > 0) {
+          lines.shift();
+        }
+
+        if (lines.length > maxLines) {
+          displayedLines = lines.slice(-maxLines);
+          truncated = true;
+        } else {
+          displayedLines = lines;
+          truncated = true;
+        }
+      } else {
+        const fullContent = await readFile(latestLogFile, "utf-8");
+        const allLines = fullContent.split("\n");
+        totalLines = allLines.length;
+
+        if (totalLines > maxLines) {
+          displayedLines = allLines.slice(-maxLines);
+          truncated = true;
+        } else {
+          displayedLines = allLines;
+        }
       }
 
-      if (startPos > 0) {
-        content = `[LOG TRUNCATED - Showing last ${MAX_TOTAL_SIZE / 1024 / 1024
-          }MB of ${fileSize / 1024 / 1024}MB total]\n\n${content}`;
+      if (truncated) {
+        content = `[LOG TRUNCATED - Showing last ${maxLines} lines (${(fileSize / 1024 / 1024).toFixed(2)}MB total)]\n\n` + displayedLines.join("\n");
+      } else {
+        content = displayedLines.join("\n");
+        totalLines = displayedLines.length;
       }
+      newContent = content;
     } else {
-      const fullContent = await readFile(latestLogFile, "utf-8");
+      if (offset < fileSize) {
+        const fileHandle = await open(latestLogFile, "r");
+        const bytesToRead = fileSize - offset;
+        const buffer = Buffer.alloc(bytesToRead);
+        await fileHandle.read(buffer, 0, bytesToRead, offset);
+        await fileHandle.close();
 
-      if (offset > 0 && offset < fileSize) {
-        newContent = fullContent.slice(offset);
-        content = newContent;
-      } else if (offset === 0) {
-        content = fullContent;
-        newContent = fullContent;
-      } else if (offset >= fileSize) {
-        content = "";
-        newContent = "";
+        newContent = buffer.toString("utf-8");
+        const newLines = newContent.split("\n").filter(l => l.length > 0);
+        if (newLines.length > 0) {
+          content = newContent;
+        }
       }
     }
 
@@ -185,6 +218,9 @@ export const GET = async (request: NextRequest) => {
       exitCode: job.exitCode,
       fileSize,
       offset,
+      totalLines: offset === 0 && !truncated ? totalLines : undefined,
+      displayedLines: displayedLines.length,
+      truncated,
     });
   } catch (error: any) {
     console.error("Error streaming log:", error);

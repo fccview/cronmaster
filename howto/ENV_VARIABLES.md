@@ -56,6 +56,7 @@ Translation loading priority:
 | ----------------------------------- | ------- | -------------------------------------------------- |
 | `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds) |
 | `LIVE_UPDATES`                      | `true`  | Enable/disable Server-Sent Events for live updates |
+| `DISABLE_SYSTEM_STATS`              | `false` | Set to `true` to completely disable system stats (stops polling and hides sidebar) |
 
 ## Logging Configuration
 

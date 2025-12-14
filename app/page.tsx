@@ -90,9 +90,11 @@ export default async function Home() {
             </div>
           </header>
 
-          <SystemInfoCard systemInfo={initialSystemInfo} />
+          {process.env.DISABLE_SYSTEM_STATS !== "true" && (
+            <SystemInfoCard systemInfo={initialSystemInfo} />
+          )}
 
-          <main className="lg:ml-80 transition-all duration-300 ml-0 sidebar-collapsed:lg:ml-16">
+          <main className={`${process.env.DISABLE_SYSTEM_STATS === "true" ? "lg:ml-0" : "lg:ml-80"} transition-all duration-300 ml-0 sidebar-collapsed:lg:ml-16`}>
             <div className="container mx-auto px-4 py-8 lg:px-8">
               <WrapperScriptWarning />
               <TabbedInterface cronJobs={cronJobs} scripts={scripts} />

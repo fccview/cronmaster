@@ -86,4 +86,4 @@ export const getScriptById = (
   id: string
 ): Script | undefined => {
   return scripts.find((script) => script.id === id);
-}
+};
