@@ -124,7 +124,7 @@ export const RestoreBackupModal = ({
             {backups.map((backup) => (
               <div
                 key={backup.filename}
-                className="glass-card p-3 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
+                className="glass-card p-3 border border-border rounded-lg hover:bg-accent/30 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0">
@@ -136,7 +136,7 @@ export const RestoreBackupModal = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {commandCopied === backup.filename && (
-                        <Check className="h-3 w-3 text-green-600 flex-shrink-0" />
+                        <Check className="h-3 w-3 text-status-success flex-shrink-0" />
                       )}
                       <pre
                         onClick={(e) => {
@@ -145,7 +145,7 @@ export const RestoreBackupModal = ({
                           setCommandCopied(backup.filename);
                           setTimeout(() => setCommandCopied(null), 3000);
                         }}
-                        className="flex-1 cursor-pointer overflow-hidden text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border/30 truncate"
+                        className="flex-1 cursor-pointer overflow-hidden text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border truncate"
                         title={unwrapCommand(backup.job.command)}
                       >
                         {unwrapCommand(backup.job.command)}
@@ -204,7 +204,7 @@ export const RestoreBackupModal = ({
           </div>
         )}
 
-        <div className="flex justify-between gap-2 pt-4 border-t border-border/50">
+        <div className="flex justify-between gap-2 pt-4 border-t border-border">
           <p className="text-sm text-muted-foreground">
             {t("cronjobs.availableBackups")}: {backups.length}
           </p>

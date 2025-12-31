@@ -42,14 +42,14 @@ export const PWAInstallPrompt = (): JSX.Element | null => {
       if (choice.outcome === "accepted") {
         setDeferred(null);
       }
-    } catch (_err) {}
+    } catch (_err) { }
   }, [deferred]);
 
   if (isInstalled || !deferred) return null;
 
   return (
     <button
-      className="px-3 py-1 rounded-md border border-border/50 bg-background/80 hover:bg-background/60"
+      className="px-3 py-1 rounded-md border border-border bg-background/80 hover:bg-background/60"
       onClick={onInstall}
     >
       Install App

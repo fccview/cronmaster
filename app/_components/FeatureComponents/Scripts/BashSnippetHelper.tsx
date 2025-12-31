@@ -171,7 +171,7 @@ export const BashSnippetHelper = ({
           return (
             <div
               key={snippet.id}
-              className="bg-muted/30 rounded-lg border border-border/50 p-3 hover:bg-accent/30 transition-colors"
+              className="bg-muted/30 rounded-lg border border-border p-3 hover:bg-accent/30 transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">

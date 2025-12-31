@@ -124,7 +124,7 @@ export const SelectScriptModal = ({
                               {script.name}
                             </h4>
                             {selectedScriptId === script.id && (
-                              <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                              <Check className="h-4 w-4 text-status-success flex-shrink-0" />
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -167,7 +167,7 @@ export const SelectScriptModal = ({
                         {t("scripts.commandPreview")}
                       </span>
                     </div>
-                    <div className="bg-muted/30 p-3 rounded border border-border/30">
+                    <div className="bg-muted/30 p-3 rounded border border-border">
                       <code className="text-sm font-mono text-foreground break-all">
                         {hostScriptPath}
                       </code>
@@ -178,7 +178,7 @@ export const SelectScriptModal = ({
                     <span className="text-sm font-medium text-foreground">
                       {t("scripts.scriptContent")}
                     </span>
-                    <div className="bg-muted/30 p-3 rounded border border-border/30 mt-2 max-h-32 overflow-auto">
+                    <div className="bg-muted/30 p-3 rounded border border-border mt-2 max-h-32 overflow-auto">
                       <pre className="text-xs font-mono text-foreground whitespace-pre-wrap">
                         {previewContent}
                       </pre>
@@ -195,7 +195,7 @@ export const SelectScriptModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Button
             type="button"
             variant="outline"

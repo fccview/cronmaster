@@ -87,9 +87,9 @@ export const CronExpressionHelper = ({
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
           {explanation?.isValid ? (
-            <CheckCircle className="h-4 w-4 text-green-500" />
+            <CheckCircle className="h-4 w-4 text-status-success" />
           ) : value ? (
-            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertCircle className="h-4 w-4 text-status-error" />
           ) : (
             <Clock className="h-4 w-4 text-muted-foreground" />
           )}
@@ -97,7 +97,7 @@ export const CronExpressionHelper = ({
       </div>
 
       {explanation && (
-        <div className="bg-muted/30 rounded p-2 border border-border/30">
+        <div className="bg-background2 p-2 ascii-border terminal-font">
           <div className="space-y-1">
             <div className="flex items-start gap-2">
               <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
@@ -108,7 +108,7 @@ export const CronExpressionHelper = ({
                     : "Invalid Expression"}
                 </p>
                 {explanation.error && (
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                  <p className="text-xs text-status-error mt-0.5">
                     {explanation.error}
                   </p>
                 )}
@@ -117,7 +117,7 @@ export const CronExpressionHelper = ({
 
             {explanation.isValid && explanation.nextRuns.length > 0 && (
               <div className="flex items-start gap-2">
-                <Calendar className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
+                <Calendar className="h-3 w-3 text-status-info mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground mb-1">
                     Next executions:
@@ -137,7 +137,7 @@ export const CronExpressionHelper = ({
       )}
 
       {showPatterns && (
-        <div className="bg-muted/30 rounded-lg border border-border/50">
+        <div className="bg-background0 ascii-border terminal-font">
           <button
             type="button"
             onClick={(e) => {
@@ -145,7 +145,7 @@ export const CronExpressionHelper = ({
               e.stopPropagation();
               setShowPatternsPanel(!showPatternsPanel);
             }}
-            className="w-full text-left p-3 hover:bg-accent/30 transition-colors rounded-t-lg"
+            className="w-full text-left p-3 hover:bg-background0 transition-colors"
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Quick Patterns</span>
@@ -160,7 +160,7 @@ export const CronExpressionHelper = ({
           </button>
 
           {showPatternsPanel && (
-            <div className="p-3 border-t border-border/50">
+            <div className="p-3 border-t border-border">
               <div className="relative mb-3">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input

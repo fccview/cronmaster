@@ -124,9 +124,9 @@ export const CreateTaskModal = ({
               <button
                 type="button"
                 onClick={handleCustomCommand}
-                className={`p-4 rounded-lg border-2 transition-all ${!form.selectedScriptId
-                    ? "border-primary bg-primary/5 text-primary"
-                    : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
+                className={`p-4 rounded-lg transition-all ${!form.selectedScriptId
+                  ? "border-border border-2"
+                  : "border-border border"
                   }`}
               >
                 <div className="flex items-center gap-3">
@@ -145,9 +145,9 @@ export const CreateTaskModal = ({
               <button
                 type="button"
                 onClick={() => setIsSelectScriptModalOpen(true)}
-                className={`p-4 rounded-lg border-2 transition-all ${form.selectedScriptId
-                    ? "border-primary bg-primary/5 text-primary"
-                    : "border-border bg-muted/30 text-muted-foreground hover:border-border/60"
+                className={`p-4 rounded-lg transition-all ${form.selectedScriptId
+                  ? "border-border border-2"
+                  : "border-border border"
                   }`}
               >
                 <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ export const CreateTaskModal = ({
                   <p className="text-sm text-muted-foreground mb-2">
                     {selectedScript.description}
                   </p>
-                  <div className="bg-muted/30 p-2 rounded border border-border/30">
+                  <div className="bg-muted/30 p-2 rounded border border-border">
                     <code className="text-xs font-mono text-foreground break-all">
                       {form.command}
                     </code>
@@ -222,7 +222,7 @@ export const CreateTaskModal = ({
                       ? "/app/scripts/script_name.sh"
                       : "/usr/bin/command"
                   }
-                  className="w-full h-24 p-2 border border-border rounded bg-background text-foreground font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/20"
+                  className="w-full h-24 p-2 border border-border rounded bg-background0 text-foreground font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/20"
                   required
                   readOnly={!!form.selectedScriptId}
                 />
@@ -249,11 +249,11 @@ export const CreateTaskModal = ({
               value={form.comment}
               onChange={(e) => onFormChange({ comment: e.target.value })}
               placeholder={t("cronjobs.whatDoesThisTaskDo")}
-              className="bg-muted/30 border-border/50 focus:border-primary/50"
+              className="bg-muted/30 border-border focus:border-primary/50"
             />
           </div>
 
-          <div className="border border-border/30 bg-muted/10 rounded-lg p-4">
+          <div className="border border-border bg-muted/10 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"
@@ -279,7 +279,7 @@ export const CreateTaskModal = ({
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
             <Button
               type="button"
               variant="outline"

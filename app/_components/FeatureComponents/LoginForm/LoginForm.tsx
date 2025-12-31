@@ -112,8 +112,8 @@ export const LoginForm = ({
           {hasPassword && hasOIDC
             ? t("login.signInWithPasswordOrSSO")
             : hasOIDC
-            ? t("login.signInWithSSO")
-            : t("login.enterPasswordToContinue")}
+              ? t("login.signInWithSSO")
+              : t("login.enterPasswordToContinue")}
         </CardDescription>
       </CardHeader>
 
@@ -175,7 +175,7 @@ export const LoginForm = ({
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+                <span className="bg-background0 px-2 text-muted-foreground">
                   {t("login.orContinueWith")}
                 </span>
               </div>
@@ -203,7 +203,7 @@ export const LoginForm = ({
         </div>
 
         {version && (
-          <div className="mt-6 pt-4 border-t border-border/50">
+          <div className="mt-6 pt-4 border-t border-border">
             <div className="text-center text-xs text-muted-foreground">
               Cr*nMaster {t("common.version", { version })}
             </div>

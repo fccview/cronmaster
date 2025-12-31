@@ -207,7 +207,7 @@ export const ScriptsManager = ({
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
+              <div className="p-2 bg-background2 ascii-border">
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -230,8 +230,8 @@ export const ScriptsManager = ({
         </CardHeader>
         <CardContent>
           {scripts.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-blue-500/20 rounded-full flex items-center justify-center mb-6">
+            <div className="text-center py-16 terminal-font">
+              <div className="mx-auto w-20 h-20 bg-background2 ascii-border flex items-center justify-center mb-6">
                 <FileText className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-3 brand-gradient">
@@ -254,7 +254,7 @@ export const ScriptsManager = ({
               {scripts.map((script) => (
                 <div
                   key={script.id}
-                  className="glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors"
+                  className="glass-card p-4 ascii-border hover:bg-accent/30 transition-colors terminal-font"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -286,7 +286,7 @@ export const ScriptsManager = ({
                         aria-label="Copy script content to clipboard"
                       >
                         {copiedId === script.id ? (
-                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <CheckCircle className="h-3 w-3 text-status-success" />
                         ) : (
                           <CopyIcon className="h-3 w-3" />
                         )}

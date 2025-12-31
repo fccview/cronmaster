@@ -208,11 +208,11 @@ export const LogsModal = ({
                 logs.map((log) => (
                   <div
                     key={log.filename}
-                    className={`p-3 rounded border cursor-pointer transition-colors ${selectedLog === log.filename
-                      ? "border-primary bg-primary/10"
+                    className={`p-3 ascii-border cursor-pointer transition-colors terminal-font ${selectedLog === log.filename
+                      ? "border-primary bg-background2"
                       : log.hasError
-                        ? "border-red-500/50 hover:border-red-500"
-                        : "border-border hover:border-primary/50"
+                        ? "border-red-600 hover:border-red-600"
+                        : "ascii-border hover:border-primary"
                       }`}
                     onClick={() => handleViewLog(log.filename)}
                   >
@@ -220,9 +220,9 @@ export const LogsModal = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {log.hasError ? (
-                            <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 text-status-error" />
                           ) : log.exitCode === 0 ? (
-                            <CheckCircle className="w-4 h-4 flex-shrink-0 text-green-500" />
+                            <CheckCircle className="w-4 h-4 flex-shrink-0 text-status-success" />
                           ) : (
                             <FileText className="w-4 h-4 flex-shrink-0" />
                           )}
@@ -236,9 +236,9 @@ export const LogsModal = ({
                           </p>
                           {log.exitCode !== undefined && (
                             <span
-                              className={`text-xs px-1.5 py-0.5 rounded ${log.hasError
-                                ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                                : "bg-green-500/10 text-green-600 dark:text-green-400"
+                              className={`text-xs px-1.5 py-0.5 ${log.hasError
+                                ? "bg-background2 text-status-error"
+                                : "bg-background2 text-status-success"
                                 }`}
                             >
                               Exit: {log.exitCode}
@@ -271,7 +271,7 @@ export const LogsModal = ({
                   {t("common.loading")}...
                 </div>
               ) : selectedLog ? (
-                <pre className="h-full overflow-auto bg-muted/50 p-4 rounded border border-border text-xs font-mono whitespace-pre-wrap">
+                <pre className="h-full overflow-auto bg-background2 p-4 ascii-border text-xs font-mono whitespace-pre-wrap terminal-font">
                   {logContent}
                 </pre>
               ) : (

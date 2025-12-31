@@ -59,7 +59,7 @@ export const EditTaskModal = ({
                 value={form.command}
                 onChange={(e) => onFormChange({ command: e.target.value })}
                 placeholder="/usr/bin/command"
-                className="font-mono bg-muted/30 border-border/50 focus:border-primary/50"
+                className="font-mono bg-muted/30 border-border focus:border-primary/50"
                 required
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -80,11 +80,11 @@ export const EditTaskModal = ({
             value={form.comment}
             onChange={(e) => onFormChange({ comment: e.target.value })}
             placeholder={t("cronjobs.whatDoesThisTaskDo")}
-            className="bg-muted/30 border-border/50 focus:border-primary/50"
+            className="bg-muted/30 border-border focus:border-primary/50"
           />
         </div>
 
-        <div className="border border-border/30 bg-muted/10 rounded-lg p-4">
+        <div className="border border-border bg-muted/10 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <input
               type="checkbox"
@@ -108,7 +108,7 @@ export const EditTaskModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Button
             type="button"
             variant="outline"

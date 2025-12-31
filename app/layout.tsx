@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Inter } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { ThemeProvider } from "@/app/_providers/ThemeProvider";
 import { ServiceWorkerRegister } from "@/app/_components/FeatureComponents/PWA/ServiceWorkerRegister";
@@ -10,12 +10,6 @@ import { NextIntlClientProvider } from "next-intl";
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
   display: "swap",
 });
 
@@ -58,7 +52,7 @@ export default async function RootLayout({
   messages = await loadTranslationMessages(locale);
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-webtui-theme="catppuccin-latte">
       <head>
         <meta name="application-name" content="Cr*nMaster" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -66,15 +60,23 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Cr*nMaster" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="stylesheet" href="/webtui/base.css" />
+        <link rel="stylesheet" href="/webtui/theme-catppuccin.css" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem('theme') || 'light';
+                const webtui = theme === 'dark' ? 'catppuccin-mocha' : 'catppuccin-latte';
+                document.documentElement.setAttribute('data-webtui-theme', webtui);
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
+      <body className={`${jetbrainsMono.variable} terminal-font`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <ThemeProvider>
             {children}
           </ThemeProvider>
           <ServiceWorkerRegister />

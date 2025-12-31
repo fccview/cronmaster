@@ -98,7 +98,7 @@ export const DropdownMenu = ({
 
       {isOpen && (
         <div
-          className={`absolute right-0 w-56 rounded-lg border border-border/50 bg-background shadow-lg z-[9999] overflow-hidden ${
+          className={`absolute right-0 w-56 ascii-border bg-background0 shadow-lg z-[9999] overflow-hidden terminal-font ${
             positionAbove ? "bottom-full mb-2" : "top-full mt-2"
           }`}
         >
@@ -112,8 +112,8 @@ export const DropdownMenu = ({
                   item.disabled
                     ? "opacity-50 cursor-not-allowed"
                     : item.variant === "destructive"
-                    ? "text-destructive hover:bg-destructive/10"
-                    : "text-foreground hover:bg-accent"
+                    ? "text-status-error hover:bg-background1"
+                    : "hover:bg-background1"
                 }`}
               >
                 {item.icon && (

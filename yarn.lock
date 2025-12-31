@@ -1700,6 +1700,16 @@
   resolved "https://registry.yarnpkg.com/@unrs/resolver-binding-win32-x64-msvc/-/resolver-binding-win32-x64-msvc-1.11.1.tgz#538b1e103bf8d9864e7b85cc96fa8d6fb6c40777"
   integrity sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==
 
+"@webtui/css@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@webtui/css/-/css-0.1.5.tgz#2a1d2fe50200ee1dfbbe87448acc0298c3a0d5a6"
+  integrity sha512-6+yk/XjW4JHaRUJpglYcvE9pcxay+PmoPFYeedHksCz0JHp3POW0LG2c6q1hSu2y7U4V0yHO7/eQBC3P0qCyIw==
+
+"@webtui/theme-catppuccin@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@webtui/theme-catppuccin/-/theme-catppuccin-0.0.3.tgz#bc451e8334f697acd17aeb31b721c17012edd37a"
+  integrity sha512-mn3qpyIDYzPm9DoDX7Rs/Ma/3YawbAZEu6/Cemj4kTodr4eBFuEOmkkd1RtChsXGH75fZ054MIzZoVwYvA5W2g==
+
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"
@@ -4160,6 +4170,15 @@ postcss-import@^15.1.0:
     read-cache "^1.0.0"
     resolve "^1.1.7"
 
+postcss-import@^16.1.1:
+  version "16.1.1"
+  resolved "https://registry.yarnpkg.com/postcss-import/-/postcss-import-16.1.1.tgz#cfbe79e6c9232b0dbbe1c18f35308825cfe8ff2a"
+  integrity sha512-2xVS1NCZAfjtVdvXiyegxzJ447GyqCeEI5V7ApgQVOWnros1p5lGNovJNapwPpMombyFBfqDwt7AD3n2l0KOfQ==
+  dependencies:
+    postcss-value-parser "^4.0.0"
+    read-cache "^1.0.0"
+    resolve "^1.1.7"
+
 postcss-js@^4.0.1:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/postcss-js/-/postcss-js-4.1.0.tgz#003b63c6edde948766e40f3daf7e997ae43a5ce6"
@@ -4281,6 +4300,11 @@ react-dom@^18:
   dependencies:
     loose-envify "^1.1.0"
     scheduler "^0.23.2"
+
+react-icons@^5.5.0:
+  version "5.5.0"
+  resolved "https://registry.yarnpkg.com/react-icons/-/react-icons-5.5.0.tgz#8aa25d3543ff84231685d3331164c00299cdfaf2"
+  integrity sha512-MEFcXdkP3dLo8uumGI5xN3lDFNsRtrjbOEKDLD7yv76v4wpnEq2Lt2qeHaQOr34I/wPN3s3+N08WkQ+CW37Xiw==
 
 react-is@^16.13.1:
   version "16.13.1"

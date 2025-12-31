@@ -173,7 +173,6 @@ export const SystemInfoCard = ({
       icon: Clock,
       label: t("sidebar.uptime"),
       value: systemInfo.uptime,
-      color: "text-orange-500",
     },
   ];
 
@@ -184,7 +183,6 @@ export const SystemInfoCard = ({
       value: `${systemInfo.memory.used} / ${systemInfo.memory.total}`,
       detail: `${systemInfo.memory.free} free`,
       status: systemInfo.memory.status,
-      color: "text-cyan-500",
       showProgress: true,
       progressValue: systemInfo.memory.usage,
     },
@@ -194,7 +192,6 @@ export const SystemInfoCard = ({
       value: systemInfo.cpu.model,
       detail: `${systemInfo.cpu.cores} cores`,
       status: systemInfo.cpu.status,
-      color: "text-pink-500",
       showProgress: true,
       progressValue: systemInfo.cpu.usage,
     },
@@ -206,7 +203,6 @@ export const SystemInfoCard = ({
         ? `${systemInfo.gpu.memory} VRAM`
         : systemInfo.gpu.status,
       status: systemInfo.gpu.status,
-      color: "text-indigo-500",
     },
     ...(systemInfo.network
       ? [
@@ -216,7 +212,6 @@ export const SystemInfoCard = ({
           value: `${systemInfo.network.latency}ms`,
           detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
           status: systemInfo.network.status,
-          color: "text-teal-500",
         },
       ]
       : []),
@@ -264,7 +259,6 @@ export const SystemInfoCard = ({
               icon={item.icon}
               label={item.label}
               value={item.value}
-              color={item.color}
               variant="basic"
             />
           ))}
@@ -284,7 +278,6 @@ export const SystemInfoCard = ({
               value={item.value}
               detail={item.detail}
               status={item.status}
-              color={item.color}
               variant="performance"
               showProgress={item.showProgress}
               progressValue={item.progressValue}

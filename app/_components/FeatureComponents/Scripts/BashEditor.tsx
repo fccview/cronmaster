@@ -5,7 +5,8 @@ import { EditorView, keymap } from "@codemirror/view";
 import { EditorState, Transaction } from "@codemirror/state";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { StreamLanguage } from "@codemirror/language";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { catppuccinMocha, catppuccinLatte } from './catppuccin-theme';
+import { useTheme } from 'next-themes';
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Terminal, Copy, Check } from "lucide-react";
 
@@ -27,6 +28,7 @@ export const BashEditor = ({
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
+  const { theme } = useTheme();
 
   const insertFourSpaces = ({
     state,
@@ -99,13 +101,55 @@ export const BashEditor = ({
   useEffect(() => {
     if (!editorRef.current) return;
 
+    const isDark = theme === 'catppuccin-mocha';
     const bashLanguage = StreamLanguage.define(shell);
+
+    // Get CSS variables from the document
+    const getThemeColors = () => {
+      const root = document.documentElement;
+      const style = getComputedStyle(root);
+
+      return {
+        background: style.getPropertyValue('--base').trim() || (isDark ? '#1e1e2e' : '#eff1f5'),
+        foreground: style.getPropertyValue('--text').trim() || (isDark ? '#cdd6f4' : '#4c4f69'),
+        border: style.getPropertyValue('--box-border-color').trim() || (isDark ? '#313244' : '#9ca0b0'),
+        surface: style.getPropertyValue('--surface0').trim() || (isDark ? '#313244' : '#ccd0da'),
+      };
+    };
+
+    const colors = getThemeColors();
+
+    const customTheme = EditorView.theme({
+      "&": {
+        backgroundColor: colors.background,
+        color: colors.foreground,
+        border: `1px solid ${colors.border}`,
+        borderRadius: '0',
+      },
+      ".cm-content": {
+        caretColor: colors.foreground,
+        padding: '12px'
+      },
+      ".cm-gutters": {
+        backgroundColor: colors.surface,
+        color: colors.foreground,
+        borderRight: `1px solid ${colors.border}`,
+        opacity: '0.6',
+      },
+      ".cm-activeLineGutter": {
+        backgroundColor: colors.surface,
+        opacity: '1',
+      },
+      ".cm-scroller": {
+        fontFamily: 'JetBrains Mono, Fira Code, monospace',
+      },
+    }, { dark: isDark });
 
     const state = EditorState.create({
       doc: value || placeholder,
       extensions: [
         bashLanguage,
-        oneDark,
+        customTheme,
         keymap.of([
           { key: "Tab", run: insertFourSpaces },
           { key: "Shift-Tab", run: removeFourSpaces },
@@ -119,7 +163,7 @@ export const BashEditor = ({
           "&": {
             fontSize: "14px",
             fontFamily:
-              'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              'JetBrains Mono, Fira Code, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
             height: "100%",
             maxHeight: "100%",
           },
@@ -132,7 +176,7 @@ export const BashEditor = ({
           },
           ".cm-scroller": {
             fontFamily:
-              'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              'JetBrains Mono, Fira Code, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
             height: "100%",
             maxHeight: "100%",
           },
@@ -150,7 +194,7 @@ export const BashEditor = ({
     return () => {
       view.destroy();
     };
-  }, []);
+  }, [theme]);
 
   useEffect(() => {
     if (editorViewRef.current) {
@@ -181,7 +225,7 @@ export const BashEditor = ({
       {label && (
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-cyan-500" />
+            <Terminal className="h-4 w-4" />
             <span className="text-sm font-medium">{label}</span>
           </div>
           <Button
@@ -200,8 +244,8 @@ export const BashEditor = ({
           </Button>
         </div>
       )}
-      <div className="border border-border overflow-hidden h-full">
-        <div ref={editorRef} className="h-full rounded-lg" />
+      <div className="overflow-hidden h-full">
+        <div ref={editorRef} className="h-full" />
       </div>
     </div>
   );

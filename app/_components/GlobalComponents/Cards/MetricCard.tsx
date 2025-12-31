@@ -27,7 +27,7 @@ export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
       value,
       detail,
       status,
-      color = "text-blue-500",
+      color,
       variant = "basic",
       showProgress = false,
       progressValue = 0,
@@ -40,14 +40,14 @@ export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
       <div
         ref={ref}
         className={cn(
-          "flex items-start gap-3 p-3 border border-border/50 rounded-lg hover:bg-accent/50 transition-colors duration-200 glass-card-hover",
+          "flex items-start gap-3 p-3 tui-card-mini transition-colors duration-200 terminal-font",
           className
         )}
         {...props}
       >
         <div
           className={cn(
-            "p-2 rounded-lg border border-border/50 flex-shrink-0 bg-card/50"
+            "p-2 ascii-border flex-shrink-0 bg-background0"
           )}
         >
           <Icon className={cn("h-4 w-4", color)} />
@@ -55,7 +55,7 @@ export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <p className="text-xs font-medium uppercase tracking-wide terminal-font">
               {label}
             </p>
             {status && variant === "performance" && (
@@ -67,12 +67,12 @@ export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
             <TruncatedText
               text={value}
               maxLength={40}
-              className="text-sm font-medium text-foreground"
+              className="text-sm font-medium terminal-font"
             />
           </div>
 
           {detail && (
-            <p className="text-xs text-muted-foreground mb-2">{detail}</p>
+            <p className="text-xs mb-2 terminal-font">{detail}</p>
           )}
 
           {showProgress && (

@@ -54,7 +54,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
       <>
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="fixed bottom-4 right-4 z-50 lg:hidden p-2 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg hover:bg-accent transition-colors"
+          className="fixed bottom-4 right-4 z-50 lg:hidden p-2 bg-background0 ascii-border transition-colors terminal-font"
         >
           {isMobileOpen ? (
             <X className="h-5 w-5" />
@@ -65,7 +65,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 
         <div
           className={cn(
-            "fixed inset-0 bg-black/50 z-20 lg:hidden transition-opacity duration-300",
+            "fixed inset-0 bg-background0 z-20 lg:hidden transition-opacity duration-300",
             isMobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           onClick={() => setIsMobileOpen(false)}
@@ -74,7 +74,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         <div
           ref={ref}
           className={cn(
-            "bg-background/95 backdrop-blur-md border-r border-border/50 transition-all duration-300 ease-in-out glass-card",
+            "bg-background0 ascii-border transition-all duration-300 ease-in-out terminal-font",
             isMobileOpen
               ? "fixed left-0 top-0 h-full w-80 z-30 translate-x-0"
               : "fixed left-0 top-0 h-full w-80 z-30 -translate-x-full lg:translate-x-0",
@@ -92,7 +92,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         >
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -right-3 top-[21.5vh] w-6 h-6 bg-background border border-border rounded-full items-center justify-center hover:bg-accent transition-colors z-40 hidden lg:flex"
+            className="absolute -right-3 top-[21.5vh] w-6 h-6 bg-background0 ascii-border items-center justify-center transition-colors z-40 hidden lg:flex"
           >
             {isCollapsed ? (
               <ChevronRight className="h-3 w-3" />
@@ -101,18 +101,18 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             )}
           </button>
 
-          <div className="p-4 border-b border-border/50 bg-background/95 backdrop-blur-md">
+          <div className="p-4 ascii-border !border-t-0 border-l-0 !border-r-0 bg-background0">
             <div
               className={cn(
                 "flex items-center gap-3",
                 isCollapsed && "lg:justify-center"
               )}
             >
-              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg flex-shrink-0">
-                <Server className="h-4 w-4 text-cyan-500" />
+              <div className="p-2 bg-background0 ascii-border flex-shrink-0">
+                <Server className="h-4 w-4" />
               </div>
               {(!isCollapsed || !isCollapsed) && (
-                <h2 className="text-sm font-semibold text-foreground truncate">
+                <h2 className="text-sm font-semibold truncate terminal-font">
                   {t("sidebar.systemOverview")}
                 </h2>
               )}
@@ -131,22 +131,22 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                 <div className="flex flex-col items-center space-y-4">
                   {quickStats ? (
                     <>
-                      <div className="w-12 h-12 bg-card/50 border border-border/30 rounded-lg flex flex-col items-center justify-center p-1">
-                        <Cpu className="h-3 w-3 text-pink-500 mb-1" />
+                      <div className="w-12 h-12 bg-background0 ascii-border flex flex-col items-center justify-center p-1">
+                        <Cpu className="h-3 w-3 mb-1" />
                         <span className="text-xs font-bold text-foreground">
                           {quickStats.cpu}%
                         </span>
                       </div>
 
-                      <div className="w-12 h-12 bg-card/50 border border-border/30 rounded-lg flex flex-col items-center justify-center p-1">
-                        <HardDrive className="h-3 w-3 text-cyan-500 mb-1" />
+                      <div className="w-12 h-12 bg-background0 ascii-border flex flex-col items-center justify-center p-1">
+                        <HardDrive className="h-3 w-3 mb-1" />
                         <span className="text-xs font-bold text-foreground">
                           {quickStats.memory}%
                         </span>
                       </div>
 
-                      <div className="w-12 h-12 bg-card/50 border border-border/30 rounded-lg flex flex-col items-center justify-center p-1">
-                        <Wifi className="h-3 w-3 text-teal-500 mb-1" />
+                      <div className="w-12 h-12 bg-background0 ascii-border flex flex-col items-center justify-center p-1">
+                        <Wifi className="h-3 w-3 mb-1" />
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-foreground leading-none">
                             {quickStats.network}
@@ -163,7 +163,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                         return (
                           <div
                             key={index}
-                            className="w-8 h-8 bg-card/50 border border-border/30 rounded-lg flex items-center justify-center"
+                            className="w-8 h-8 bg-background2 ascii-border flex items-center justify-center"
                           >
                             <Server className="h-4 w-4 text-muted-foreground" />
                           </div>

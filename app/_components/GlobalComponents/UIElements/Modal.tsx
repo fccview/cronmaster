@@ -2,8 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/app/_utils/global-utils";
-import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
+import { Button } from "./Button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -26,99 +25,51 @@ export const Modal = ({
   preventCloseOnClickOutside = false,
   className = "",
 }: ModalProps) => {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
+    const dialog = dialogRef.current;
+    if (!dialog) return;
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
+      dialog.showModal();
       document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
+    } else {
+      dialog.close();
       document.body.style.overflow = "unset";
-    };
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node) &&
-        !preventCloseOnClickOutside
-      ) {
-        const target = event.target as Element;
-        const isClickingOnModal = target.closest('[data-modal="true"]');
-        const isClickingOnBackdrop =
-          target.classList.contains("modal-backdrop");
-
-        if (isClickingOnBackdrop) {
-          onClose();
-        }
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
     }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen, onClose, preventCloseOnClickOutside]);
-
-  if (!isOpen) return null;
+  }, [isOpen]);
 
   const sizeClasses = {
-    sm: "max-w-md",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
-    "2xl": "max-w-6xl",
-    "3xl": "max-w-8xl",
+    sm: "w-[600px]",
+    md: "w-[800px]",
+    lg: "w-[1000px]",
+    xl: "w-[1200px]",
+    "2xl": "w-[1400px]",
+    "3xl": "w-[90vw]",
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4"
-      data-modal="true"
+    <dialog
+      ref={dialogRef}
+      className={`ascii-border terminal-font bg-background0 ${sizeClasses[size]} max-w-[95vw] ${className}`}
+      onClick={(e) => {
+        if (e.target === dialogRef.current && !preventCloseOnClickOutside) {
+          onClose();
+        }
+      }}
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm modal-backdrop" />
-
-      <div
-        ref={modalRef}
-        className={cn(
-          "relative w-full bg-card border border-border shadow-lg",
-          "max-h-[85vh]",
-          "sm:rounded-lg sm:max-h-[90vh] sm:w-full",
-          sizeClasses[size],
-          className
+      <div className="ascii-border border-t-0 border-l-0 border-r-0 p-4 flex justify-between items-center bg-background0">
+        <h2 className="terminal-font font-bold uppercase">{title}</h2>
+        {showCloseButton && (
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
         )}
-      >
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border sticky top-0 bg-card z-10">
-          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-          {showCloseButton && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-
-        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(80vh-100px)]">
-          {children}
-        </div>
       </div>
-    </div>
+      <div className="p-4 max-h-[70vh] overflow-y-auto tui-scrollbar bg-background0">
+        {children}
+      </div>
+    </dialog>
   );
 };

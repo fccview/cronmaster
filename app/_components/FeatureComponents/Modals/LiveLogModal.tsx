@@ -228,19 +228,19 @@ export const LiveLogModal = ({
     <div className="flex items-center gap-3">
       <span>{t("cronjobs.liveJobExecution")}{jobComment && `: ${jobComment}`}</span>
       {status === "running" && (
-        <span className="flex items-center gap-1 text-sm text-blue-500">
+        <span className="flex items-center gap-1 text-sm text-status-info">
           <Loader2 className="w-4 h-4 animate-spin" />
           {t("cronjobs.running")}
         </span>
       )}
       {status === "completed" && (
-        <span className="flex items-center gap-1 text-sm text-green-500">
+        <span className="flex items-center gap-1 text-sm text-status-success">
           <CheckCircle2 className="w-4 h-4" />
           {t("cronjobs.completed", { exitCode: exitCode ?? 0 })}
         </span>
       )}
       {status === "failed" && (
-        <span className="flex items-center gap-1 text-sm text-red-500">
+        <span className="flex items-center gap-1 text-sm text-status-error">
           <XCircle className="w-4 h-4" />
           {t("cronjobs.jobFailed", { exitCode: exitCode ?? 1 })}
         </span>
@@ -268,7 +268,7 @@ export const LiveLogModal = ({
                   id="maxLines"
                   value={maxLines}
                   onChange={(e) => setMaxLines(parseInt(e.target.value, 10))}
-                  className="bg-background border border-border rounded px-2 py-1 text-sm"
+                  className="bg-background0 border border-border rounded px-2 py-1 text-sm"
                 >
                   <option value="100">{t("cronjobs.nLines", { count: "100" })}</option>
                   <option value="500">{t("cronjobs.nLines", { count: "500" })}</option>
@@ -316,7 +316,7 @@ export const LiveLogModal = ({
             )}
           </div>
           {truncated && !showFullLog && (
-            <div className="text-sm text-orange-500 flex items-center gap-1">
+            <div className="text-sm text-status-warning flex items-center gap-1 terminal-font">
               <AlertTriangle className="h-4 w-4" />
               {t("cronjobs.showingLastOf", {
                 lineCount: lineCount.toLocaleString(),
@@ -327,8 +327,8 @@ export const LiveLogModal = ({
         </div>
 
         {showSizeWarning && (
-          <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 flex items-start gap-3">
-            <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+          <div className="bg-background2 ascii-border p-3 flex items-start gap-3 terminal-font">
+            <AlertTriangle className="h-4 w-4 text-status-warning mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground">
                 <span className="font-medium">{t("cronjobs.largeLogFileDetected")}</span> ({formatFileSize(fileSize)})
@@ -340,7 +340,7 @@ export const LiveLogModal = ({
               variant="ghost"
               size="sm"
               onClick={toggleTailMode}
-              className="text-orange-500 hover:text-orange-400 hover:bg-orange-500/10 h-auto py-1 px-2 text-xs"
+              className="text-status-warning hover:text-status-warning hover:bg-background2 h-auto py-1 px-2 text-xs"
               title={tailMode ? t("cronjobs.showAllLines") : t("cronjobs.enableTailMode")}
             >
               {tailMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
@@ -348,8 +348,8 @@ export const LiveLogModal = ({
           </div>
         )}
 
-        <div className="bg-black/90 dark:bg-black/60 rounded-lg p-4 max-h-[60vh] overflow-auto">
-          <pre className="text-xs font-mono text-green-400 whitespace-pre-wrap break-words">
+        <div className="bg-black/90 dark:bg-black/60 p-4 max-h-[60vh] overflow-auto terminal-font ascii-border">
+          <pre className="text-xs font-mono text-status-success whitespace-pre-wrap break-words">
             {logContent || t("cronjobs.waitingForJobToStart")}
             <div ref={logEndRef} />
           </pre>

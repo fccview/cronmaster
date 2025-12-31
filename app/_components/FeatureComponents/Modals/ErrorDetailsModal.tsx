@@ -69,7 +69,7 @@ Timestamp: ${error.timestamp}
             <h4 className="text-sm font-medium text-foreground mb-2">
               Details
             </h4>
-            <div className="bg-muted/30 p-3 rounded border border-border/30">
+            <div className="bg-muted/30 p-3 rounded border border-border">
               <pre className="text-sm font-mono text-foreground whitespace-pre-wrap break-words">
                 {error.details}
               </pre>
@@ -82,7 +82,7 @@ Timestamp: ${error.timestamp}
             <h4 className="text-sm font-medium text-foreground mb-2">
               Command
             </h4>
-            <div className="bg-muted/30 p-3 rounded border border-border/30">
+            <div className="bg-muted/30 p-3 rounded border border-border">
               <code className="text-sm font-mono text-foreground break-all">
                 {error.command}
               </code>
@@ -93,7 +93,7 @@ Timestamp: ${error.timestamp}
         {error.output && (
           <div>
             <h4 className="text-sm font-medium text-foreground mb-2">Output</h4>
-            <div className="bg-muted/30 p-3 rounded border border-border/30 max-h-32 overflow-y-auto">
+            <div className="bg-muted/30 p-3 rounded border border-border max-h-32 overflow-y-auto">
               <pre className="text-sm font-mono text-foreground whitespace-pre-wrap">
                 {error.output}
               </pre>
@@ -118,7 +118,7 @@ Timestamp: ${error.timestamp}
           Timestamp: {error.timestamp}
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Button
             variant="outline"
             onClick={handleCopyDetails}
