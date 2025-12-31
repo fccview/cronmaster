@@ -4,7 +4,7 @@ import { MetricCard } from "@/app/_components/GlobalComponents/Cards/MetricCard"
 import { SystemStatus } from "@/app/_components/FeatureComponents/System/SystemStatus";
 import { PerformanceSummary } from "@/app/_components/FeatureComponents/System/PerformanceSummary";
 import { Sidebar } from "@/app/_components/FeatureComponents/Layout/Sidebar";
-import { Clock, HardDrive, Cpu, Monitor, Wifi } from "lucide-react";
+import { ClockIcon, HardDriveIcon, CpuIcon, MonitorIcon, WifiHighIcon } from "@phosphor-icons/react";
 
 interface SystemInfoType {
   hostname: string;
@@ -170,7 +170,7 @@ export const SystemInfoCard = ({
 
   const basicInfoItems = [
     {
-      icon: Clock,
+      icon: ClockIcon,
       label: t("sidebar.uptime"),
       value: systemInfo.uptime,
     },
@@ -178,7 +178,7 @@ export const SystemInfoCard = ({
 
   const performanceItems = [
     {
-      icon: HardDrive,
+      icon: HardDriveIcon,
       label: t("sidebar.memory"),
       value: `${systemInfo.memory.used} / ${systemInfo.memory.total}`,
       detail: `${systemInfo.memory.free} free`,
@@ -187,7 +187,7 @@ export const SystemInfoCard = ({
       progressValue: systemInfo.memory.usage,
     },
     {
-      icon: Cpu,
+      icon: CpuIcon,
       label: t("sidebar.cpu"),
       value: systemInfo.cpu.model,
       detail: `${systemInfo.cpu.cores} cores`,
@@ -196,7 +196,7 @@ export const SystemInfoCard = ({
       progressValue: systemInfo.cpu.usage,
     },
     {
-      icon: Monitor,
+      icon: MonitorIcon,
       label: t("sidebar.gpu"),
       value: systemInfo.gpu.model,
       detail: systemInfo.gpu.memory
@@ -207,7 +207,7 @@ export const SystemInfoCard = ({
     ...(systemInfo.network
       ? [
         {
-          icon: Wifi,
+          icon: WifiHighIcon,
           label: t("sidebar.network"),
           value: `${systemInfo.network.latency}ms`,
           detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
@@ -269,7 +269,7 @@ export const SystemInfoCard = ({
         <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
           {t("sidebar.performanceMetrics")}
         </h3>
-        <div className="space-y-2">
+        <div className="space-y-4">
           {performanceItems.map((item) => (
             <MetricCard
               key={item.label}

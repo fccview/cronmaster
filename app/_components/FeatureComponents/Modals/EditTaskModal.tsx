@@ -4,7 +4,7 @@ import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
-import { Edit, Terminal, FileOutput } from "lucide-react";
+import { PencilSimpleIcon, TerminalIcon, FileArrowDownIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 interface EditTaskModalProps {
@@ -63,7 +63,7 @@ export const EditTaskModal = ({
                 required
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Terminal className="h-4 w-4 text-muted-foreground" />
+                <TerminalIcon className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
           </div>
@@ -98,7 +98,7 @@ export const EditTaskModal = ({
                 htmlFor="logsEnabled"
                 className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer"
               >
-                <FileOutput className="h-4 w-4 text-primary" />
+                <FileArrowDownIcon className="h-4 w-4 text-primary" />
                 {t("cronjobs.enableLogging")}
               </label>
               <p className="text-xs text-muted-foreground mt-1">
@@ -118,7 +118,7 @@ export const EditTaskModal = ({
             Cancel
           </Button>
           <Button type="submit" className="btn-primary glow-primary">
-            <Edit className="h-4 w-4 mr-2" />
+            <PencilSimpleIcon className="h-4 w-4 mr-2" />
             Update Task
           </Button>
         </div>

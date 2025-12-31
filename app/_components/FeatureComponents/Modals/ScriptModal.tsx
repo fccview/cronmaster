@@ -6,7 +6,7 @@ import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { BashEditor } from "@/app/_components/FeatureComponents/Scripts/BashEditor";
 import { BashSnippetHelper } from "@/app/_components/FeatureComponents/Scripts/BashSnippetHelper";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
-import { FileText, Code, Info, Trash2 } from "lucide-react";
+import { FileTextIcon, CodeIcon, InfoIcon, TrashIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 interface ScriptModalProps {
@@ -114,7 +114,7 @@ export const ScriptModal = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
           <div className="lg:col-span-1 bg-background0 ascii-border p-4 flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-              <Code className="h-4 w-4" />
+              <CodeIcon className="h-4 w-4" />
               <h3 className="text-sm font-medium">Snippets</h3>
             </div>
             <div className="flex-1 overflow-y-auto min-h-0 !pr-0 tui-scrollbar">
@@ -124,7 +124,7 @@ export const ScriptModal = ({
 
           <div className="lg:col-span-2 flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-              <FileText className="h-4 w-4" />
+              <FileTextIcon className="h-4 w-4" />
               <h3 className="text-sm font-medium">
                 Script Content <span className="text-status-error">*</span>
               </h3>
@@ -154,7 +154,7 @@ export const ScriptModal = ({
                 onClick={onClearDraft}
                 className="opacity-60 hover:opacity-100"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <TrashIcon className="h-4 w-4 mr-2" />
                 {t("scripts.clearDraft")}
               </Button>
             )}

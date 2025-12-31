@@ -8,7 +8,7 @@ import { StreamLanguage } from "@codemirror/language";
 import { catppuccinMocha, catppuccinLatte } from './catppuccin-theme';
 import { useTheme } from 'next-themes';
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { Terminal, Copy, Check } from "lucide-react";
+import { TerminalIcon, CopyIcon, CheckIcon } from "@phosphor-icons/react";
 
 interface BashEditorProps {
   value: string;
@@ -104,7 +104,6 @@ export const BashEditor = ({
     const isDark = theme === 'catppuccin-mocha';
     const bashLanguage = StreamLanguage.define(shell);
 
-    // Get CSS variables from the document
     const getThemeColors = () => {
       const root = document.documentElement;
       const style = getComputedStyle(root);
@@ -141,7 +140,7 @@ export const BashEditor = ({
         opacity: '1',
       },
       ".cm-scroller": {
-        fontFamily: 'JetBrains Mono, Fira Code, monospace',
+        fontFamily: 'JetBrains Mono, Fira CodeIcon, monospace',
       },
     }, { dark: isDark });
 
@@ -163,7 +162,7 @@ export const BashEditor = ({
           "&": {
             fontSize: "14px",
             fontFamily:
-              'JetBrains Mono, Fira Code, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              'JetBrains Mono, Fira CodeIcon, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
             height: "100%",
             maxHeight: "100%",
           },
@@ -176,7 +175,7 @@ export const BashEditor = ({
           },
           ".cm-scroller": {
             fontFamily:
-              'JetBrains Mono, Fira Code, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              'JetBrains Mono, Fira CodeIcon, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
             height: "100%",
             maxHeight: "100%",
           },
@@ -225,7 +224,7 @@ export const BashEditor = ({
       {label && (
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4" />
+            <TerminalIcon className="h-4 w-4" />
             <span className="text-sm font-medium">{label}</span>
           </div>
           <Button
@@ -236,11 +235,11 @@ export const BashEditor = ({
             className="btn-outline h-7 px-2"
           >
             {copied ? (
-              <Check className="h-3 w-3 mr-1" />
+              <CheckIcon className="h-3 w-3 mr-1" />
             ) : (
-              <Copy className="h-3 w-3 mr-1" />
+              <CopyIcon className="h-3 w-3 mr-1" />
             )}
-            {copied ? "Copied!" : "Copy"}
+            {copied ? "Copied!" : "CopyIcon"}
           </Button>
         </div>
       )}

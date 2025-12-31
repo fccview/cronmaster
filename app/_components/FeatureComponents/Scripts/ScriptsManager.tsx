@@ -4,15 +4,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/_components/GlobalComponents/Cards/Card";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import {
-  FileText,
-  Plus,
-  Edit,
-  Trash2,
-  Copy,
-  Copy as CopyIcon,
-  CheckCircle,
-  Files,
-} from "lucide-react";
+  FileTextIcon,
+  PlusIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+  CopyIcon,
+  CheckCircleIcon,
+  FilesIcon,
+} from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 import {
   createScript,
@@ -208,7 +207,7 @@ export const ScriptsManager = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-background2 ascii-border">
-                <FileText className="h-5 w-5 text-primary" />
+                <FileTextIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-xl brand-gradient">
@@ -223,7 +222,7 @@ export const ScriptsManager = ({
               onClick={() => setIsCreateModalOpen(true)}
               className="btn-primary glow-primary"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <PlusIcon className="h-4 w-4 mr-2" />
               {t("scripts.newScript")}
             </Button>
           </div>
@@ -232,7 +231,7 @@ export const ScriptsManager = ({
           {scripts.length === 0 ? (
             <div className="text-center py-16 terminal-font">
               <div className="mx-auto w-20 h-20 bg-background2 ascii-border flex items-center justify-center mb-6">
-                <FileText className="h-10 w-10 text-primary" />
+                <FileTextIcon className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-3 brand-gradient">
                 {t("scripts.noScriptsYet")}
@@ -245,7 +244,7 @@ export const ScriptsManager = ({
                 className="btn-primary glow-primary"
                 size="lg"
               >
-                <Plus className="h-5 w-5 mr-2" />
+                <PlusIcon className="h-5 w-5 mr-2" />
                 {t("scripts.createYourFirstScript")}
               </Button>
             </div>
@@ -282,11 +281,11 @@ export const ScriptsManager = ({
                         size="sm"
                         onClick={() => handleCopy(script)}
                         className="btn-outline h-8 px-3"
-                        title="Copy script content to clipboard"
-                        aria-label="Copy script content to clipboard"
+                        title="CopyIcon script content to clipboard"
+                        aria-label="CopyIcon script content to clipboard"
                       >
                         {copiedId === script.id ? (
-                          <CheckCircle className="h-3 w-3 text-status-success" />
+                          <CheckCircleIcon className="h-3 w-3 text-status-success" />
                         ) : (
                           <CopyIcon className="h-3 w-3" />
                         )}
@@ -302,7 +301,7 @@ export const ScriptsManager = ({
                         title="Clone script"
                         aria-label="Clone script"
                       >
-                        <Files className="h-3 w-3" />
+                        <FilesIcon className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="outline"
@@ -320,10 +319,10 @@ export const ScriptsManager = ({
                           setIsEditModalOpen(true);
                         }}
                         className="btn-outline h-8 px-3"
-                        title="Edit script"
-                        aria-label="Edit script"
+                        title="PencilSimpleIcon script"
+                        aria-label="PencilSimpleIcon script"
                       >
-                        <Edit className="h-3 w-3" />
+                        <PencilSimpleIcon className="h-3 w-3" />
                       </Button>
                       <Button
                         variant="destructive"
@@ -336,7 +335,7 @@ export const ScriptsManager = ({
                         title="Delete script"
                         aria-label="Delete script"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <TrashIcon className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>

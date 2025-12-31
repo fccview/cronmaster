@@ -2,7 +2,7 @@
 
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { AlertCircle, Copy, X } from "lucide-react";
+import { WarningCircleIcon, CopyIcon, XIcon } from "@phosphor-icons/react";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 
 interface ErrorDetails {
@@ -54,7 +54,7 @@ Timestamp: ${error.timestamp}
       <div className="space-y-4">
         <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+            <WarningCircleIcon className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
             <div className="flex-1">
               <h3 className="font-medium text-destructive mb-1">
                 {error.title}
@@ -93,7 +93,7 @@ Timestamp: ${error.timestamp}
         {error.output && (
           <div>
             <h4 className="text-sm font-medium text-foreground mb-2">Output</h4>
-            <div className="bg-muted/30 p-3 rounded border border-border max-h-32 overflow-y-auto">
+            <div className="bg-muted/30 p-3 rounded border border-border max-h-32 overflow-y-auto tui-scrollbar">
               <pre className="text-sm font-mono text-foreground whitespace-pre-wrap">
                 {error.output}
               </pre>
@@ -106,7 +106,7 @@ Timestamp: ${error.timestamp}
             <h4 className="text-sm font-medium text-foreground mb-2">
               Error Output
             </h4>
-            <div className="bg-destructive/5 p-3 rounded border border-destructive/20 max-h-32 overflow-y-auto">
+            <div className="bg-destructive/5 p-3 rounded border border-destructive/20 max-h-32 overflow-y-auto tui-scrollbar">
               <pre className="text-sm font-mono text-destructive whitespace-pre-wrap">
                 {error.stderr}
               </pre>
@@ -124,8 +124,8 @@ Timestamp: ${error.timestamp}
             onClick={handleCopyDetails}
             className="btn-outline"
           >
-            <Copy className="h-4 w-4 mr-2" />
-            Copy Details
+            <CopyIcon className="h-4 w-4 mr-2" />
+            CopyIcon Details
           </Button>
           <Button onClick={onClose} className="btn-primary">
             Close

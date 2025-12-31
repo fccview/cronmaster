@@ -19,6 +19,11 @@
     box-sizing: border-box;
   }
 
+  /* Force scrollbars to always be visible */
+  ::-webkit-scrollbar {
+    -webkit-appearance: none;
+  }
+
   body {
     margin: 0;
     padding: 0;
@@ -39,20 +44,37 @@
   }
 
   .tui-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--box-border-color, var(--foreground2)) var(--background1);
+    scrollbar-width: auto !important;
   }
 
   .tui-scrollbar::-webkit-scrollbar {
-    width: 8px;
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    background-color: var(--background1) !important;
+  }
+
+  .tui-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--background0) !important;
+    border: 1px solid var(--box-border-color, var(--foreground2));
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 40px !important;
+    height: 40px !important;
+  }
+
+  .tui-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary) !important;
+    box-shadow: 0 0 8px var(--primary);
   }
 
   .tui-scrollbar::-webkit-scrollbar-track {
     background: var(--background1);
+    border-left: 1px solid var(--box-border-color, var(--foreground2));
   }
 
-  .tui-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--box-border-color, var(--foreground2));
+  .tui-scrollbar::-webkit-scrollbar-corner {
+    background: var(--background1);
   }
 
   .bg-background0 {

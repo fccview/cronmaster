@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Loader2, CheckCircle2, XCircle, AlertTriangle, Minimize2, Maximize2 } from "lucide-react";
+import { CircleNotchIcon, CheckCircleIcon, XCircleIcon, WarningIcon, ArrowsInIcon, ArrowsOutIcon } from "@phosphor-icons/react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
@@ -229,19 +229,19 @@ export const LiveLogModal = ({
       <span>{t("cronjobs.liveJobExecution")}{jobComment && `: ${jobComment}`}</span>
       {status === "running" && (
         <span className="flex items-center gap-1 text-sm text-status-info">
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <CircleNotchIcon className="w-4 h-4 animate-spin" />
           {t("cronjobs.running")}
         </span>
       )}
       {status === "completed" && (
         <span className="flex items-center gap-1 text-sm text-status-success">
-          <CheckCircle2 className="w-4 h-4" />
+          <CheckCircleIcon className="w-4 h-4" />
           {t("cronjobs.completed", { exitCode: exitCode ?? 0 })}
         </span>
       )}
       {status === "failed" && (
         <span className="flex items-center gap-1 text-sm text-status-error">
-          <XCircle className="w-4 h-4" />
+          <XCircleIcon className="w-4 h-4" />
           {t("cronjobs.jobFailed", { exitCode: exitCode ?? 1 })}
         </span>
       )}
@@ -317,7 +317,7 @@ export const LiveLogModal = ({
           </div>
           {truncated && !showFullLog && (
             <div className="text-sm text-status-warning flex items-center gap-1 terminal-font">
-              <AlertTriangle className="h-4 w-4" />
+              <WarningIcon className="h-4 w-4" />
               {t("cronjobs.showingLastOf", {
                 lineCount: lineCount.toLocaleString(),
                 totalLines: totalLines.toLocaleString()
@@ -328,7 +328,7 @@ export const LiveLogModal = ({
 
         {showSizeWarning && (
           <div className="bg-background2 ascii-border p-3 flex items-start gap-3 terminal-font">
-            <AlertTriangle className="h-4 w-4 text-status-warning mt-0.5 flex-shrink-0" />
+            <WarningIcon className="h-4 w-4 text-status-warning mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground">
                 <span className="font-medium">{t("cronjobs.largeLogFileDetected")}</span> ({formatFileSize(fileSize)})
@@ -343,7 +343,7 @@ export const LiveLogModal = ({
               className="text-status-warning hover:text-status-warning hover:bg-background2 h-auto py-1 px-2 text-xs"
               title={tailMode ? t("cronjobs.showAllLines") : t("cronjobs.enableTailMode")}
             >
-              {tailMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+              {tailMode ? <ArrowsOutIcon className="h-3 w-3" /> : <ArrowsInIcon className="h-3 w-3" />}
             </Button>
           </div>
         )}

@@ -9,15 +9,15 @@ import {
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import {
-  Clock,
-  Info,
-  CheckCircle,
-  AlertCircle,
+  ClockIcon,
+  InfoIcon,
+  CheckCircleIcon,
+  WarningCircleIcon,
   Calendar,
-  ChevronDown,
-  ChevronUp,
-  Search,
-} from "lucide-react";
+  CaretDownIcon,
+  CaretUpIcon,
+  MagnifyingGlassIcon,
+} from "@phosphor-icons/react";
 import { useLocale } from "next-intl";
 
 interface CronExpressionHelperProps {
@@ -87,11 +87,11 @@ export const CronExpressionHelper = ({
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
           {explanation?.isValid ? (
-            <CheckCircle className="h-4 w-4 text-status-success" />
+            <CheckCircleIcon className="h-4 w-4 text-status-success" />
           ) : value ? (
-            <AlertCircle className="h-4 w-4 text-status-error" />
+            <WarningCircleIcon className="h-4 w-4 text-status-error" />
           ) : (
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <ClockIcon className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
       </div>
@@ -100,7 +100,7 @@ export const CronExpressionHelper = ({
         <div className="bg-background2 p-2 ascii-border terminal-font">
           <div className="space-y-1">
             <div className="flex items-start gap-2">
-              <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
+              <InfoIcon className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs italic text-muted-foreground">
                   {explanation.isValid
@@ -151,9 +151,9 @@ export const CronExpressionHelper = ({
               <span className="text-sm font-medium">Quick Patterns</span>
               <div className="p-1">
                 {showPatternsPanel ? (
-                  <ChevronUp className="h-4 w-4" />
+                  <CaretUpIcon className="h-4 w-4" />
                 ) : (
-                  <ChevronDown className="h-4 w-4" />
+                  <CaretDownIcon className="h-4 w-4" />
                 )}
               </div>
             </div>
@@ -162,16 +162,16 @@ export const CronExpressionHelper = ({
           {showPatternsPanel && (
             <div className="p-3 border-t border-border">
               <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={patternSearch}
                   onChange={(e) => setPatternSearch(e.target.value)}
-                  placeholder="Search patterns..."
+                  placeholder="MagnifyingGlassIcon patterns..."
                   className="pl-9"
                 />
               </div>
 
-              <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+              <div className="space-y-3 max-h-64 overflow-y-auto tui-scrollbar">
                 {filteredPatterns.map((category) => (
                   <div key={category.category} className="space-y-2">
                     <h4 className="font-medium text-foreground text-sm">

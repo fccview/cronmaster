@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { FileText, Trash2, Eye, X, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
+import { FileTextIcon, TrashIcon, EyeIcon, XIcon, ArrowsClockwiseIcon, WarningCircleIcon, CheckCircleIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 import {
   getJobLogs,
@@ -173,7 +173,7 @@ export const LogsModal = ({
               className="btn-primary glow-primary"
               size="sm"
             >
-              <RefreshCw
+              <ArrowsClockwiseIcon
                 className={`w-4 h-4 mr-2 ${isLoadingLogs ? "animate-spin" : ""
                   }`}
               />
@@ -185,7 +185,7 @@ export const LogsModal = ({
                 className="btn-destructive glow-primary"
                 size="sm"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
+                <TrashIcon className="w-4 h-4 mr-2" />
                 {t("cronjobs.deleteAll")}
               </Button>
             )}
@@ -220,11 +220,11 @@ export const LogsModal = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {log.hasError ? (
-                            <AlertCircle className="w-4 h-4 flex-shrink-0 text-status-error" />
+                            <WarningCircleIcon className="w-4 h-4 flex-shrink-0 text-status-error" />
                           ) : log.exitCode === 0 ? (
-                            <CheckCircle className="w-4 h-4 flex-shrink-0 text-status-success" />
+                            <CheckCircleIcon className="w-4 h-4 flex-shrink-0 text-status-success" />
                           ) : (
-                            <FileText className="w-4 h-4 flex-shrink-0" />
+                            <FileTextIcon className="w-4 h-4 flex-shrink-0" />
                           )}
                           <span className="text-sm font-medium truncate">
                             {formatTimestamp(log.timestamp)}
@@ -254,7 +254,7 @@ export const LogsModal = ({
                         className="btn-destructive glow-primary p-1 h-auto"
                         size="sm"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <TrashIcon className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
@@ -277,7 +277,7 @@ export const LogsModal = ({
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
-                    <Eye className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <EyeIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>{t("cronjobs.selectLogToView")}</p>
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export const LogsModal = ({
 
         <div className="mt-4 pt-4 border-t border-border flex justify-end">
           <Button onClick={onClose} className="btn-primary glow-primary">
-            <X className="w-4 h-4 mr-2" />
+            <XIcon className="w-4 h-4 mr-2" />
             {t("common.close")}
           </Button>
         </div>

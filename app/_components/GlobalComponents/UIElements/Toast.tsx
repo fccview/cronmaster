@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
+import { XIcon, CheckCircleIcon, WarningCircleIcon, InfoIcon, WarningIcon } from "@phosphor-icons/react";
 import { cn } from "@/app/_utils/global-utils";
 import { ErrorDetailsModal } from "@/app/_components/FeatureComponents/Modals/ErrorDetailsModal";
 
@@ -30,10 +30,10 @@ interface ToastProps {
 }
 
 const toastIcons = {
-  success: CheckCircle,
-  error: AlertCircle,
-  info: Info,
-  warning: AlertTriangle,
+  success: CheckCircleIcon,
+  error: WarningCircleIcon,
+  info: InfoIcon,
+  warning: WarningIcon,
 };
 
 const toastStyles = {
@@ -90,7 +90,7 @@ export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
         }}
         className="flex-shrink-0 p-1 rounded-md hover:bg-black/10 transition-colors"
       >
-        <X className="h-4 w-4" />
+        <XIcon className="h-4 w-4" />
       </button>
     </div>
   );

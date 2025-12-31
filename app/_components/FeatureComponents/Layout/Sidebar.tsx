@@ -2,15 +2,15 @@ import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef, useState, useEffect } from "react";
 import React from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Server,
-  Menu,
-  X,
-  Cpu,
-  HardDrive,
-  Wifi,
-} from "lucide-react";
+  CaretLeftIcon,
+  CaretRightIcon,
+  HardDrivesIcon,
+  ListIcon,
+  XIcon,
+  CpuIcon,
+  HardDriveIcon,
+  WifiHighIcon,
+} from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 export interface SidebarProps extends HTMLAttributes<HTMLDivElement> {
@@ -57,9 +57,9 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
           className="fixed bottom-4 right-4 z-50 lg:hidden p-2 bg-background0 ascii-border transition-colors terminal-font"
         >
           {isMobileOpen ? (
-            <X className="h-5 w-5" />
+            <XIcon className="h-5 w-5" />
           ) : (
-            <Menu className="h-5 w-5" />
+            <ListIcon className="h-5 w-5" />
           )}
         </button>
 
@@ -95,9 +95,9 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             className="absolute -right-3 top-[21.5vh] w-6 h-6 bg-background0 ascii-border items-center justify-center transition-colors z-40 hidden lg:flex"
           >
             {isCollapsed ? (
-              <ChevronRight className="h-3 w-3" />
+              <CaretRightIcon className="h-3 w-3" />
             ) : (
-              <ChevronLeft className="h-3 w-3" />
+              <CaretLeftIcon className="h-3 w-3" />
             )}
           </button>
 
@@ -109,7 +109,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
               )}
             >
               <div className="p-2 bg-background0 ascii-border flex-shrink-0">
-                <Server className="h-4 w-4" />
+                <HardDrivesIcon className="h-4 w-4" />
               </div>
               {(!isCollapsed || !isCollapsed) && (
                 <h2 className="text-sm font-semibold truncate terminal-font">
@@ -121,7 +121,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
 
           <div
             className={cn(
-              "overflow-y-auto custom-scrollbar",
+              "overflow-y-auto tui-scrollbar",
               isCollapsed ? "lg:p-2" : "p-4",
               "h-full lg:h-[calc(100vh-88px-80px)]"
             )}
@@ -132,21 +132,21 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                   {quickStats ? (
                     <>
                       <div className="w-12 h-12 bg-background0 ascii-border flex flex-col items-center justify-center p-1">
-                        <Cpu className="h-3 w-3 mb-1" />
+                        <CpuIcon className="h-3 w-3 mb-1" />
                         <span className="text-xs font-bold text-foreground">
                           {quickStats.cpu}%
                         </span>
                       </div>
 
                       <div className="w-12 h-12 bg-background0 ascii-border flex flex-col items-center justify-center p-1">
-                        <HardDrive className="h-3 w-3 mb-1" />
+                        <HardDriveIcon className="h-3 w-3 mb-1" />
                         <span className="text-xs font-bold text-foreground">
                           {quickStats.memory}%
                         </span>
                       </div>
 
                       <div className="w-12 h-12 bg-background0 ascii-border flex flex-col items-center justify-center p-1">
-                        <Wifi className="h-3 w-3 mb-1" />
+                        <WifiHighIcon className="h-3 w-3 mb-1" />
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-foreground leading-none">
                             {quickStats.network}
@@ -165,7 +165,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
                             key={index}
                             className="w-8 h-8 bg-background2 ascii-border flex items-center justify-center"
                           >
-                            <Server className="h-4 w-4 text-muted-foreground" />
+                            <HardDrivesIcon className="h-4 w-4 text-muted-foreground" />
                           </div>
                         );
                       }

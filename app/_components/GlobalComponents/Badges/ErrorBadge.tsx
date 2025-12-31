@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, X } from "lucide-react";
+import { WarningCircleIcon, XIcon } from "@phosphor-icons/react";
 import { JobError, removeJobError } from "@/app/_utils/error-utils";
 
 interface ErrorBadgeProps {
@@ -30,7 +30,7 @@ export const ErrorBadge = ({
             className="flex items-center gap-1 px-2 py-1 bg-destructive/10 text-destructive border border-destructive/20 rounded text-xs hover:bg-destructive/20 transition-colors"
             title={error.message}
           >
-            <AlertCircle className="h-3 w-3" />
+            <WarningCircleIcon className="h-3 w-3" />
             <span className="hidden sm:inline">Error</span>
           </button>
           <button
@@ -38,7 +38,7 @@ export const ErrorBadge = ({
             className="p-1 text-destructive hover:bg-destructive/10 rounded transition-colors"
             title="Dismiss error"
           >
-            <X className="h-3 w-3" />
+            <XIcon className="h-3 w-3" />
           </button>
         </div>
       ))}

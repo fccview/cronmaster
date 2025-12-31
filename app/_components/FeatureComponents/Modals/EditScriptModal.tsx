@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit } from "lucide-react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 import { ScriptModal } from "@/app/_components/FeatureComponents/Modals/ScriptModal";
 
@@ -34,9 +34,9 @@ export const EditScriptModal = ({
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={onSubmit}
-      title="Edit Script"
+      title="PencilSimpleIcon Script"
       submitButtonText="Update Script"
-      submitButtonIcon={<Edit className="h-4 w-4 mr-2" />}
+      submitButtonIcon={<PencilSimpleIcon className="h-4 w-4 mr-2" />}
       form={form}
       onFormChange={onFormChange}
       additionalFormData={{ id: script.id }}

@@ -1,6 +1,6 @@
 import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
-import { Activity } from "lucide-react";
+import { PulseIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 export interface SystemStatusProps extends HTMLAttributes<HTMLDivElement> {
@@ -64,7 +64,7 @@ export const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
           <div className={cn("w-3 h-3", config.dotColor)} />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <PulseIcon className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">
                 {t("system.systemStatus")}: {status}
               </span>

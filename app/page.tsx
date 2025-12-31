@@ -9,7 +9,7 @@ import { PWAInstallPrompt } from "@/app/_components/FeatureComponents/PWA/PWAIns
 import { WrapperScriptWarning } from "@/app/_components/FeatureComponents/System/WrapperScriptWarning";
 import { getTranslations } from "@/app/_server/actions/translations";
 import { SSEProvider } from "@/app/_contexts/SSEContext";
-import { FcClock, FcDocument } from "react-icons/fc";
+import { Logo } from "@/app/_components/GlobalComponents/Logo/Logo";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -69,13 +69,12 @@ export default async function Home() {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between lg:justify-center">
               <div className="flex items-center gap-4">
-                <FcClock size={48} />
+                <Logo size={48} showGlow={true} />
                 <div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold terminal-font uppercase">
                     Cr*nMaster
                   </h1>
                   <p className="text-xs terminal-font flex items-center gap-2">
-                    <FcDocument size={16} />
                     {t("common.cronManagementMadeEasy")}
                   </p>
                 </div>

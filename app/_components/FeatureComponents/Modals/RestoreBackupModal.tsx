@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import {
-  Upload,
-  Trash2,
-  Calendar,
-  User,
-  Download,
-  RefreshCw,
-  Check,
-} from "lucide-react";
+  UploadIcon,
+  TrashIcon,
+  CalendarIcon,
+  UserIcon,
+  DownloadIcon,
+  ArrowsClockwiseIcon,
+  CheckIcon,
+} from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
@@ -92,7 +92,7 @@ export const RestoreBackupModal = ({
             onClick={onBackupAll}
             className="btn-outline flex-1"
           >
-            <Download className="h-4 w-4 mr-2" />
+            <DownloadIcon className="h-4 w-4 mr-2" />
             {t("cronjobs.backupAll")}
           </Button>
           {backups.length > 0 && (
@@ -101,7 +101,7 @@ export const RestoreBackupModal = ({
               onClick={handleRestoreAll}
               className="btn-primary flex-1"
             >
-              <Upload className="h-4 w-4 mr-2" />
+              <UploadIcon className="h-4 w-4 mr-2" />
               {t("cronjobs.restoreAll")}
             </Button>
           )}
@@ -111,7 +111,7 @@ export const RestoreBackupModal = ({
             className="btn-outline"
             title={t("common.refresh")}
           >
-            <RefreshCw className="h-4 w-4" />
+            <ArrowsClockwiseIcon className="h-4 w-4" />
           </Button>
         </div>
 
@@ -120,15 +120,15 @@ export const RestoreBackupModal = ({
             <p>{t("cronjobs.noBackupsFound")}</p>
           </div>
         ) : (
-          <div className="space-y-2 max-h-[500px] overflow-y-auto">
+          <div className="space-y-3 max-h-[500px] overflow-y-auto tui-scrollbar">
             {backups.map((backup) => (
               <div
                 key={backup.filename}
-                className="glass-card p-3 border border-border rounded-lg hover:bg-accent/30 transition-colors"
+                className="tui-card p-3 terminal-font"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0">
-                    <code className="text-xs bg-purple-500/10 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded font-mono border border-purple-500/20">
+                    <code className="text-xs bg-background0 text-status-warning px-1.5 py-0.5 terminal-font ascii-border">
                       {backup.job.schedule}
                     </code>
                   </div>
@@ -136,7 +136,7 @@ export const RestoreBackupModal = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {commandCopied === backup.filename && (
-                        <Check className="h-3 w-3 text-status-success flex-shrink-0" />
+                        <CheckIcon className="h-3 w-3 text-status-success flex-shrink-0" />
                       )}
                       <pre
                         onClick={(e) => {
@@ -145,7 +145,7 @@ export const RestoreBackupModal = ({
                           setCommandCopied(backup.filename);
                           setTimeout(() => setCommandCopied(null), 3000);
                         }}
-                        className="flex-1 cursor-pointer overflow-hidden text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border truncate"
+                        className="flex-1 cursor-pointer overflow-hidden text-sm font-medium terminal-font bg-background1 px-2 py-1 ascii-border truncate"
                         title={unwrapCommand(backup.job.command)}
                       >
                         {unwrapCommand(backup.job.command)}
@@ -155,47 +155,47 @@ export const RestoreBackupModal = ({
 
                   <div className="flex items-center gap-3 text-xs text-muted-foreground flex-shrink-0">
                     <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
+                      <UserIcon className="h-3 w-3" />
                       <span>{backup.job.user}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
+                      <CalendarIcon className="h-3 w-3" />
                       <span>{formatDate(backup.backedUpAt)}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => {
                         onRestore(backup.filename);
                         onClose();
                       }}
-                      className="h-7 w-7 p-0"
+                      className="btn-outline h-8 px-3"
                       title={t("cronjobs.restoreThisBackup")}
                     >
-                      <Upload className="h-3 w-3" />
+                      <UploadIcon className="h-3 w-3" />
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => handleDelete(backup.filename)}
                       disabled={deletingFilename === backup.filename}
-                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                      className="btn-destructive h-8 px-3"
                       title={t("cronjobs.deleteBackup")}
                     >
                       {deletingFilename === backup.filename ? (
                         <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
                       ) : (
-                        <Trash2 className="h-3 w-3" />
+                        <TrashIcon className="h-3 w-3" />
                       )}
                     </Button>
                   </div>
                 </div>
 
                 {backup.job.comment && (
-                  <p className="text-xs text-muted-foreground italic mt-2 ml-0">
+                  <p className="text-xs text-muted-foreground italic mt-2">
                     {backup.job.comment}
                   </p>
                 )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react";
 import { Button } from "./Button";
 
 interface ModalProps {
@@ -63,7 +63,7 @@ export const Modal = ({
         <h2 className="terminal-font font-bold uppercase">{title}</h2>
         {showCloseButton && (
           <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
+            <XIcon className="h-4 w-4" />
           </Button>
         )}
       </div>

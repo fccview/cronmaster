@@ -1,6 +1,6 @@
 import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
-import { Zap } from "lucide-react";
+import { LightningIcon } from "@phosphor-icons/react";
 import { StatusBadge } from "@/app/_components/GlobalComponents/Badges/StatusBadge";
 
 export interface PerformanceMetric {
@@ -26,7 +26,7 @@ export const PerformanceSummary = forwardRef<HTMLDivElement, PerformanceSummaryP
         {...props}
       >
         <div className="flex items-center gap-2 mb-3">
-          <Zap className="h-4 w-4" />
+          <LightningIcon className="h-4 w-4" />
           <span className="text-sm font-medium">
             Performance Summary
           </span>

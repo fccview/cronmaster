@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { ChevronDown, Code, MessageSquare } from "lucide-react";
+import { CaretDownIcon, CodeIcon, ChatTextIcon } from "@phosphor-icons/react";
 import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
 import { useTranslations } from "next-intl";
 
@@ -72,15 +72,15 @@ export const FiltersModal = ({
               >
                 <div className="flex items-center">
                   {localScheduleMode === "cron" && (
-                    <Code className="h-4 w-4 mr-2" />
+                    <CodeIcon className="h-4 w-4 mr-2" />
                   )}
                   {localScheduleMode === "human" && (
-                    <MessageSquare className="h-4 w-4 mr-2" />
+                    <ChatTextIcon className="h-4 w-4 mr-2" />
                   )}
                   {localScheduleMode === "both" && (
                     <>
-                      <Code className="h-4 w-4 mr-1" />
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <CodeIcon className="h-4 w-4 mr-1" />
+                      <ChatTextIcon className="h-4 w-4 mr-2" />
                     </>
                   )}
                   <span>
@@ -90,7 +90,7 @@ export const FiltersModal = ({
                     {localScheduleMode === "both" && t("cronjobs.both")}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 ml-2" />
+                <CaretDownIcon className="h-4 w-4 ml-2" />
               </Button>
 
               {isScheduleDropdownOpen && (
@@ -105,7 +105,7 @@ export const FiltersModal = ({
                       : ""
                       }`}
                   >
-                    <Code className="h-3 w-3" />
+                    <CodeIcon className="h-3 w-3" />
                     {t("cronjobs.cronSyntax")}
                   </button>
                   <button
@@ -118,7 +118,7 @@ export const FiltersModal = ({
                       : ""
                       }`}
                   >
-                    <MessageSquare className="h-3 w-3" />
+                    <ChatTextIcon className="h-3 w-3" />
                     {t("cronjobs.humanReadable")}
                   </button>
                   <button
@@ -131,8 +131,8 @@ export const FiltersModal = ({
                       : ""
                       }`}
                   >
-                    <Code className="h-3 w-3" />
-                    <MessageSquare className="h-3 w-3" />
+                    <CodeIcon className="h-3 w-3" />
+                    <ChatTextIcon className="h-3 w-3" />
                     {t("cronjobs.both")}
                   </button>
                 </div>

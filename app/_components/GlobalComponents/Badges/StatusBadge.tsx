@@ -1,6 +1,6 @@
 import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
-import { CheckCircle, AlertTriangle, XCircle, Activity } from "lucide-react";
+import { CheckCircleIcon, WarningIcon, XCircleIcon, PulseIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 export interface StatusBadgeProps extends HTMLAttributes<HTMLDivElement> {
@@ -33,7 +33,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
           return {
             color: "text-status-success",
             bgColor: "bg-background0",
-            icon: CheckCircle,
+            icon: CheckCircleIcon,
             label: t("system.optimal"),
           };
         case "moderate":
@@ -41,7 +41,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
           return {
             color: "text-status-warning",
             bgColor: "bg-background0",
-            icon: AlertTriangle,
+            icon: WarningIcon,
             label: t("system.warning"),
           };
         case "high":
@@ -49,7 +49,7 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
           return {
             color: "text-status-warning",
             bgColor: "bg-background0",
-            icon: AlertTriangle,
+            icon: WarningIcon,
             label: t("system.high"),
           };
         case "critical":
@@ -58,14 +58,14 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
           return {
             color: "text-status-error",
             bgColor: "bg-background0",
-            icon: XCircle,
+            icon: XCircleIcon,
             label: t("system.critical"),
           };
         default:
           return {
             color: "",
             bgColor: "bg-background0",
-            icon: Activity,
+            icon: PulseIcon,
             label: t("system.unknown"),
           };
       }

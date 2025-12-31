@@ -1,12 +1,12 @@
 import { cn } from "@/app/_utils/global-utils";
-import { HTMLAttributes, forwardRef } from "react";
-import { LucideIcon } from "lucide-react";
+import { HTMLAttributes, forwardRef, ComponentType } from "react";
+import { IconProps } from "@phosphor-icons/react";
 import { StatusBadge } from "@/app/_components/GlobalComponents/Badges/StatusBadge";
 import { ProgressBar } from "@/app/_components/GlobalComponents/UIElements/ProgressBar";
 import { TruncatedText } from "@/app/_components/GlobalComponents/UIElements/TruncatedText";
 
 export interface MetricCardProps extends HTMLAttributes<HTMLDivElement> {
-  icon: LucideIcon;
+  icon: ComponentType<IconProps>;
   label: string;
   value: string;
   detail?: string;
