@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/heading.png" width="600px">
+  <img src="public/heading.png">
 </p>
 
 ## Quick links
