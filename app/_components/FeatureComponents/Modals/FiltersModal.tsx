@@ -94,14 +94,14 @@ export const FiltersModal = ({
               </Button>
 
               {isScheduleDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-background0 border border-border rounded-md shadow-lg z-50 min-w-[140px]">
+                <div className="absolute top-full left-0 p-1 right-0 mt-1 bg-background0 border border-border rounded-md shadow-lg z-50 min-w-[140px]">
                   <button
                     onClick={() => {
                       setLocalScheduleMode("cron");
                       setIsScheduleDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${localScheduleMode === "cron"
-                      ? "bg-accent text-accent-foreground"
+                    className={`w-full text-left px-3 border py-2 text-sm hover:border-border border-transparent transition-colors flex items-center gap-2 ${localScheduleMode === "cron"
+                      ? "border-border"
                       : ""
                       }`}
                   >
@@ -113,8 +113,8 @@ export const FiltersModal = ({
                       setLocalScheduleMode("human");
                       setIsScheduleDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${localScheduleMode === "human"
-                      ? "bg-accent text-accent-foreground"
+                    className={`w-full text-left px-3 py-2 border text-sm hover:border-border border-transparent transition-colors flex items-center gap-2 ${localScheduleMode === "human"
+                      ? "border-border"
                       : ""
                       }`}
                   >
@@ -126,8 +126,8 @@ export const FiltersModal = ({
                       setLocalScheduleMode("both");
                       setIsScheduleDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${localScheduleMode === "both"
-                      ? "bg-accent text-accent-foreground"
+                    className={`w-full text-left px-3 py-2 border text-sm hover:border-border border-transparent transition-colors flex items-center gap-2 ${localScheduleMode === "both"
+                      ? "border-border"
                       : ""
                       }`}
                   >

@@ -79,13 +79,13 @@ export const UserFilter = ({
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background0 border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto tui-scrollbar">
+        <div className="absolute top-full left-0 right-0 p-1 mt-1 bg-background0 border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto tui-scrollbar">
           <button
             onClick={() => {
               onUserChange(null);
               setIsOpen(false);
             }}
-            className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${!selectedUser ? "bg-accent text-accent-foreground" : ""
+            className={`w-full text-left px-3 py-2 text-sm hover:border-border transition-colors ${!selectedUser ? "border border-border" : "border border-transparent"
               }`}
           >
             {t("common.allUsers")}
@@ -97,7 +97,7 @@ export const UserFilter = ({
                 onUserChange(user);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${selectedUser === user ? "bg-accent text-accent-foreground" : ""
+              className={`w-full text-left px-3 py-2 text-sm border border-transparent hover:border-border transition-colors ${selectedUser === user ? "border border-border" : "border border-transparent"
                 }`}
             >
               {user}

@@ -101,17 +101,17 @@ export const DropdownMenu = ({
           className={`absolute right-0 w-56 ascii-border bg-background0 shadow-lg z-[9999] overflow-hidden terminal-font ${positionAbove ? "bottom-full mb-2" : "top-full mt-2"
             }`}
         >
-          <div className="py-1">
+          <div className="p-1">
             {items.map((item, index) => (
               <button
                 key={index}
                 onClick={() => handleItemClick(item)}
                 disabled={item.disabled}
-                className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${item.disabled
+                className={`w-full flex items-center border border-transparent gap-3 px-4 py-2 text-sm transition-colors ${item.disabled
                   ? "opacity-50 cursor-not-allowed"
                   : item.variant === "destructive"
-                    ? "text-status-error hover:bg-background1"
-                    : "hover:bg-background1"
+                    ? "text-status-error hover:border hover:border-border"
+                    : "hover:border-border"
                   }`}
               >
                 {item.icon && (

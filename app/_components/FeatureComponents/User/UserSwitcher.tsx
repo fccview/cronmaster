@@ -80,7 +80,7 @@ export const UserSwitcher = ({
                 onUserChange(user);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${selectedUser === user ? "bg-accent text-accent-foreground" : ""
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${selectedUser === user ? "border border-border" : "border border-transparent"
                 }`}
             >
               {user}

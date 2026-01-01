@@ -1,22 +1,7 @@
-FROM node:20-slim AS base
-
-RUN apt-get update && apt-get install -y \
-    pciutils \
-    curl \
-    iputils-ping \
-    util-linux \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y docker-ce-cli \
-    && rm -rf /var/lib/apt/lists/*
+FROM node:20-alpine AS base
 
 FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
@@ -42,26 +27,27 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 nextjs
+RUN apk add --no-cache su-exec docker-cli pciutils curl iputils util-linux ca-certificates
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
 RUN mkdir -p /app/scripts /app/data /app/snippets && \
     chown -R nextjs:nodejs /app/scripts /app/data /app/snippets
 
+RUN mkdir -p /app/.next/cache && \
+    chown -R nextjs:nodejs /app/.next
+
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
 COPY --from=builder /app/public ./public
-
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-
-COPY --from=builder --chown=nextjs:nodejs /app/app ./app
-
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/yarn.lock ./yarn.lock
-
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["yarn", "start"]
+USER nextjs
+
+CMD ["node", "server.js"]

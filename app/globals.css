@@ -30,6 +30,20 @@
   }
 }
 
+body {
+  font-family: 'IBM Plex Mono', monospace!important;
+  font-weight: 500!important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Azeret Mono Variable', monospace!important;
+}
+
+p, span, a, label, input, textarea, button, select, option {
+  font-family: 'IBM Plex Mono', monospace!important;
+  font-weight: 500!important;
+}
+
 @layer utilities {
   .ascii-border {
     border: 1px solid var(--box-border-color, var(--foreground2));
@@ -182,7 +196,6 @@
     flex-direction: column;
   }
 
-  /* Sidebar layout adjustment */
   .no-sidebar main {
     margin-left: 0 !important;
   }

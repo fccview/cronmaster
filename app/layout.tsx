@@ -4,6 +4,10 @@ import "@/app/globals.css";
 import { ThemeProvider } from "@/app/_providers/ThemeProvider";
 import { ServiceWorkerRegister } from "@/app/_components/FeatureComponents/PWA/ServiceWorkerRegister";
 import { loadTranslationMessages } from "@/app/_server/actions/translations";
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@fontsource/ibm-plex-mono/600.css';
+import '@fontsource-variable/azeret-mono';
 
 import { NextIntlClientProvider } from "next-intl";
 
