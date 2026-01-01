@@ -4,11 +4,11 @@ import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import {
   Calendar,
-  Terminal,
-  MessageSquare,
-  AlertCircle,
-  Trash2,
-} from "lucide-react";
+  TerminalIcon,
+  ChatTextIcon,
+  WarningCircleIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 
 interface DeleteTaskModalProps {
@@ -34,7 +34,7 @@ export const DeleteTaskModal = ({
       size="sm"
     >
       <div className="space-y-3">
-        <div className="bg-muted/30 rounded p-2 border border-border/50">
+        <div className="bg-muted/30 rounded p-2 border border-border">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Calendar className="h-3 w-3 text-muted-foreground" />
@@ -44,15 +44,15 @@ export const DeleteTaskModal = ({
             </div>
 
             <div className="flex items-start gap-2">
-              <Terminal className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <pre className="max-w-full overflow-x-auto text-xs font-medium text-foreground break-words bg-muted/30 px-1 py-0.5 rounded border border-border/30 flex-1 hide-scrollbar">
+              <TerminalIcon className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <pre className="max-w-full overflow-x-auto text-xs font-medium text-foreground break-words bg-muted/30 px-1 py-0.5 rounded border border-border flex-1 hide-scrollbar">
                 {job.command}
               </pre>
             </div>
 
             {job.comment && (
               <div className="flex items-start gap-2">
-                <MessageSquare className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <ChatTextIcon className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-muted-foreground break-words italic">
                   {job.comment}
                 </p>
@@ -63,7 +63,7 @@ export const DeleteTaskModal = ({
 
         <div className="bg-destructive/5 border border-destructive/20 rounded p-2">
           <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+            <WarningCircleIcon className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-xs font-medium text-destructive mb-0.5">
                 This action cannot be undone
@@ -75,16 +75,15 @@ export const DeleteTaskModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
+        <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button variant="outline" onClick={onClose} className="btn-outline">
             Cancel
           </Button>
           <Button
             variant="destructive"
             onClick={onConfirm}
-            className="btn-destructive"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <TrashIcon className="h-4 w-4 mr-2" />
             Delete Task
           </Button>
         </div>

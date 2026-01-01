@@ -1,49 +1,55 @@
-const withNextIntl = require('next-intl/plugin')('./app/i18n.ts');
-
 const withPWA = require('next-pwa')({
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-    disable: process.env.NODE_ENV === 'development',
-    buildExcludes: [/middleware-manifest\.json$/]
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  buildExcludes: [/middleware-manifest\.json$/]
 })
 
-/** @type {import('next').NextConfig} */
+const withNextIntl = require('next-intl/plugin')('./app/i18n.ts')
+
 const nextConfig = {
-    webpack: (config, { dev, isServer }) => {
-        config.resolve.alias = {
-            ...config.resolve.alias,
-            'osx-temperature-sensor': false,
-        };
+  output: 'standalone',
+  experimental: {
+    serverComponentsExternalPackages: [],
+    webpackBuildWorker: true
+  },
+  swcMinify: true,
+  images: {
+    unoptimized: true
+  },
+  webpack: (config, { dev, isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'osx-temperature-sensor': false,
+    };
 
-        if (dev && !isServer) {
-            config.watchOptions = {
-                ...config.watchOptions,
-                ignored: /node_modules/,
-            };
-        }
+    if (dev && !isServer) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: /node_modules/,
+      };
+    }
 
-        return config;
-    },
-    async headers() {
-        return [
-            {
-                source: '/manifest.json',
-                headers: [
-                    { key: 'Content-Type', value: 'application/manifest+json' },
-                ],
-            },
-            {
-                source: '/sw.js',
-                headers: [
-                    { key: 'Service-Worker-Allowed', value: '/' },
-                    { key: 'Cache-Control', value: 'no-cache' },
-                ],
-            },
-        ]
-    },
+    return config;
+  },
+  async headers() {
+    return [
+      {
+        source: '/manifest.json',
+        headers: [
+          { key: 'Content-Type', value: 'application/manifest+json' },
+        ],
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Service-Worker-Allowed', value: '/' },
+          { key: 'Cache-Control', value: 'no-cache' },
+        ],
+      },
+    ]
+  },
 }
 
-module.exports = withNextIntl({
-    ...withPWA(nextConfig)
-});
+module.exports = withPWA(withNextIntl(nextConfig))

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
+import { XIcon, CheckCircleIcon, WarningCircleIcon, InfoIcon, WarningIcon } from "@phosphor-icons/react";
 import { cn } from "@/app/_utils/global-utils";
 import { ErrorDetailsModal } from "@/app/_components/FeatureComponents/Modals/ErrorDetailsModal";
 
@@ -30,19 +30,17 @@ interface ToastProps {
 }
 
 const toastIcons = {
-  success: CheckCircle,
-  error: AlertCircle,
-  info: Info,
-  warning: AlertTriangle,
+  success: CheckCircleIcon,
+  error: WarningCircleIcon,
+  info: InfoIcon,
+  warning: WarningIcon,
 };
 
 const toastStyles = {
-  success:
-    "border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-400",
-  error: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400",
-  info: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  warning:
-    "border-yellow-500/20 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+  success: "ascii-border bg-background0 text-status-success",
+  error: "ascii-border bg-background0 text-status-error",
+  info: "ascii-border bg-background0 text-status-info",
+  warning: "ascii-border bg-background0 text-status-warning",
 };
 
 export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
@@ -62,7 +60,7 @@ export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-4 rounded-lg border backdrop-blur-md transition-all duration-300 ease-in-out",
+        "flex items-start gap-3 p-4 terminal-font transition-all duration-300 ease-in-out",
         toastStyles[toast.type],
         isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
       )}
@@ -92,7 +90,7 @@ export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
         }}
         className="flex-shrink-0 p-1 rounded-md hover:bg-black/10 transition-colors"
       >
-        <X className="h-4 w-4" />
+        <XIcon className="h-4 w-4" />
       </button>
     </div>
   );

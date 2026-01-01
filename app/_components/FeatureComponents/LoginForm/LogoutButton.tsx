@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { LogOut } from "lucide-react";
+import { SignOutIcon } from "@phosphor-icons/react";
 
 export const LogoutButton = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +35,7 @@ export const LogoutButton = () => {
       disabled={isLoading}
       title="Logout"
     >
-      <LogOut className="h-[1.2rem] w-[1.2rem]" />
+      <SignOutIcon className="h-[1.2rem] w-[1.2rem]" />
       <span className="sr-only">Logout</span>
     </Button>
   );

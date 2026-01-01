@@ -4,7 +4,7 @@ import { MetricCard } from "@/app/_components/GlobalComponents/Cards/MetricCard"
 import { SystemStatus } from "@/app/_components/FeatureComponents/System/SystemStatus";
 import { PerformanceSummary } from "@/app/_components/FeatureComponents/System/PerformanceSummary";
 import { Sidebar } from "@/app/_components/FeatureComponents/Layout/Sidebar";
-import { Clock, HardDrive, Cpu, Monitor, Wifi } from "lucide-react";
+import { ClockIcon, HardDriveIcon, CpuIcon, MonitorIcon, WifiHighIcon } from "@phosphor-icons/react";
 
 interface SystemInfoType {
   hostname: string;
@@ -170,53 +170,48 @@ export const SystemInfoCard = ({
 
   const basicInfoItems = [
     {
-      icon: Clock,
+      icon: ClockIcon,
       label: t("sidebar.uptime"),
       value: systemInfo.uptime,
-      color: "text-orange-500",
     },
   ];
 
   const performanceItems = [
     {
-      icon: HardDrive,
+      icon: HardDriveIcon,
       label: t("sidebar.memory"),
       value: `${systemInfo.memory.used} / ${systemInfo.memory.total}`,
       detail: `${systemInfo.memory.free} free`,
       status: systemInfo.memory.status,
-      color: "text-cyan-500",
       showProgress: true,
       progressValue: systemInfo.memory.usage,
     },
     {
-      icon: Cpu,
+      icon: CpuIcon,
       label: t("sidebar.cpu"),
       value: systemInfo.cpu.model,
       detail: `${systemInfo.cpu.cores} cores`,
       status: systemInfo.cpu.status,
-      color: "text-pink-500",
       showProgress: true,
       progressValue: systemInfo.cpu.usage,
     },
     {
-      icon: Monitor,
+      icon: MonitorIcon,
       label: t("sidebar.gpu"),
       value: systemInfo.gpu.model,
       detail: systemInfo.gpu.memory
         ? `${systemInfo.gpu.memory} VRAM`
         : systemInfo.gpu.status,
       status: systemInfo.gpu.status,
-      color: "text-indigo-500",
     },
     ...(systemInfo.network
       ? [
         {
-          icon: Wifi,
+          icon: WifiHighIcon,
           label: t("sidebar.network"),
           value: `${systemInfo.network.latency}ms`,
           detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
           status: systemInfo.network.status,
-          color: "text-teal-500",
         },
       ]
       : []),
@@ -264,7 +259,6 @@ export const SystemInfoCard = ({
               icon={item.icon}
               label={item.label}
               value={item.value}
-              color={item.color}
               variant="basic"
             />
           ))}
@@ -275,7 +269,7 @@ export const SystemInfoCard = ({
         <h3 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
           {t("sidebar.performanceMetrics")}
         </h3>
-        <div className="space-y-2">
+        <div className="space-y-4">
           {performanceItems.map((item) => (
             <MetricCard
               key={item.label}
@@ -284,7 +278,6 @@ export const SystemInfoCard = ({
               value={item.value}
               detail={item.detail}
               status={item.status}
-              color={item.color}
               variant="performance"
               showProgress={item.showProgress}
               progressValue={item.progressValue}

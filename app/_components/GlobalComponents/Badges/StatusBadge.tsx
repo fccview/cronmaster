@@ -1,6 +1,6 @@
 import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
-import { CheckCircle, AlertTriangle, XCircle, Activity } from "lucide-react";
+import { CheckCircleIcon, WarningIcon, XCircleIcon, PulseIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 export interface StatusBadgeProps extends HTMLAttributes<HTMLDivElement> {
@@ -31,46 +31,41 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
         case "operational":
         case "stable":
           return {
-            color: "text-emerald-500",
-            bgColor: "bg-emerald-500/10",
-            borderColor: "border-emerald-500/20",
-            icon: CheckCircle,
+            color: "text-status-success",
+            bgColor: "bg-background0",
+            icon: CheckCircleIcon,
             label: t("system.optimal"),
           };
         case "moderate":
         case "warning":
           return {
-            color: "text-yellow-500",
-            bgColor: "bg-yellow-500/10",
-            borderColor: "border-yellow-500/20",
-            icon: AlertTriangle,
+            color: "text-status-warning",
+            bgColor: "bg-background0",
+            icon: WarningIcon,
             label: t("system.warning"),
           };
         case "high":
         case "slow":
           return {
-            color: "text-orange-500",
-            bgColor: "bg-orange-500/10",
-            borderColor: "border-orange-500/20",
-            icon: AlertTriangle,
+            color: "text-status-warning",
+            bgColor: "bg-background0",
+            icon: WarningIcon,
             label: t("system.high"),
           };
         case "critical":
         case "poor":
         case "offline":
           return {
-            color: "text-destructive",
-            bgColor: "bg-destructive/10",
-            borderColor: "border-destructive/20",
-            icon: XCircle,
+            color: "text-status-error",
+            bgColor: "bg-background0",
+            icon: XCircleIcon,
             label: t("system.critical"),
           };
         default:
           return {
-            color: "text-muted-foreground",
-            bgColor: "bg-muted",
-            borderColor: "border-border",
-            icon: Activity,
+            color: "",
+            bgColor: "bg-background0",
+            icon: PulseIcon,
             label: t("system.unknown"),
           };
       }
@@ -83,9 +78,8 @@ export const StatusBadge = forwardRef<HTMLDivElement, StatusBadgeProps>(
       <div
         ref={ref}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border px-2 py-1",
+          "inline-flex items-center gap-1.5 ascii-border px-2 py-1 terminal-font",
           config.bgColor,
-          config.borderColor,
           {
             "text-xs": size === "sm",
             "text-sm": size === "md",

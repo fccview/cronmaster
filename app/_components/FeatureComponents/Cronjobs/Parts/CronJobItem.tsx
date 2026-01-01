@@ -4,24 +4,24 @@ import { useState, useEffect } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { DropdownMenu } from "@/app/_components/GlobalComponents/UIElements/DropdownMenu";
 import {
-  Trash2,
-  Edit,
-  Files,
-  User,
-  Play,
-  Pause,
-  Code,
-  Info,
-  FileOutput,
-  FileX,
-  FileText,
-  AlertCircle,
-  CheckCircle,
-  AlertTriangle,
-  Download,
-  Hash,
-  Check,
-} from "lucide-react";
+  TrashIcon,
+  PencilSimpleIcon,
+  FilesIcon,
+  UserIcon,
+  PlayIcon,
+  PauseIcon,
+  CodeIcon,
+  InfoIcon,
+  FileArrowDownIcon,
+  FileXIcon,
+  FileTextIcon,
+  WarningCircleIcon,
+  CheckCircleIcon,
+  WarningIcon,
+  DownloadIcon,
+  HashIcon,
+  CheckIcon,
+} from "@phosphor-icons/react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { JobError } from "@/app/_utils/error-utils";
 import { ErrorBadge } from "@/app/_components/GlobalComponents/Badges/ErrorBadge";
@@ -92,7 +92,7 @@ export const CronJobItem = ({
   const dropdownMenuItems = [
     {
       label: t("cronjobs.editCronJob"),
-      icon: <Edit className="h-3 w-3" />,
+      icon: <PencilSimpleIcon className="h-3 w-3" />,
       onClick: () => onEdit(job),
     },
     {
@@ -100,45 +100,45 @@ export const CronJobItem = ({
         ? t("cronjobs.disableLogging")
         : t("cronjobs.enableLogging"),
       icon: job.logsEnabled ? (
-        <FileX className="h-3 w-3" />
+        <FileXIcon className="h-3 w-3" />
       ) : (
-        <FileOutput className="h-3 w-3" />
+        <FileArrowDownIcon className="h-3 w-3" />
       ),
       onClick: () => onToggleLogging(job.id),
     },
     ...(job.logsEnabled
       ? [
-          {
-            label: t("cronjobs.viewLogs"),
-            icon: <FileText className="h-3 w-3" />,
-            onClick: () => onViewLogs(job),
-          },
-        ]
+        {
+          label: t("cronjobs.viewLogs"),
+          icon: <FileTextIcon className="h-3 w-3" />,
+          onClick: () => onViewLogs(job),
+        },
+      ]
       : []),
     {
       label: job.paused
         ? t("cronjobs.resumeCronJob")
         : t("cronjobs.pauseCronJob"),
       icon: job.paused ? (
-        <Play className="h-3 w-3" />
+        <PlayIcon className="h-3 w-3" />
       ) : (
-        <Pause className="h-3 w-3" />
+        <PauseIcon className="h-3 w-3" />
       ),
       onClick: () => (job.paused ? onResume(job.id) : onPause(job.id)),
     },
     {
       label: t("cronjobs.cloneCronJob"),
-      icon: <Files className="h-3 w-3" />,
+      icon: <FilesIcon className="h-3 w-3" />,
       onClick: () => onClone(job),
     },
     {
       label: t("cronjobs.backupJob"),
-      icon: <Download className="h-3 w-3" />,
+      icon: <DownloadIcon className="h-3 w-3" />,
       onClick: () => onBackup(job.id),
     },
     {
       label: t("cronjobs.deleteCronJob"),
-      icon: <Trash2 className="h-3 w-3" />,
+      icon: <TrashIcon className="h-3 w-3" />,
       onClick: () => onDelete(job),
       variant: "destructive" as const,
       disabled: deletingId === job.id,
@@ -148,22 +148,21 @@ export const CronJobItem = ({
   return (
     <div
       key={job.id}
-      className={`glass-card p-4 border border-border/50 rounded-lg hover:bg-accent/30 transition-colors ${
-        isDropdownOpen ? "relative z-10" : ""
-      }`}
+      className={`border border-border lg:tui-card p-4 terminal-font transition-colors ${isDropdownOpen ? "relative z-10" : ""
+        }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             {(scheduleDisplayMode === "cron" ||
               scheduleDisplayMode === "both") && (
-              <code className="text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono border border-purple-500/20">
-                {job.schedule}
-              </code>
-            )}
+                <code className="text-sm bg-background0 text-status-warning px-2 py-1 terminal-font ascii-border">
+                  {job.schedule}
+                </code>
+              )}
             {scheduleDisplayMode === "human" && cronExplanation?.isValid && (
-              <div className="flex items-start gap-1.5 border-b border-primary/30 bg-primary/10 rounded text-primary px-2 py-0.5">
-                <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-1.5 ascii-border bg-background2 px-2 py-0.5">
+                <InfoIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                 <p className="text-sm italic">
                   {cronExplanation.humanReadable}
                 </p>
@@ -172,7 +171,7 @@ export const CronJobItem = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0 w-full">
                 {commandCopied === job.id && (
-                  <Check className="h-3 w-3 text-green-600" />
+                  <CheckIcon className="h-3 w-3 text-status-success" />
                 )}
                 <pre
                   onClick={(e) => {
@@ -181,7 +180,7 @@ export const CronJobItem = ({
                     setCommandCopied(job.id);
                     setTimeout(() => setCommandCopied(null), 3000);
                   }}
-                  className="w-full cursor-pointer overflow-x-auto text-sm font-medium text-foreground bg-muted/30 px-2 py-1 rounded border border-border/30 hide-scrollbar"
+                  className="w-full cursor-pointer overflow-x-auto text-sm font-medium terminal-font bg-background1 px-2 py-1 ascii-border hide-scrollbar"
                 >
                   {unwrapCommand(displayCommand)}
                 </pre>
@@ -191,8 +190,8 @@ export const CronJobItem = ({
 
           <div className="flex items-center gap-2 pb-2 pt-4">
             {scheduleDisplayMode === "both" && cronExplanation?.isValid && (
-              <div className="flex items-start gap-1.5 border-b border-primary/30 bg-primary/10 rounded text-primary px-2 py-0.5">
-                <Info className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-1.5 ascii-border bg-background2 px-2 py-0.5">
+                <InfoIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                 <p className="text-xs italic">
                   {cronExplanation.humanReadable}
                 </p>
@@ -201,7 +200,7 @@ export const CronJobItem = ({
 
             {job.comment && (
               <p
-                className="text-xs text-muted-foreground italic truncate"
+                className="text-xs italic truncate"
                 title={job.comment}
               >
                 {job.comment}
@@ -210,13 +209,13 @@ export const CronJobItem = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 py-3">
-            <div className="flex items-center gap-1 text-xs bg-muted/50 text-muted-foreground px-2 py-0.5 rounded border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors relative">
-              <User className="h-3 w-3" />
+            <div className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border cursor-pointer hover:bg-background2 transition-colors relative terminal-font">
+              <UserIcon className="h-3 w-3" />
               <span>{job.user}</span>
             </div>
 
             <div
-              className="flex items-center gap-1 text-xs bg-muted/50 text-muted-foreground px-2 py-0.5 rounded border border-border/30 cursor-pointer hover:bg-muted/70 transition-colors relative"
+              className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border cursor-pointer hover:bg-background2 transition-colors relative terminal-font"
               title="Click to copy Job UUID"
               onClick={async () => {
                 const success = await copyToClipboard(job.id);
@@ -227,22 +226,22 @@ export const CronJobItem = ({
               }}
             >
               {showCopyConfirmation ? (
-                <Check className="h-3 w-3 text-green-600" />
+                <CheckIcon className="h-3 w-3 text-status-success" />
               ) : (
-                <Hash className="h-3 w-3" />
+                <HashIcon className="h-3 w-3" />
               )}
               <span className="font-mono">{job.id}</span>
             </div>
 
             {job.paused && (
-              <span className="text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/20">
-                {t("cronjobs.paused")}
+              <span className="text-xs bg-background2 px-2 py-0.5 ascii-border terminal-font">
+                <span className="text-status-warning">{t("cronjobs.paused")}</span>
               </span>
             )}
 
             {job.logsEnabled && (
-              <span className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">
-                {t("cronjobs.logged")}
+              <span className="text-xs bg-background0 px-2 py-0.5 ascii-border terminal-font">
+                <span className="text-status-info">{t("cronjobs.logged")}</span>
               </span>
             )}
 
@@ -252,11 +251,11 @@ export const CronJobItem = ({
                   e.stopPropagation();
                   onViewLogs(job);
                 }}
-                className="flex items-center gap-1 text-xs bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-0.5 rounded border border-red-500/30 hover:bg-red-500/20 transition-colors cursor-pointer"
+                className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border hover:bg-background1 transition-colors cursor-pointer terminal-font"
                 title="Latest execution failed - Click to view error log"
               >
-                <AlertCircle className="h-3 w-3" />
-                <span>
+                <WarningCircleIcon className="h-3 w-3 text-status-error" />
+                <span className="text-status-error">
                   {t("cronjobs.failed", {
                     exitCode: job.logError?.exitCode?.toString() ?? "",
                   })}
@@ -272,12 +271,12 @@ export const CronJobItem = ({
                     e.stopPropagation();
                     onViewLogs(job);
                   }}
-                  className="flex items-center gap-1 text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border hover:bg-background1 transition-colors cursor-pointer terminal-font"
                   title="Latest execution succeeded, but has historical failures - Click to view logs"
                 >
-                  <CheckCircle className="h-3 w-3" />
-                  <span>{t("cronjobs.healthy")}</span>
-                  <AlertTriangle className="h-3 w-3" />
+                  <CheckCircleIcon className="h-3 w-3 text-status-success" />
+                  <span className="text-status-warning">{t("cronjobs.healthy")}</span>
+                  <WarningIcon className="h-3 w-3 text-status-warning" />
                 </button>
               )}
 
@@ -285,9 +284,9 @@ export const CronJobItem = ({
               !job.logError?.hasError &&
               !job.logError?.hasHistoricalFailures &&
               job.logError?.latestExitCode === 0 && (
-                <div className="flex items-center gap-1 text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded border border-green-500/30">
-                  <CheckCircle className="h-3 w-3" />
-                  <span>{t("cronjobs.healthy")}</span>
+                <div className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border terminal-font">
+                  <CheckCircleIcon className="h-3 w-3 text-status-success" />
+                  <span className="text-status-success">{t("cronjobs.healthy")}</span>
                 </div>
               )}
 
@@ -315,7 +314,7 @@ export const CronJobItem = ({
               {runningJobId === job.id ? (
                 <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
-                <Code className="h-3 w-3" />
+                <CodeIcon className="h-3 w-3" />
               )}
             </Button>
 
@@ -334,9 +333,9 @@ export const CronJobItem = ({
               aria-label={t("cronjobs.pauseCronJob")}
             >
               {job.paused ? (
-                <Play className="h-3 w-3" />
+                <PlayIcon className="h-3 w-3" />
               ) : (
-                <Pause className="h-3 w-3" />
+                <PauseIcon className="h-3 w-3" />
               )}
             </Button>
 
@@ -363,9 +362,9 @@ export const CronJobItem = ({
               }
             >
               {job.logsEnabled ? (
-                <FileText className="h-3 w-3" />
+                <FileTextIcon className="h-3 w-3" />
               ) : (
-                <FileOutput className="h-3 w-3" />
+                <FileArrowDownIcon className="h-3 w-3" />
               )}
             </Button>
           </div>

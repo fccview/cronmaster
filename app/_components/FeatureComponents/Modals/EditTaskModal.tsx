@@ -3,8 +3,9 @@
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
+import { Switch } from "@/app/_components/GlobalComponents/UIElements/Switch";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
-import { Edit, Terminal, FileOutput } from "lucide-react";
+import { PencilSimpleIcon, TerminalIcon, FileArrowDownIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 interface EditTaskModalProps {
@@ -59,11 +60,11 @@ export const EditTaskModal = ({
                 value={form.command}
                 onChange={(e) => onFormChange({ command: e.target.value })}
                 placeholder="/usr/bin/command"
-                className="font-mono bg-muted/30 border-border/50 focus:border-primary/50"
+                className="font-mono bg-muted/30 border-border focus:border-primary/50"
                 required
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Terminal className="h-4 w-4 text-muted-foreground" />
+                <TerminalIcon className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
           </div>
@@ -80,27 +81,26 @@ export const EditTaskModal = ({
             value={form.comment}
             onChange={(e) => onFormChange({ comment: e.target.value })}
             placeholder={t("cronjobs.whatDoesThisTaskDo")}
-            className="bg-muted/30 border-border/50 focus:border-primary/50"
+            className="bg-muted/30 border-border focus:border-primary/50"
           />
         </div>
 
-        <div className="border border-border/30 bg-muted/10 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="logsEnabled"
+
+        <div className="border border-border bg-muted/10 rounded-lg p-4">
+          <div
+            className="flex items-start gap-3 cursor-pointer"
+            onClick={() => onFormChange({ logsEnabled: !form.logsEnabled })}
+          >
+            <Switch
               checked={form.logsEnabled}
-              onChange={(e) => onFormChange({ logsEnabled: e.target.checked })}
-              className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
+              onCheckedChange={(checked) => onFormChange({ logsEnabled: checked })}
+              className="mt-1"
             />
             <div className="flex-1">
-              <label
-                htmlFor="logsEnabled"
-                className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer"
-              >
-                <FileOutput className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <FileArrowDownIcon className="h-4 w-4 text-primary" />
                 {t("cronjobs.enableLogging")}
-              </label>
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {t("cronjobs.loggingDescription")}
               </p>
@@ -108,7 +108,8 @@ export const EditTaskModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Button
             type="button"
             variant="outline"
@@ -118,7 +119,7 @@ export const EditTaskModal = ({
             Cancel
           </Button>
           <Button type="submit" className="btn-primary glow-primary">
-            <Edit className="h-4 w-4 mr-2" />
+            <PencilSimpleIcon className="h-4 w-4 mr-2" />
             Update Task
           </Button>
         </div>

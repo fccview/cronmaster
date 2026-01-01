@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { ChevronDown, User } from "lucide-react";
+import { CaretDownIcon, UserIcon } from "@phosphor-icons/react";
 import { fetchAvailableUsers } from "@/app/_server/actions/cronjobs";
 
 interface UserSwitcherProps {
@@ -43,7 +43,7 @@ export const UserSwitcher = ({
       <div
         className={`flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md ${className}`}
       >
-        <User className="h-4 w-4 text-muted-foreground" />
+        <UserIcon className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Loading users...</span>
       </div>
     );
@@ -62,14 +62,14 @@ export const UserSwitcher = ({
         className="w-full justify-between"
       >
         <div className="flex items-center gap-2">
-          <User className="h-4 w-4" />
+          <UserIcon className="h-4 w-4" />
           <span className="text-sm">{selectedUser || "Select user"}</span>
         </div>
-        <ChevronDown className="h-4 w-4" />
+        <CaretDownIcon className="h-4 w-4" />
       </Button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background0 border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto tui-scrollbar">
           {users.map((user) => (
             <button
               type="button"
@@ -80,9 +80,8 @@ export const UserSwitcher = ({
                 onUserChange(user);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                selectedUser === user ? "bg-accent text-accent-foreground" : ""
-              }`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${selectedUser === user ? "border border-border" : "border border-transparent"
+                }`}
             >
               {user}
             </button>

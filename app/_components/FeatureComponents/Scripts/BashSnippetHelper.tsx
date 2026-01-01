@@ -4,15 +4,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import {
-  Search,
-  FileText,
+  MagnifyingGlassIcon,
+  FileTextIcon,
   FolderOpen,
-  Code,
-  Settings,
+  CodeIcon,
+  GearIcon,
   Database,
-  Copy,
-  Check,
-} from "lucide-react";
+  CopyIcon,
+  CheckIcon,
+} from "@phosphor-icons/react";
 import {
   fetchSnippets,
   fetchSnippetCategories,
@@ -25,13 +25,13 @@ interface BashSnippetHelperProps {
 }
 
 const categoryIcons = {
-  "File Operations": FileText,
-  Loops: Code,
-  Conditionals: Code,
-  "System Operations": Settings,
+  "File Operations": FileTextIcon,
+  Loops: CodeIcon,
+  Conditionals: CodeIcon,
+  "System Operations": GearIcon,
   "Database Operations": Database,
-  "User Examples": FolderOpen,
-  "Custom Scripts": Code,
+  "UserIcon Examples": FolderOpen,
+  "Custom Scripts": CodeIcon,
 };
 
 export const BashSnippetHelper = ({
@@ -109,7 +109,7 @@ export const BashSnippetHelper = ({
     return (
       <div className="space-y-3">
         <div className="text-center py-8">
-          <Code className="h-8 w-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+          <CodeIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2 animate-spin" />
           <p className="text-sm text-muted-foreground">Loading snippets...</p>
         </div>
       </div>
@@ -119,7 +119,7 @@ export const BashSnippetHelper = ({
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -129,7 +129,7 @@ export const BashSnippetHelper = ({
       </div>
 
       {!searchQuery && (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto tui-scrollbar">
           <div className="flex gap-1 pb-2 min-w-max">
             <Button
               type="button"
@@ -142,7 +142,7 @@ export const BashSnippetHelper = ({
             </Button>
             {categories.map((category) => {
               const Icon =
-                categoryIcons[category as keyof typeof categoryIcons] || Code;
+                categoryIcons[category as keyof typeof categoryIcons] || CodeIcon;
               return (
                 <Button
                   key={category}
@@ -163,15 +163,15 @@ export const BashSnippetHelper = ({
         </div>
       )}
 
-      <div className="space-y-2 overflow-y-auto !pr-0 custom-scrollbar">
+      <div className="space-y-2 overflow-y-auto !pr-0 tui-scrollbar">
         {filteredSnippets.map((snippet) => {
           const Icon =
             categoryIcons[snippet.category as keyof typeof categoryIcons] ||
-            Code;
+            CodeIcon;
           return (
             <div
               key={snippet.id}
-              className="bg-muted/30 rounded-lg border border-border/50 p-3 hover:bg-accent/30 transition-colors"
+              className="bg-muted/30 rounded-lg border border-border p-3 hover:bg-accent/30 transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -180,7 +180,7 @@ export const BashSnippetHelper = ({
                     {snippet.title}
                   </h4>
                   {snippet.source === "user" && (
-                    <span className="inline-block px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded border border-green-200">
+                    <span className="inline-block px-1.5 py-0.5 text-xs text-status-success border border-border">
                       User
                     </span>
                   )}
@@ -192,7 +192,7 @@ export const BashSnippetHelper = ({
                   {snippet.tags.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
-                      className="inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded border border-primary/20"
+                      className="inline-block px-2 py-1 text-xs bg-primary/10 text-primary border border-border"
                     >
                       {tag}
                     </span>
@@ -209,12 +209,11 @@ export const BashSnippetHelper = ({
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopy(snippet)}
-                    className="h-6 w-8 p-0 text-xs"
                   >
                     {copiedId === snippet.id ? (
-                      <Check className="h-3 w-3" />
+                      <CheckIcon className="h-3 w-3" />
                     ) : (
-                      <Copy className="h-3 w-3" />
+                      <CopyIcon className="h-3 w-3" />
                     )}
                   </Button>
                   <Button
@@ -222,7 +221,7 @@ export const BashSnippetHelper = ({
                     variant="default"
                     size="sm"
                     onClick={() => handleInsert(snippet)}
-                    className="h-6 px-3 text-xs flex-1"
+                    className="flex-1"
                   >
                     Insert
                   </Button>
@@ -234,7 +233,7 @@ export const BashSnippetHelper = ({
 
         {filteredSnippets.length === 0 && (
           <div className="text-center py-8">
-            <Code className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <CodeIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               {searchQuery
                 ? `No snippets found for "${searchQuery}"`

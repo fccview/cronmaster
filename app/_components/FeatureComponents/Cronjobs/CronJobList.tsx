@@ -9,16 +9,16 @@ import {
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Switch } from "@/app/_components/GlobalComponents/UIElements/Switch";
 import {
-  Clock,
-  Plus,
+  ClockIcon,
+  PlusIcon,
   Archive,
-  ChevronDown,
-  Code,
-  MessageSquare,
-  Settings,
-  Loader2,
-  Filter,
-} from "lucide-react";
+  CaretDownIcon,
+  CodeIcon,
+  ChatTextIcon,
+  GearIcon,
+  CircleNotchIcon,
+  FunnelIcon,
+} from "@phosphor-icons/react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
 import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
@@ -236,8 +236,8 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Clock className="h-5 w-5 text-primary" />
+              <div className="p-2 bg-primary/10 ascii-border">
+                <ClockIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-xl brand-gradient">
@@ -261,7 +261,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                   className="btn-outline"
                   title={t("cronjobs.filters")}
                 >
-                  <Filter className="h-4 w-4" />
+                  <FunnelIcon className="h-4 w-4" />
                 </Button>
                 <Button
                   onClick={() => setIsBackupModalOpen(true)}
@@ -276,7 +276,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                 onClick={() => setIsNewCronModalOpen(true)}
                 className="btn-primary glow-primary"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <PlusIcon className="h-4 w-4 mr-2" />
                 {t("cronjobs.newTask")}
               </Button>
             </div>
@@ -301,7 +301,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
               onNewTaskClick={() => setIsNewCronModalOpen(true)}
             />
           ) : (
-            <div className="space-y-3 max-h-[55vh] min-h-[55vh] overflow-y-auto">
+            <div className="space-y-4 max-h-[55vh] min-h-[55vh] overflow-y-auto tui-scrollbar pr-1">
               {loadedSettings ? (
                 filteredJobs.map((job) =>
                   minimalMode ? (
@@ -347,7 +347,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
                 )
               ) : (
                 <div className="flex items-center justify-center h-full min-h-[55vh]">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <CircleNotchIcon className="h-8 w-8 animate-spin text-primary" />
                 </div>
               )}
             </div>

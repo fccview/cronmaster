@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
-import { FileText, Search, Check, Terminal } from "lucide-react";
+import { FileTextIcon, MagnifyingGlassIcon, CheckIcon, TerminalIcon } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 import { getScriptContent } from "@/app/_server/actions/scripts";
 import { getHostScriptPath } from "@/app/_server/actions/scripts";
@@ -84,7 +84,7 @@ export const SelectScriptModal = ({
     >
       <div className="space-y-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -119,12 +119,12 @@ export const SelectScriptModal = ({
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                            <FileTextIcon className="h-4 w-4 text-primary flex-shrink-0" />
                             <h4 className="font-medium text-foreground truncate">
                               {script.name}
                             </h4>
                             {selectedScriptId === script.id && (
-                              <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                              <CheckIcon className="h-4 w-4 text-status-success flex-shrink-0" />
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -148,7 +148,7 @@ export const SelectScriptModal = ({
                 {t("scripts.scriptPreview")}
               </h3>
             </div>
-            <div className="p-4 h-full max-h-80 overflow-y-auto">
+            <div className="p-4 h-full max-h-80 overflow-y-auto tui-scrollbar">
               {previewScript ? (
                 <div className="space-y-4">
                   <div>
@@ -162,12 +162,12 @@ export const SelectScriptModal = ({
 
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <Terminal className="h-4 w-4 text-primary" />
+                      <TerminalIcon className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium text-foreground">
                         {t("scripts.commandPreview")}
                       </span>
                     </div>
-                    <div className="bg-muted/30 p-3 rounded border border-border/30">
+                    <div className="bg-muted/30 p-3 rounded border border-border">
                       <code className="text-sm font-mono text-foreground break-all">
                         {hostScriptPath}
                       </code>
@@ -178,7 +178,7 @@ export const SelectScriptModal = ({
                     <span className="text-sm font-medium text-foreground">
                       {t("scripts.scriptContent")}
                     </span>
-                    <div className="bg-muted/30 p-3 rounded border border-border/30 mt-2 max-h-32 overflow-auto">
+                    <div className="bg-muted/30 p-3 rounded border border-border mt-2 max-h-32 overflow-auto tui-scrollbar">
                       <pre className="text-xs font-mono text-foreground whitespace-pre-wrap">
                         {previewContent}
                       </pre>
@@ -187,7 +187,7 @@ export const SelectScriptModal = ({
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground py-8">
-                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <FileTextIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>{t("scripts.selectScriptToPreview")}</p>
                 </div>
               )}
@@ -195,7 +195,7 @@ export const SelectScriptModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Button
             type="button"
             variant="outline"
@@ -210,7 +210,7 @@ export const SelectScriptModal = ({
             disabled={!previewScript}
             className="btn-primary glow-primary"
           >
-            <Check className="h-4 w-4 mr-2" />
+            <CheckIcon className="h-4 w-4 mr-2" />
             {t("scripts.selectScript")}
           </Button>
         </div>

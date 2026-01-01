@@ -5,7 +5,7 @@ import { CronJobList } from "@/app/_components/FeatureComponents/Cronjobs/CronJo
 import { ScriptsManager } from "@/app/_components/FeatureComponents/Scripts/ScriptsManager";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
-import { Clock, FileText } from "lucide-react";
+import { ClockIcon, FileTextIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 interface TabbedInterfaceProps {
@@ -24,33 +24,31 @@ export const TabbedInterface = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-lg p-1 glass-card">
-        <div className="flex">
+      <div className="tui-card p-1 terminal-font">
+        <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("cronjobs")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${
-              activeTab === "cronjobs"
-                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium flex-1 justify-center terminal-font ${activeTab === "cronjobs"
+              ? "bg-background0 ascii-border"
+              : "hover:ascii-border"
+              }`}
           >
-            <Clock className="h-4 w-4" />
+            <ClockIcon className="h-4 w-4" />
             {t("cronjobs.cronJobs")}
-            <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
+            <span className="ml-1 text-xs bg-background0 px-2 py-0.5 ascii-border font-medium">
               {cronJobs.length}
             </span>
           </button>
           <button
             onClick={() => setActiveTab("scripts")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md flex-1 justify-center ${
-              activeTab === "scripts"
-                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium flex-1 justify-center terminal-font ${activeTab === "scripts"
+              ? "bg-background0 ascii-border"
+              : "hover:ascii-border"
+              }`}
           >
-            <FileText className="h-4 w-4" />
+            <FileTextIcon className="h-4 w-4" />
             {t("scripts.scripts")}
-            <span className="ml-1 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
+            <span className="ml-1 text-xs bg-background0 px-2 py-0.5 ascii-border font-medium">
               {scripts.length}
             </span>
           </button>

@@ -2,7 +2,7 @@
   <img src="public/heading.png" width="400px">
 </p>
 
-## Table of Contents
+## Quick links
 
 - [Features](#features)
 - [Quick Start](#quick-start)
@@ -18,11 +18,16 @@
   - [Managing Cron Jobs](#managing-cron-jobs)
   - [Job Execution Logging](#job-execution-logging)
   - [Managing Scripts](#managing-scripts)
-- [Technologies Used](#technologies-used)
-- [Contributing](#contributing)
-- [License](#license)
 
----
+
+<div align="center">
+
+| Desktop | Mobile |
+|---------|--------|
+| ![Dark Mode Desktop](screenshots/home-dark.png) | ![Dark Mode Mobile](screenshots/home-dark-mobile.png) |
+| ![Light Mode Desktop](screenshots/home-light.png) | ![Light Mode Mobile](screenshots/home-light-mobile.png) |
+
+</div>
 
 ## Features
 
@@ -51,26 +56,13 @@
   <br />
 </p>
 
----
-
-<br />
-
-## Before we start
-
-Hey there! 👋 Just a friendly heads-up: I'm a big believer in open source and love sharing my work with the community. Everything you find in my GitHub repos is and always will be 100% free. If someone tries to sell you a "premium" version of any of my projects while claiming to be me, please know that this is not legitimate. 🚫
-
-If you find my projects helpful and want to fuel my late-night coding sessions with caffeine, I'd be super grateful for any support! ☕
-
 <p align="center">
   <a href="https://www.buymeacoffee.com/fccview">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="150">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="120">
   </a>
 </p>
 
-<div align="center">
-  <img width="500px" src="screenshots/home.png">
-  <img width="500px" src="screenshots/live-running.png" />
-</div>
+---
 
 <a id="quick-start"></a>
 
@@ -93,7 +85,6 @@ services:
       - "40123:3000"
     environment:
       - NODE_ENV=production
-      - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       - AUTH_PASSWORD=very_strong_password
       - HOST_CRONTAB_USER=root
@@ -334,16 +325,6 @@ I would like to thank the following members for raising issues and help test/deb
     </tr>
   </tbody>
 </table>
-
-<a id="license"></a>
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For issues and questions, please open an issue on the GitHub repository.
 
 ## Star History
 

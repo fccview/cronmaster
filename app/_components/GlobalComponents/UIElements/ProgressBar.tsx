@@ -25,35 +25,29 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
     const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
     const getColorClass = (percentage: number) => {
-      if (percentage >= 90) return "bg-destructive";
-      if (percentage >= 80) return "bg-orange-500";
-      if (percentage >= 70) return "bg-yellow-500";
-      return "bg-emerald-500";
+      if (percentage >= 90) return "bg-red-600";
+      if (percentage >= 80) return "bg-yellow-600";
+      if (percentage >= 70) return "bg-yellow-600";
+      return "bg-green-600";
     };
 
     const getGradientClass = (percentage: number) => {
-      if (percentage >= 90)
-        return "bg-gradient-to-r from-destructive to-red-600";
-      if (percentage >= 80)
-        return "bg-gradient-to-r from-orange-500 to-orange-600";
-      if (percentage >= 70)
-        return "bg-gradient-to-r from-yellow-500 to-yellow-600";
-      return "bg-gradient-to-r from-emerald-500 to-emerald-600";
+      return getColorClass(percentage);
     };
 
     return (
-      <div ref={ref} className={cn("w-full", className)} {...props}>
+      <div ref={ref} className={cn("w-full terminal-font", className)} {...props}>
         {showLabel && (
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs text-muted-foreground">Usage</span>
-            <span className="text-xs font-medium text-foreground">
+            <span className="text-xs">Usage</span>
+            <span className="text-xs font-medium">
               {Math.round(percentage)}%
             </span>
           </div>
         )}
 
         <div
-          className={cn("w-full bg-muted rounded-full overflow-hidden", {
+          className={cn("w-full bg-background2 ascii-border overflow-hidden", {
             "h-1.5": size === "sm",
             "h-2": size === "md",
             "h-3": size === "lg",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy } from "lucide-react";
+import { CopyIcon } from "@phosphor-icons/react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
@@ -89,7 +89,7 @@ export const CloneScriptModal = ({
               </>
             ) : (
               <>
-                <Copy className="h-4 w-4 mr-2" />
+                <CopyIcon className="h-4 w-4 mr-2" />
                 Clone Script
               </>
             )}

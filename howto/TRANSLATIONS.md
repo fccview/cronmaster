@@ -2,7 +2,7 @@
 
 CronMaster supports internationalization (i18n) with both **unofficial custom translations** and **official translations** that can be contributed to the project.
 
-## Table of Contents
+## Quick links
 
 - [Custom User Translations (Unofficial)](#custom-user-translations-unofficial)
 - [Official Translations via Pull Request](#official-translations-via-pull-request)

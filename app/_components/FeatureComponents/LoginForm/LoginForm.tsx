@@ -12,7 +12,7 @@ import {
   CardDescription,
   CardContent,
 } from "@/app/_components/GlobalComponents/Cards/Card";
-import { Lock, Eye, EyeOff, Shield, AlertTriangle, Loader2 } from "lucide-react";
+import { LockIcon, EyeIcon, EyeSlashIcon, ShieldIcon, WarningIcon, CircleNotchIcon } from "@phosphor-icons/react";
 
 interface LoginFormProps {
   hasPassword?: boolean;
@@ -88,7 +88,7 @@ export const LoginForm = ({
       <Card className="w-full max-w-md shadow-xl">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <CircleNotchIcon className="w-12 h-12 text-primary animate-spin" />
             <div className="text-center">
               <p className="text-lg font-medium">{t("login.redirectingToOIDC")}</p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -105,15 +105,15 @@ export const LoginForm = ({
     <Card className="w-full max-w-md shadow-xl">
       <CardHeader className="text-center">
         <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-          <Lock className="w-8 h-8 text-primary" />
+          <LockIcon className="w-8 h-8 text-primary" />
         </div>
         <CardTitle>{t("login.welcomeTitle")}</CardTitle>
         <CardDescription>
           {hasPassword && hasOIDC
             ? t("login.signInWithPasswordOrSSO")
             : hasOIDC
-            ? t("login.signInWithSSO")
-            : t("login.enterPasswordToContinue")}
+              ? t("login.signInWithSSO")
+              : t("login.enterPasswordToContinue")}
         </CardDescription>
       </CardHeader>
 
@@ -121,7 +121,7 @@ export const LoginForm = ({
         {!hasPassword && !hasOIDC && (
           <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-md">
             <div className="flex items-start space-x-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+              <WarningIcon className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-amber-700 dark:text-amber-400">
                 <div className="font-medium">
                   {t("login.authenticationNotConfigured")}
@@ -152,9 +152,9 @@ export const LoginForm = ({
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
+                    <EyeSlashIcon className="w-4 h-4" />
                   ) : (
-                    <Eye className="w-4 h-4" />
+                    <EyeIcon className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -175,7 +175,7 @@ export const LoginForm = ({
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+                <span className="bg-background0 px-2 text-muted-foreground">
                   {t("login.orContinueWith")}
                 </span>
               </div>
@@ -190,7 +190,7 @@ export const LoginForm = ({
               onClick={handleOIDCLogin}
               disabled={isLoading}
             >
-              <Shield className="w-4 h-4 mr-2" />
+              <ShieldIcon className="w-4 h-4 mr-2" />
               {isLoading ? t("login.redirecting") : t("login.signInWithSSO")}
             </Button>
           )}
@@ -203,7 +203,7 @@ export const LoginForm = ({
         </div>
 
         {version && (
-          <div className="mt-6 pt-4 border-t border-border/50">
+          <div className="mt-6 pt-4 border-t border-border">
             <div className="text-center text-xs text-muted-foreground">
               Cr*nMaster {t("common.version", { version })}
             </div>

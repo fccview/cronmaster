@@ -2,7 +2,7 @@
 
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { FileText, AlertCircle, Trash2 } from "lucide-react";
+import { FileTextIcon, WarningCircleIcon, TrashIcon } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 
 interface DeleteScriptModalProps {
@@ -25,10 +25,10 @@ export const DeleteScriptModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Delete Script" size="sm">
       <div className="space-y-3">
-        <div className="bg-muted/30 rounded p-2 border border-border/50">
+        <div className="bg-muted/30 rounded p-2 border border-border">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <FileText className="h-3 w-3 text-muted-foreground" />
+              <FileTextIcon className="h-3 w-3 text-muted-foreground" />
               <span className="text-xs font-medium text-foreground">
                 {script.name}
               </span>
@@ -36,7 +36,7 @@ export const DeleteScriptModal = ({
 
             {script.description && (
               <div className="flex items-start gap-2">
-                <FileText className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <FileTextIcon className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-muted-foreground break-words italic">
                   {script.description}
                 </p>
@@ -44,8 +44,8 @@ export const DeleteScriptModal = ({
             )}
 
             <div className="flex items-start gap-2">
-              <FileText className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <code className="text-xs font-mono bg-muted/30 px-1 py-0.5 rounded border border-border/30">
+              <FileTextIcon className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <code className="text-xs font-mono bg-muted/30 px-1 py-0.5 rounded border border-border">
                 {script.filename}
               </code>
             </div>
@@ -54,7 +54,7 @@ export const DeleteScriptModal = ({
 
         <div className="bg-destructive/5 border border-destructive/20 rounded p-2">
           <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+            <WarningCircleIcon className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-xs font-medium text-destructive mb-0.5">
                 This action cannot be undone
@@ -66,7 +66,7 @@ export const DeleteScriptModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
+        <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button
             variant="outline"
             onClick={onClose}
@@ -78,7 +78,6 @@ export const DeleteScriptModal = ({
           <Button
             variant="destructive"
             onClick={onConfirm}
-            className="btn-destructive"
             disabled={isDeleting}
           >
             {isDeleting ? (
@@ -88,7 +87,7 @@ export const DeleteScriptModal = ({
               </>
             ) : (
               <>
-                <Trash2 className="h-4 w-4 mr-2" />
+                <TrashIcon className="h-4 w-4 mr-2" />
                 Delete Script
               </>
             )}

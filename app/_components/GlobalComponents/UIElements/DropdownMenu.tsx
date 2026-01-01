@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { MoreVertical } from "lucide-react";
+import { DotsThreeVerticalIcon } from "@phosphor-icons/react";
 
 const DROPDOWN_HEIGHT = 200;
 
@@ -25,7 +25,7 @@ interface DropdownMenuProps {
 export const DropdownMenu = ({
   items,
   triggerLabel,
-  triggerIcon = <MoreVertical className="h-3 w-3" />,
+  triggerIcon = <DotsThreeVerticalIcon className="h-3 w-3" />,
   triggerClassName = "btn-outline h-8 px-3",
   onOpenChange,
 }: DropdownMenuProps) => {
@@ -98,23 +98,21 @@ export const DropdownMenu = ({
 
       {isOpen && (
         <div
-          className={`absolute right-0 w-56 rounded-lg border border-border/50 bg-background shadow-lg z-[9999] overflow-hidden ${
-            positionAbove ? "bottom-full mb-2" : "top-full mt-2"
-          }`}
+          className={`absolute right-0 w-56 ascii-border bg-background0 shadow-lg z-[9999] overflow-hidden terminal-font ${positionAbove ? "bottom-full mb-2" : "top-full mt-2"
+            }`}
         >
-          <div className="py-1">
+          <div className="p-1">
             {items.map((item, index) => (
               <button
                 key={index}
                 onClick={() => handleItemClick(item)}
                 disabled={item.disabled}
-                className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                  item.disabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : item.variant === "destructive"
-                    ? "text-destructive hover:bg-destructive/10"
-                    : "text-foreground hover:bg-accent"
-                }`}
+                className={`w-full flex items-center border border-transparent gap-3 px-4 py-2 text-sm transition-colors ${item.disabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : item.variant === "destructive"
+                    ? "text-status-error hover:border hover:border-border"
+                    : "hover:border-border"
+                  }`}
               >
                 {item.icon && (
                   <span className="flex-shrink-0">{item.icon}</span>

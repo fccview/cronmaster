@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { FileText, Trash2, Eye, X, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
+import { FileTextIcon, TrashIcon, EyeIcon, XIcon, ArrowsClockwiseIcon, WarningCircleIcon, CheckCircleIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 import {
   getJobLogs,
@@ -173,7 +173,7 @@ export const LogsModal = ({
               className="btn-primary glow-primary"
               size="sm"
             >
-              <RefreshCw
+              <ArrowsClockwiseIcon
                 className={`w-4 h-4 mr-2 ${isLoadingLogs ? "animate-spin" : ""
                   }`}
               />
@@ -182,10 +182,10 @@ export const LogsModal = ({
             {logs.length > 0 && (
               <Button
                 onClick={handleDeleteAllLogs}
-                className="btn-destructive glow-primary"
+                variant="destructive"
                 size="sm"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
+                <TrashIcon className="w-4 h-4 mr-2" />
                 {t("cronjobs.deleteAll")}
               </Button>
             )}
@@ -208,11 +208,11 @@ export const LogsModal = ({
                 logs.map((log) => (
                   <div
                     key={log.filename}
-                    className={`p-3 rounded border cursor-pointer transition-colors ${selectedLog === log.filename
-                      ? "border-primary bg-primary/10"
+                    className={`p-3 ascii-border cursor-pointer transition-colors terminal-font ${selectedLog === log.filename
+                      ? "border-primary bg-background2"
                       : log.hasError
-                        ? "border-red-500/50 hover:border-red-500"
-                        : "border-border hover:border-primary/50"
+                        ? "border-red-600 hover:border-red-600"
+                        : "ascii-border hover:border-primary"
                       }`}
                     onClick={() => handleViewLog(log.filename)}
                   >
@@ -220,11 +220,11 @@ export const LogsModal = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {log.hasError ? (
-                            <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                            <WarningCircleIcon className="w-4 h-4 flex-shrink-0 text-status-error" />
                           ) : log.exitCode === 0 ? (
-                            <CheckCircle className="w-4 h-4 flex-shrink-0 text-green-500" />
+                            <CheckCircleIcon className="w-4 h-4 flex-shrink-0 text-status-success" />
                           ) : (
-                            <FileText className="w-4 h-4 flex-shrink-0" />
+                            <FileTextIcon className="w-4 h-4 flex-shrink-0" />
                           )}
                           <span className="text-sm font-medium truncate">
                             {formatTimestamp(log.timestamp)}
@@ -236,9 +236,9 @@ export const LogsModal = ({
                           </p>
                           {log.exitCode !== undefined && (
                             <span
-                              className={`text-xs px-1.5 py-0.5 rounded ${log.hasError
-                                ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                                : "bg-green-500/10 text-green-600 dark:text-green-400"
+                              className={`text-xs px-1.5 py-0.5 ${log.hasError
+                                ? "bg-background2 text-status-error"
+                                : "bg-background2 text-status-success"
                                 }`}
                             >
                               Exit: {log.exitCode}
@@ -251,10 +251,10 @@ export const LogsModal = ({
                           e.stopPropagation();
                           handleDeleteLog(log.filename);
                         }}
-                        className="btn-destructive glow-primary p-1 h-auto"
+                        variant="destructive"
                         size="sm"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <TrashIcon className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
@@ -271,13 +271,13 @@ export const LogsModal = ({
                   {t("common.loading")}...
                 </div>
               ) : selectedLog ? (
-                <pre className="h-full overflow-auto bg-muted/50 p-4 rounded border border-border text-xs font-mono whitespace-pre-wrap">
+                <pre className="h-full overflow-auto bg-background0 tui-scrollbar p-4 ascii-border text-xs font-mono whitespace-pre-wrap terminal-font">
                   {logContent}
                 </pre>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
-                    <Eye className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <EyeIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>{t("cronjobs.selectLogToView")}</p>
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export const LogsModal = ({
 
         <div className="mt-4 pt-4 border-t border-border flex justify-end">
           <Button onClick={onClose} className="btn-primary glow-primary">
-            <X className="w-4 h-4 mr-2" />
+            <XIcon className="w-4 h-4 mr-2" />
             {t("common.close")}
           </Button>
         </div>

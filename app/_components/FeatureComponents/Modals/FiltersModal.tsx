@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { ChevronDown, Code, MessageSquare } from "lucide-react";
+import { CaretDownIcon, CodeIcon, ChatTextIcon } from "@phosphor-icons/react";
 import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
 import { useTranslations } from "next-intl";
 
@@ -72,15 +72,15 @@ export const FiltersModal = ({
               >
                 <div className="flex items-center">
                   {localScheduleMode === "cron" && (
-                    <Code className="h-4 w-4 mr-2" />
+                    <CodeIcon className="h-4 w-4 mr-2" />
                   )}
                   {localScheduleMode === "human" && (
-                    <MessageSquare className="h-4 w-4 mr-2" />
+                    <ChatTextIcon className="h-4 w-4 mr-2" />
                   )}
                   {localScheduleMode === "both" && (
                     <>
-                      <Code className="h-4 w-4 mr-1" />
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <CodeIcon className="h-4 w-4 mr-1" />
+                      <ChatTextIcon className="h-4 w-4 mr-2" />
                     </>
                   )}
                   <span>
@@ -90,23 +90,22 @@ export const FiltersModal = ({
                     {localScheduleMode === "both" && t("cronjobs.both")}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 ml-2" />
+                <CaretDownIcon className="h-4 w-4 ml-2" />
               </Button>
 
               {isScheduleDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 min-w-[140px]">
+                <div className="absolute top-full left-0 p-1 right-0 mt-1 bg-background0 border border-border rounded-md shadow-lg z-50 min-w-[140px]">
                   <button
                     onClick={() => {
                       setLocalScheduleMode("cron");
                       setIsScheduleDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${
-                      localScheduleMode === "cron"
-                        ? "bg-accent text-accent-foreground"
-                        : ""
-                    }`}
+                    className={`w-full text-left px-3 border py-2 text-sm hover:border-border border-transparent transition-colors flex items-center gap-2 ${localScheduleMode === "cron"
+                      ? "border-border"
+                      : ""
+                      }`}
                   >
-                    <Code className="h-3 w-3" />
+                    <CodeIcon className="h-3 w-3" />
                     {t("cronjobs.cronSyntax")}
                   </button>
                   <button
@@ -114,13 +113,12 @@ export const FiltersModal = ({
                       setLocalScheduleMode("human");
                       setIsScheduleDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${
-                      localScheduleMode === "human"
-                        ? "bg-accent text-accent-foreground"
-                        : ""
-                    }`}
+                    className={`w-full text-left px-3 py-2 border text-sm hover:border-border border-transparent transition-colors flex items-center gap-2 ${localScheduleMode === "human"
+                      ? "border-border"
+                      : ""
+                      }`}
                   >
-                    <MessageSquare className="h-3 w-3" />
+                    <ChatTextIcon className="h-3 w-3" />
                     {t("cronjobs.humanReadable")}
                   </button>
                   <button
@@ -128,14 +126,13 @@ export const FiltersModal = ({
                       setLocalScheduleMode("both");
                       setIsScheduleDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${
-                      localScheduleMode === "both"
-                        ? "bg-accent text-accent-foreground"
-                        : ""
-                    }`}
+                    className={`w-full text-left px-3 py-2 border text-sm hover:border-border border-transparent transition-colors flex items-center gap-2 ${localScheduleMode === "both"
+                      ? "border-border"
+                      : ""
+                      }`}
                   >
-                    <Code className="h-3 w-3" />
-                    <MessageSquare className="h-3 w-3" />
+                    <CodeIcon className="h-3 w-3" />
+                    <ChatTextIcon className="h-3 w-3" />
                     {t("cronjobs.both")}
                   </button>
                 </div>
@@ -144,7 +141,7 @@ export const FiltersModal = ({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-border">
+        <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={onClose}>
             {t("common.cancel")}
           </Button>

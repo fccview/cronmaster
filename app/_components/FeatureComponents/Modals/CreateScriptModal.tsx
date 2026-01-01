@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { ScriptModal } from "@/app/_components/FeatureComponents/Modals/ScriptModal";
 
 interface CreateScriptModalProps {
@@ -35,7 +35,7 @@ export const CreateScriptModal = ({
       onSubmit={onSubmit}
       title="Create New Script"
       submitButtonText="Create Script"
-      submitButtonIcon={<Plus className="h-4 w-4 mr-2" />}
+      submitButtonIcon={<PlusIcon className="h-4 w-4 mr-2" />}
       form={form}
       onFormChange={onFormChange}
       isDraft={isDraft}
