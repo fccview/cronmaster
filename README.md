@@ -19,7 +19,15 @@
   - [Job Execution Logging](#job-execution-logging)
   - [Managing Scripts](#managing-scripts)
 
----
+
+<div align="center">
+
+| Desktop | Mobile |
+|---------|--------|
+| ![Dark Mode Desktop](screenshots/home-dark.png) | ![Dark Mode Mobile](screenshots/home-dark-mobile.png) |
+| ![Light Mode Desktop](screenshots/home-light.png) | ![Light Mode Mobile](screenshots/home-light-mobile.png) |
+
+</div>
 
 ## Features
 
@@ -48,26 +56,13 @@
   <br />
 </p>
 
----
-
-<br />
-
-## Before we start
-
-Hi, fccview here! Just a friendly heads-up: I'm a big believer in open source and love sharing my work with the community. Everything you find in my GitHub repos is and always will be 100% free. If someone tries to sell you a "premium" version of any of my projects while claiming to be me, please know that this is not legitimate.
-
-If you find my projects helpful and want to fuel my late-night coding sessions with caffeine, I'd be super grateful for any support! ☕
-
 <p align="center">
   <a href="https://www.buymeacoffee.com/fccview">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="150">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="120">
   </a>
 </p>
 
-<div align="center">
-  <img width="500px" src="screenshots/home-dark.png">
-  <img width="500px" src="screenshots/home-light.png" />
-</div>
+---
 
 <a id="quick-start"></a>
 
