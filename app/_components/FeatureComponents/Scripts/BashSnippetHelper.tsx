@@ -180,8 +180,8 @@ export const BashSnippetHelper = ({
                     {snippet.title}
                   </h4>
                   {snippet.source === "user" && (
-                    <span className="inline-block px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded border border-green-200">
-                      UserIcon
+                    <span className="inline-block px-1.5 py-0.5 text-xs text-status-success border border-border">
+                      User
                     </span>
                   )}
                 </div>

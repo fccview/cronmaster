@@ -52,7 +52,7 @@ export const Modal = ({
   return (
     <dialog
       ref={dialogRef}
-      className={`ascii-border terminal-font bg-background0 ${sizeClasses[size]} max-w-[95vw] ${className}`}
+      className={`ascii-border terminal-font bg-background0 mobile-modal ${sizeClasses[size]} max-w-[95vw] ${className}`}
       onClick={(e) => {
         if (e.target === dialogRef.current && !preventCloseOnClickOutside) {
           onClose();

@@ -348,8 +348,8 @@ export const LiveLogModal = ({
           </div>
         )}
 
-        <div className="bg-black/90 dark:bg-black/60 p-4 max-h-[60vh] overflow-auto terminal-font ascii-border">
-          <pre className="text-xs font-mono text-status-success whitespace-pre-wrap break-words">
+        <div className="bg-background0 p-4 max-h-[60vh] overflow-auto terminal-font ascii-border">
+          <pre className="text-xs text-status-success whitespace-pre-wrap break-words">
             {logContent || t("cronjobs.waitingForJobToStart")}
             <div ref={logEndRef} />
           </pre>

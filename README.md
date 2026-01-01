@@ -2,7 +2,7 @@
   <img src="public/heading.png" width="400px">
 </p>
 
-## Table of Contents
+## Quick links
 
 - [Features](#features)
 - [Quick Start](#quick-start)
@@ -18,7 +18,6 @@
   - [Managing Cron Jobs](#managing-cron-jobs)
   - [Job Execution Logging](#job-execution-logging)
   - [Managing Scripts](#managing-scripts)
-- [Technologies Used](#technologies-used)
 
 ---
 

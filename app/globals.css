@@ -57,6 +57,18 @@ option {
   font-weight: 500 !important;
 }
 
+pre {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+pre::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+
 @layer utilities {
   .ascii-border {
     border: 1px solid var(--box-border-color, var(--foreground2));
@@ -235,5 +247,17 @@ option {
     .no-sidebar main {
       margin-left: 0 !important;
     }
+  }
+}
+
+@media (max-width: 992px) {
+  .mobile-modal {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    width: 100% !important;
+    max-height: 90vh;
+    max-width: 100%;
+    margin: inherit;
   }
 }
