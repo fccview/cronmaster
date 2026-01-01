@@ -55,7 +55,7 @@
 
 ## Before we start
 
-Hey there! 👋 Just a friendly heads-up: I'm a big believer in open source and love sharing my work with the community. Everything you find in my GitHub repos is and always will be 100% free. If someone tries to sell you a "premium" version of any of my projects while claiming to be me, please know that this is not legitimate. 🚫
+Hi, fccview here! Just a friendly heads-up: I'm a big believer in open source and love sharing my work with the community. Everything you find in my GitHub repos is and always will be 100% free. If someone tries to sell you a "premium" version of any of my projects while claiming to be me, please know that this is not legitimate.
 
 If you find my projects helpful and want to fuel my late-night coding sessions with caffeine, I'd be super grateful for any support! ☕
 
@@ -66,8 +66,8 @@ If you find my projects helpful and want to fuel my late-night coding sessions w
 </p>
 
 <div align="center">
-  <img width="500px" src="screenshots/home.png">
-  <img width="500px" src="screenshots/live-running.png" />
+  <img width="500px" src="screenshots/home-dark.png">
+  <img width="500px" src="screenshots/home-light.png" />
 </div>
 
 <a id="quick-start"></a>
