@@ -78,7 +78,7 @@ export default async function Home() {
                 <Logo size={48} showGlow={true} />
                 <div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold terminal-font uppercase">
-                    Cr*nMaster
+                    Cr<span className="text-status-error">*</span>nMaster
                   </h1>
                   <p className="text-xs terminal-font flex items-center gap-2">
                     {t("common.version").replace("{version}", version)}

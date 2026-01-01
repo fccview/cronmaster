@@ -31,17 +31,30 @@
 }
 
 body {
-  font-family: 'IBM Plex Mono', monospace!important;
-  font-weight: 500!important;
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-weight: 500 !important;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Azeret Mono Variable', monospace!important;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Azeret Mono Variable', monospace !important;
 }
 
-p, span, a, label, input, textarea, button, select, option {
-  font-family: 'IBM Plex Mono', monospace!important;
-  font-weight: 500!important;
+p,
+span,
+a,
+label,
+input,
+textarea,
+button,
+select,
+option {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-weight: 500 !important;
 }
 
 @layer utilities {
@@ -51,12 +64,18 @@ p, span, a, label, input, textarea, button, select, option {
   }
 
   .border-border {
-    border-color: var(--box-border-color, var(--foreground2))!important;
+    border-color: var(--box-border-color, var(--foreground2)) !important;
   }
 
   .tui-scrollbar {
     scrollbar-width: auto !important;
-    padding-right: 15px;
+    padding-right: 5px;
+  }
+
+  @media (min-width: 992px) {
+    .tui-scrollbar {
+      padding-right: 15px;
+    }
   }
 
   .tui-scrollbar::-webkit-scrollbar {

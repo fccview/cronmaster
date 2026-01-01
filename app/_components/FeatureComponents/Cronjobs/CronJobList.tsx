@@ -236,7 +236,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
+              <div className="p-2 bg-primary/10 ascii-border">
                 <ClockIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -301,7 +301,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
               onNewTaskClick={() => setIsNewCronModalOpen(true)}
             />
           ) : (
-            <div className="space-y-4 max-h-[55vh] min-h-[55vh] overflow-y-auto tui-scrollbar pr-2">
+            <div className="space-y-4 max-h-[55vh] min-h-[55vh] overflow-y-auto tui-scrollbar pr-1">
               {loadedSettings ? (
                 filteredJobs.map((job) =>
                   minimalMode ? (

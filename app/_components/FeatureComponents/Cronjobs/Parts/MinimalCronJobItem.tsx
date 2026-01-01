@@ -139,7 +139,7 @@ export const MinimalCronJobItem = ({
   return (
     <div
       key={job.id}
-      className={`tui-card p-3 terminal-font transition-colors ${isDropdownOpen ? "relative z-10" : ""
+      className={`border border-border lg:tui-card p-3 terminal-font transition-colors ${isDropdownOpen ? "relative z-10" : ""
         }`}
     >
       <div className="flex items-center gap-3">

@@ -148,7 +148,7 @@ export const CronJobItem = ({
   return (
     <div
       key={job.id}
-      className={`tui-card p-4 terminal-font transition-colors ${isDropdownOpen ? "relative z-10" : ""
+      className={`border border-border lg:tui-card p-4 terminal-font transition-colors ${isDropdownOpen ? "relative z-10" : ""
         }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">

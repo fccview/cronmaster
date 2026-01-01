@@ -16,7 +16,6 @@ export const PWAInstallPrompt = (): JSX.Element | null => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
     };
     const onAppInstalled = () => {
@@ -49,10 +48,10 @@ export const PWAInstallPrompt = (): JSX.Element | null => {
 
   return (
     <button
-      className="px-3 py-1 rounded-md border border-border bg-background/80 hover:bg-background/60"
+      className="px-3 py-2 ascii-border bg-background0 hover:bg-background1 transition-colors terminal-font text-sm"
       onClick={onInstall}
     >
-      Install App
+      Install
     </button>
   );
 };

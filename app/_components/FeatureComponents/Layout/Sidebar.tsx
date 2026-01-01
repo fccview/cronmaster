@@ -101,29 +101,11 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
             )}
           </button>
 
-          <div className="p-4 ascii-border !border-t-0 border-l-0 !border-r-0 bg-background0">
-            <div
-              className={cn(
-                "flex items-center gap-3",
-                isCollapsed && "lg:justify-center"
-              )}
-            >
-              <div className="p-2 bg-background0 ascii-border flex-shrink-0">
-                <HardDrivesIcon className="h-4 w-4" />
-              </div>
-              {(!isCollapsed || !isCollapsed) && (
-                <h2 className="text-sm font-semibold truncate terminal-font">
-                  {t("sidebar.systemOverview")}
-                </h2>
-              )}
-            </div>
-          </div>
-
           <div
             className={cn(
               "overflow-y-auto tui-scrollbar",
               isCollapsed ? "lg:p-2" : "p-4",
-              "h-full lg:h-[calc(100vh-88px-80px)]"
+              "h-full lg:h-[calc(100vh-88px)]"
             )}
           >
             {isCollapsed ? (

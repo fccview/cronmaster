@@ -2,6 +2,7 @@
 
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { SunIcon, MoonIcon } from '@phosphor-icons/react';
 
 export const ThemeToggle = () => {
   const [mounted, setMounted] = useState(false);
@@ -18,9 +19,15 @@ export const ThemeToggle = () => {
   return (
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="px-3 py-2 ascii-border terminal-font text-sm bg-background0"
+      className="p-2 ascii-border bg-background0 hover:bg-background1 transition-colors"
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {isDark ? 'LIGHT' : 'DARK'}
+      {isDark ? (
+        <SunIcon size={20} weight="regular" className="text-foreground" />
+      ) : (
+        <MoonIcon size={20} weight="regular" className="text-foreground" />
+      )}
     </button>
   );
 };
