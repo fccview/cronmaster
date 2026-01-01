@@ -238,7 +238,7 @@ export const MinimalCronJobItem = ({
             size="sm"
             onClick={() => onRun(job.id)}
             disabled={runningJobId === job.id || job.paused}
-            className="btn-outline h-8 px-3"
+            className="btn-outline h-8 px-3 hidden md:flex"
             title={t("cronjobs.runCronManually")}
             aria-label={t("cronjobs.runCronManually")}
           >
@@ -259,7 +259,7 @@ export const MinimalCronJobItem = ({
                 onPause(job.id);
               }
             }}
-            className="btn-outline h-8 px-3"
+            className="btn-outline h-8 px-3 hidden md:flex"
             title={t("cronjobs.pauseCronJob")}
             aria-label={t("cronjobs.pauseCronJob")}
           >
@@ -280,7 +280,7 @@ export const MinimalCronJobItem = ({
                 onToggleLogging(job.id);
               }
             }}
-            className="btn-outline h-8 px-3"
+            className="btn-outline h-8 px-3 hidden md:flex"
             title={
               job.logsEnabled
                 ? t("cronjobs.viewLogs")
