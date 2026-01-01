@@ -59,7 +59,7 @@ export const Modal = ({
         }
       }}
     >
-      <div className="ascii-border border-t-0 border-l-0 border-r-0 p-4 flex justify-between items-center bg-background0">
+      <div className="border-border border-b p-4 flex justify-between items-center bg-background0">
         <h2 className="terminal-font font-bold uppercase">{title}</h2>
         {showCloseButton && (
           <Button variant="ghost" size="icon" onClick={onClose}>

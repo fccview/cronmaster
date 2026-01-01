@@ -78,7 +78,6 @@ export const DeleteScriptModal = ({
           <Button
             variant="destructive"
             onClick={onConfirm}
-            className="btn-destructive"
             disabled={isDeleting}
           >
             {isDeleting ? (

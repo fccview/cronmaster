@@ -188,5 +188,21 @@
     "warnings": {
         "wrapperScriptModified": "Wrapper Script Modified",
         "wrapperScriptModifiedDescription": "Your cron-log-wrapper.sh script has been modified from the official version. This may affect logging functionality. Consider reverting to the official version or ensure your changes don't break the required format for log parsing."
+    },
+    "notFound": {
+        "title": "404 - Page Not Found",
+        "subtitle": "ERROR: The requested resource could not be located",
+        "message": "The page you're looking for doesn't exist. Want to play snake instead?",
+        "gameOver": "GAME OVER",
+        "score": "Score",
+        "highScore": "High Score",
+        "pressToStart": "Press SPACE or tap to start",
+        "pressToRestart": "Press SPACE or tap to restart",
+        "controls": "Controls",
+        "useArrowKeys": "Use arrow keys to move",
+        "tapToMove": "Tap screen edges to move",
+        "goHome": "Return to Dashboard",
+        "pauseGame": "Press P to pause",
+        "paused": "PAUSED"
     }
 }

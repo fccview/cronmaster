@@ -82,7 +82,6 @@ export const DeleteTaskModal = ({
           <Button
             variant="destructive"
             onClick={onConfirm}
-            className="btn-destructive"
           >
             <TrashIcon className="h-4 w-4 mr-2" />
             Delete Task

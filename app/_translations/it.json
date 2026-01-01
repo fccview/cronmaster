@@ -184,5 +184,22 @@
     "warnings": {
         "wrapperScriptModified": "Script Wrapper Modificato",
         "wrapperScriptModifiedDescription": "Il tuo script cron-log-wrapper.sh è stato modificato dalla versione ufficiale. Questo potrebbe influenzare la funzionalità di logging. Considera di ripristinare la versione ufficiale o assicurati che le tue modifiche non interrompano il formato richiesto per l'analisi dei log."
+    },
+    "notFound": {
+        "title": "404 - Pagina Non Trovata",
+        "subtitle": "ERRORE: La risorsa richiesta non è stata trovata",
+        "message": "La pagina che stai cercando non esiste. Partitella a snake?",
+        "playSnake": "Gioca a Snake mentre sei qui",
+        "gameOver": "GAME OVER",
+        "score": "Punteggio",
+        "highScore": "Punteggio Massimo",
+        "pressToStart": "Premi SPAZIO o tocca per iniziare",
+        "pressToRestart": "Premi SPAZIO o tocca per ricominciare",
+        "controls": "Controlli",
+        "useArrowKeys": "Usa i tasti freccia per muoverti",
+        "tapToMove": "Tocca i bordi dello schermo per muoverti",
+        "goHome": "Torna alla Dashboard",
+        "pauseGame": "Premi P per mettere in pausa",
+        "paused": "IN PAUSA"
     }
 }

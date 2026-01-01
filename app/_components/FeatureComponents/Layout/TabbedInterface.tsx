@@ -35,7 +35,7 @@ export const TabbedInterface = ({
           >
             <ClockIcon className="h-4 w-4" />
             {t("cronjobs.cronJobs")}
-            <span className="ml-1 text-xs bg-background2 px-2 py-0.5 ascii-border font-medium">
+            <span className="ml-1 text-xs bg-background0 px-2 py-0.5 ascii-border font-medium">
               {cronJobs.length}
             </span>
           </button>
@@ -48,7 +48,7 @@ export const TabbedInterface = ({
           >
             <FileTextIcon className="h-4 w-4" />
             {t("scripts.scripts")}
-            <span className="ml-1 text-xs bg-background2 px-2 py-0.5 ascii-border font-medium">
+            <span className="ml-1 text-xs bg-background0 px-2 py-0.5 ascii-border font-medium">
               {scripts.length}
             </span>
           </button>

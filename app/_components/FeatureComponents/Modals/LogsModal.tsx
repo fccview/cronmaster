@@ -182,7 +182,7 @@ export const LogsModal = ({
             {logs.length > 0 && (
               <Button
                 onClick={handleDeleteAllLogs}
-                className="btn-destructive glow-primary"
+                variant="destructive"
                 size="sm"
               >
                 <TrashIcon className="w-4 h-4 mr-2" />
@@ -251,7 +251,7 @@ export const LogsModal = ({
                           e.stopPropagation();
                           handleDeleteLog(log.filename);
                         }}
-                        className="btn-destructive glow-primary p-1 h-auto"
+                        variant="destructive"
                         size="sm"
                       >
                         <TrashIcon className="w-3 h-3" />
@@ -271,7 +271,7 @@ export const LogsModal = ({
                   {t("common.loading")}...
                 </div>
               ) : selectedLog ? (
-                <pre className="h-full overflow-auto bg-background2 p-4 ascii-border text-xs font-mono whitespace-pre-wrap terminal-font">
+                <pre className="h-full overflow-auto bg-background0 tui-scrollbar p-4 ascii-border text-xs font-mono whitespace-pre-wrap terminal-font">
                   {logContent}
                 </pre>
               ) : (

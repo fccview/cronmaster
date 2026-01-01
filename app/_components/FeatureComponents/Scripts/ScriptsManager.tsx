@@ -206,7 +206,7 @@ export const ScriptsManager = ({
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-background2 ascii-border">
+              <div className="p-2 bg-background0 ascii-border">
                 <FileTextIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -331,7 +331,7 @@ export const ScriptsManager = ({
                           setSelectedScript(script);
                           setIsDeleteModalOpen(true);
                         }}
-                        className="btn-destructive h-8 px-3"
+                        className="h-8 px-3"
                         title="Delete script"
                         aria-label="Delete script"
                       >

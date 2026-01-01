@@ -120,7 +120,7 @@ export const RestoreBackupModal = ({
             <p>{t("cronjobs.noBackupsFound")}</p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-[500px] overflow-y-auto tui-scrollbar">
+          <div className="space-y-3 max-h-[500px] overflow-y-auto tui-scrollbar pr-2 pb-2">
             {backups.map((backup) => (
               <div
                 key={backup.filename}
@@ -178,11 +178,11 @@ export const RestoreBackupModal = ({
                       <UploadIcon className="h-3 w-3" />
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(backup.filename)}
                       disabled={deletingFilename === backup.filename}
-                      className="btn-destructive h-8 px-3"
+                      className="h-8 px-3"
                       title={t("cronjobs.deleteBackup")}
                     >
                       {deletingFilename === backup.filename ? (

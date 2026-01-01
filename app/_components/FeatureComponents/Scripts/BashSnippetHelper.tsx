@@ -123,7 +123,7 @@ export const BashSnippetHelper = ({
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="MagnifyingGlassIcon bash snippets..."
+          placeholder="Search bash snippets..."
           className="pl-9"
         />
       </div>
@@ -209,7 +209,6 @@ export const BashSnippetHelper = ({
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopy(snippet)}
-                    className="h-6 w-8 p-0 text-xs"
                   >
                     {copiedId === snippet.id ? (
                       <CheckIcon className="h-3 w-3" />
@@ -222,7 +221,7 @@ export const BashSnippetHelper = ({
                     variant="default"
                     size="sm"
                     onClick={() => handleInsert(snippet)}
-                    className="h-6 px-3 text-xs flex-1"
+                    className="flex-1"
                   >
                     Insert
                   </Button>

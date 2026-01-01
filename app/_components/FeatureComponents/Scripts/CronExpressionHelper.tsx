@@ -97,7 +97,7 @@ export const CronExpressionHelper = ({
       </div>
 
       {explanation && (
-        <div className="bg-background2 p-2 ascii-border terminal-font">
+        <div className="bg-background0 p-2 text-status-warning ascii-border terminal-font">
           <div className="space-y-1">
             <div className="flex items-start gap-2">
               <InfoIcon className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
@@ -166,7 +166,7 @@ export const CronExpressionHelper = ({
                 <Input
                   value={patternSearch}
                   onChange={(e) => setPatternSearch(e.target.value)}
-                  placeholder="MagnifyingGlassIcon patterns..."
+                  placeholder="Search patterns..."
                   className="pl-9"
                 />
               </div>

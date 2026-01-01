@@ -1,30 +1,20 @@
+import Link from "next/link";
+import { getTranslations } from "@/app/_server/actions/translations";
+import { SnakeGame } from "@/app/_components/FeatureComponents/Games/SnakeGame";
+import { Logo } from "@/app/_components/GlobalComponents/Logo/Logo";
 import { SystemInfoCard } from "@/app/_components/FeatureComponents/System/SystemInfo";
-import { TabbedInterface } from "@/app/_components/FeatureComponents/Layout/TabbedInterface";
-import { getCronJobs } from "@/app/_utils/cronjob-utils";
-import { fetchScripts } from "@/app/_server/actions/scripts";
 import { ThemeToggle } from "@/app/_components/FeatureComponents/Theme/ThemeToggle";
 import { LogoutButton } from "@/app/_components/FeatureComponents/LoginForm/LogoutButton";
 import { ToastContainer } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { PWAInstallPrompt } from "@/app/_components/FeatureComponents/PWA/PWAInstallPrompt";
-import { WrapperScriptWarning } from "@/app/_components/FeatureComponents/System/WrapperScriptWarning";
-import { getTranslations } from "@/app/_server/actions/translations";
 import { SSEProvider } from "@/app/_contexts/SSEContext";
-import { Logo } from "@/app/_components/GlobalComponents/Logo/Logo";
 
-export const dynamic = "force-dynamic";
-export const maxDuration = 300;
-
-export default async function Home() {
+export default async function NotFound() {
   const t = await getTranslations();
   const liveUpdatesEnabled =
     (typeof process.env.LIVE_UPDATES === "boolean" &&
       process.env.LIVE_UPDATES === true) ||
     process.env.LIVE_UPDATES !== "false";
-
-  const [cronJobs, scripts] = await Promise.all([
-    getCronJobs(),
-    fetchScripts(),
-  ]);
 
   const initialSystemInfo = {
     hostname: "Loading...",
@@ -94,8 +84,18 @@ export default async function Home() {
 
         <main className="transition-all duration-300">
           <div className="px-4 py-8 lg:px-8">
-            <WrapperScriptWarning />
-            <TabbedInterface cronJobs={cronJobs} scripts={scripts} />
+            <div className="text-center mt-6 mb-12">
+              <div className="text-6xl font-bold terminal-font text-status-error mb-2">404</div>
+              <p className="terminal-font text-sm mb-4">{t("notFound.message")}</p>
+              <Link
+                href="/"
+                className="ascii-border bg-background1 hover:bg-background2 px-4 py-2 terminal-font uppercase font-bold transition-colors text-sm inline-block"
+              >
+                {t("notFound.goHome")}
+              </Link>
+            </div>
+
+            <SnakeGame />
           </div>
         </main>
 

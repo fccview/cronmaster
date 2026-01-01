@@ -145,7 +145,7 @@ export const ScriptModal = ({
           </div>
         </div>
 
-        <div className="flex justify-between items-center gap-3 pt-4 ascii-border border-t">
+        <div className="flex justify-between items-center gap-3 pt-4 border-border border-t">
           <div>
             {isDraft && onClearDraft && (
               <Button

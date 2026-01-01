@@ -19,7 +19,6 @@
     box-sizing: border-box;
   }
 
-  /* Force scrollbars to always be visible */
   ::-webkit-scrollbar {
     -webkit-appearance: none;
   }
@@ -32,8 +31,6 @@
 }
 
 @layer utilities {
-  
-
   .ascii-border {
     border: 1px solid var(--box-border-color, var(--foreground2));
     border-radius: 0;
@@ -45,11 +42,12 @@
 
   .tui-scrollbar {
     scrollbar-width: auto !important;
+    padding-right: 15px;
   }
 
   .tui-scrollbar::-webkit-scrollbar {
     -webkit-appearance: none;
-    width: 10px;
+    width: 7px;
     height: 10px;
     background-color: var(--background1) !important;
   }

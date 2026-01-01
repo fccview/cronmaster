@@ -301,7 +301,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
               onNewTaskClick={() => setIsNewCronModalOpen(true)}
             />
           ) : (
-            <div className="space-y-4 max-h-[55vh] min-h-[55vh] overflow-y-auto tui-scrollbar">
+            <div className="space-y-4 max-h-[55vh] min-h-[55vh] overflow-y-auto tui-scrollbar pr-2">
               {loadedSettings ? (
                 filteredJobs.map((job) =>
                   minimalMode ? (
