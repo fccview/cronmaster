@@ -10,6 +10,8 @@ import { WrapperScriptWarning } from "@/app/_components/FeatureComponents/System
 import { getTranslations } from "@/app/_server/actions/translations";
 import { SSEProvider } from "@/app/_contexts/SSEContext";
 import { Logo } from "@/app/_components/GlobalComponents/Logo/Logo";
+import { readFileSync } from "fs";
+import path from "path";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -20,6 +22,10 @@ export default async function Home() {
     (typeof process.env.LIVE_UPDATES === "boolean" &&
       process.env.LIVE_UPDATES === true) ||
     process.env.LIVE_UPDATES !== "false";
+
+  const packageJsonPath = path.join(process.cwd(), "package.json");
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+  const version = packageJson.version;
 
   const [cronJobs, scripts] = await Promise.all([
     getCronJobs(),
@@ -65,7 +71,7 @@ export default async function Home() {
   return (
     <SSEProvider liveUpdatesEnabled={liveUpdatesEnabled}>
       <div className={`min-h-screen bg-background0 ${bodyClass}`}>
-        <header className="ascii-border !border-r-0 sticky top-0 z-20 bg-background0 lg:h-[90px]">
+        <header className="border-border border-b sticky top-0 z-20 bg-background0 lg:h-[90px]">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between lg:justify-center">
               <div className="flex items-center gap-4">
@@ -75,7 +81,7 @@ export default async function Home() {
                     Cr*nMaster
                   </h1>
                   <p className="text-xs terminal-font flex items-center gap-2">
-                    {t("common.cronManagementMadeEasy")}
+                    {t("common.version").replace("{version}", version)}
                   </p>
                 </div>
               </div>

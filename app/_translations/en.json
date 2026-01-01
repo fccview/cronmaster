@@ -11,7 +11,7 @@
         "close": "Close",
         "refresh": "Refresh",
         "loading": "Loading",
-        "version": "{version}"
+        "version": "Version {version}"
     },
     "cronjobs": {
         "cronJobs": "Cron Jobs",

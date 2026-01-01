@@ -34,7 +34,7 @@ export const EditScriptModal = ({
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={onSubmit}
-      title="PencilSimpleIcon Script"
+      title="Edit Script"
       submitButtonText="Update Script"
       submitButtonIcon={<PencilSimpleIcon className="h-4 w-4 mr-2" />}
       form={form}

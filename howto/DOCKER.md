@@ -35,14 +35,12 @@ ports:
 ```yaml
 environment:
   - NODE_ENV=production
-  - DOCKER=true
   - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
   - AUTH_PASSWORD=very_strong_password
   - HOST_CRONTAB_USER=root
 ```
 
 - **NODE_ENV**: Set to `production` for production deployments
-- **DOCKER**: Must be `true` when running in Docker
 - **NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL**: Clock update interval in milliseconds (default: 30000)
 - **AUTH_PASSWORD**: Strong password for authentication
 - **HOST_CRONTAB_USER**: User whose crontab to read (default: root, can be comma-separated for multiple users)
@@ -155,7 +153,6 @@ services:
       - "40123:3000"
     environment:
       - NODE_ENV=production
-      - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
 
       # Localization

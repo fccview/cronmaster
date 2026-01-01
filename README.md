@@ -19,8 +19,6 @@
   - [Job Execution Logging](#job-execution-logging)
   - [Managing Scripts](#managing-scripts)
 - [Technologies Used](#technologies-used)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -93,7 +91,6 @@ services:
       - "40123:3000"
     environment:
       - NODE_ENV=production
-      - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=30000
       - AUTH_PASSWORD=very_strong_password
       - HOST_CRONTAB_USER=root
@@ -334,16 +331,6 @@ I would like to thank the following members for raising issues and help test/deb
     </tr>
   </tbody>
 </table>
-
-<a id="license"></a>
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For issues and questions, please open an issue on the GitHub repository.
 
 ## Star History
 

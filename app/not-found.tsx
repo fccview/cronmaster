@@ -8,6 +8,8 @@ import { LogoutButton } from "@/app/_components/FeatureComponents/LoginForm/Logo
 import { ToastContainer } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { PWAInstallPrompt } from "@/app/_components/FeatureComponents/PWA/PWAInstallPrompt";
 import { SSEProvider } from "@/app/_contexts/SSEContext";
+import { readFileSync } from "fs";
+import path from "path";
 
 export default async function NotFound() {
   const t = await getTranslations();
@@ -15,6 +17,10 @@ export default async function NotFound() {
     (typeof process.env.LIVE_UPDATES === "boolean" &&
       process.env.LIVE_UPDATES === true) ||
     process.env.LIVE_UPDATES !== "false";
+
+  const packageJsonPath = path.join(process.cwd(), "package.json");
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+  const version = packageJson.version;
 
   const initialSystemInfo = {
     hostname: "Loading...",
@@ -55,7 +61,7 @@ export default async function NotFound() {
   return (
     <SSEProvider liveUpdatesEnabled={liveUpdatesEnabled}>
       <div className={`min-h-screen bg-background0 ${bodyClass}`}>
-        <header className="ascii-border !border-r-0 sticky top-0 z-20 bg-background0 lg:h-[90px]">
+        <header className="border-border border-b sticky top-0 z-20 bg-background0 lg:h-[90px]">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between lg:justify-center">
               <div className="flex items-center gap-4">
@@ -65,7 +71,7 @@ export default async function NotFound() {
                     Cr*nMaster
                   </h1>
                   <p className="text-xs terminal-font flex items-center gap-2">
-                    {t("common.cronManagementMadeEasy")}
+                    {t("common.version").replace("{version}", version)}
                   </p>
                 </div>
               </div>

@@ -192,7 +192,7 @@ export const BashSnippetHelper = ({
                   {snippet.tags.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
-                      className="inline-block px-2 py-1 text-xs bg-primary/10 text-primary rounded border border-primary/20"
+                      className="inline-block px-2 py-1 text-xs bg-primary/10 text-primary border border-border"
                     >
                       {tag}
                     </span>

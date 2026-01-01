@@ -10,7 +10,7 @@
         "cancel": "Annulla",
         "refresh": "Aggiorna",
         "close": "Chiudi",
-        "version": "{version}"
+        "version": "Versione {version}"
     },
     "cronjobs": {
         "cronJobs": "Operazioni Cron",

@@ -319,8 +319,8 @@ export const ScriptsManager = ({
                           setIsEditModalOpen(true);
                         }}
                         className="btn-outline h-8 px-3"
-                        title="PencilSimpleIcon script"
-                        aria-label="PencilSimpleIcon script"
+                        title="Edit script"
+                        aria-label="Edit script"
                       >
                         <PencilSimpleIcon className="h-3 w-3" />
                       </Button>

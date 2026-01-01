@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
+import { Switch } from "@/app/_components/GlobalComponents/UIElements/Switch";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
 import { SelectScriptModal } from "@/app/_components/FeatureComponents/Modals/SelectScriptModal";
 import { UserSwitcher } from "@/app/_components/FeatureComponents/User/UserSwitcher";
@@ -253,31 +254,31 @@ export const CreateTaskModal = ({
             />
           </div>
 
+
           <div className="border border-border bg-muted/10 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="logsEnabled"
+            <div
+              className="flex items-start gap-3 cursor-pointer"
+              onClick={() => onFormChange({ logsEnabled: !form.logsEnabled })}
+            >
+              <Switch
                 checked={form.logsEnabled}
-                onChange={(e) =>
-                  onFormChange({ logsEnabled: e.target.checked })
+                onCheckedChange={(checked) =>
+                  onFormChange({ logsEnabled: checked })
                 }
-                className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 cursor-pointer"
+                className="mt-1"
               />
               <div className="flex-1">
-                <label
-                  htmlFor="logsEnabled"
-                  className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer"
-                >
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <FileArrowDownIcon className="h-4 w-4 text-primary" />
                   {t("cronjobs.enableLogging")}
-                </label>
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {t("cronjobs.loggingDescription")}
                 </p>
               </div>
             </div>
           </div>
+
 
           <div className="flex justify-end gap-2 pt-3 border-t border-border">
             <Button
