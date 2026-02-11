@@ -47,6 +47,7 @@
         "logs": "logs",
         "logFiles": "Log Files",
         "logContent": "Log Content",
+        "downloadLog": "Download",
         "selectLogToView": "Select a log file to view its content",
         "noLogsFound": "No logs found for this job",
         "confirmDeleteLog": "Are you sure you want to delete this log file?",

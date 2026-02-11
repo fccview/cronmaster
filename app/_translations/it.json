@@ -46,6 +46,7 @@
         "logs": "log",
         "logFiles": "File",
         "logContent": "Contenuto Log",
+        "downloadLog": "Scarica",
         "selectLogToView": "Seleziona un file per visualizzarne il contenuto",
         "noLogsFound": "Nessun log trovato per questa operazione",
         "confirmDeleteLog": "Sei sicuro di voler eliminare questo file?",

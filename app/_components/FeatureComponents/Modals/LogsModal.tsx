@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { FileTextIcon, TrashIcon, EyeIcon, XIcon, ArrowsClockwiseIcon, WarningCircleIcon, CheckCircleIcon } from "@phosphor-icons/react";
+import { FileTextIcon, TrashIcon, EyeIcon, XIcon, ArrowsClockwiseIcon, WarningCircleIcon, CheckCircleIcon, DownloadIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
+import { zipSync, strToU8 } from "fflate";
 import {
   getJobLogs,
   getLogContent,
@@ -44,6 +45,7 @@ export const LogsModal = ({
   const [logContent, setLogContent] = useState<string>("");
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [stats, setStats] = useState<{
     count: number;
     totalSize: number;
@@ -133,6 +135,28 @@ export const LogsModal = ({
     }
   };
 
+  const handleDownloadLogs = async () => {
+    if (logs.length === 0) return;
+    setIsDownloading(true);
+    try {
+      const files: Record<string, Uint8Array> = {};
+      for (const log of logs) {
+        const content = await getLogContent(jobId, log.filename);
+        files[log.filename] = strToU8(content);
+      }
+      const zipped = zipSync(files);
+      const blob = new Blob([zipped as unknown as ArrayBuffer], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${jobComment || jobId}_logs.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
@@ -157,16 +181,29 @@ export const LogsModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t("cronjobs.viewLogs")} size="xl">
       <div className="flex flex-col h-[600px]">
-        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
-          <div>
-            <h3 className="font-semibold text-lg">{jobComment || jobId}</h3>
+        <div className="block sm:flex items-center justify-between mb-4 pb-4 border-b border-border">
+          <div className="min-w-0 mb-4 sm:mb-0">
+            <h3 className="font-semibold text-lg truncate">{jobComment || jobId}</h3>
             {stats && (
               <p className="text-sm text-muted-foreground">
                 {stats.count} {t("cronjobs.logs")} • {stats.totalSizeMB} MB
               </p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
+            <Button
+              onClick={handleDownloadLogs}
+              disabled={logs.length === 0 || isDownloading}
+              className="btn-primary glow-primary"
+              size="sm"
+            >
+              {isDownloading ? (
+                <ArrowsClockwiseIcon className="w-4 h-4 sm:mr-2 animate-spin" />
+              ) : (
+                <DownloadIcon className="w-4 h-4 sm:mr-2" />
+              )}
+              <span className="hidden sm:inline">{t("cronjobs.downloadLog")}</span>
+            </Button>
             <Button
               onClick={loadLogs}
               disabled={isLoadingLogs}
@@ -174,10 +211,10 @@ export const LogsModal = ({
               size="sm"
             >
               <ArrowsClockwiseIcon
-                className={`w-4 h-4 mr-2 ${isLoadingLogs ? "animate-spin" : ""
+                className={`w-4 h-4 sm:mr-2 ${isLoadingLogs ? "animate-spin" : ""
                   }`}
               />
-              {t("common.refresh")}
+              <span className="hidden sm:inline">{t("common.refresh")}</span>
             </Button>
             {logs.length > 0 && (
               <Button
@@ -185,15 +222,15 @@ export const LogsModal = ({
                 variant="destructive"
                 size="sm"
               >
-                <TrashIcon className="w-4 h-4 mr-2" />
-                {t("cronjobs.deleteAll")}
+                <TrashIcon className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t("cronjobs.deleteAll")}</span>
               </Button>
             )}
           </div>
         </div>
 
-        <div className="flex-1 flex gap-4 overflow-hidden">
-          <div className="w-1/3 flex flex-col border-r border-border pr-4 overflow-hidden">
+        <div className="flex-1 flex flex-col sm:flex-row gap-4 overflow-hidden">
+          <div className="sm:w-1/3 flex flex-col sm:border-r border-b sm:border-b-0 border-border sm:pr-4 pb-4 sm:pb-0 overflow-hidden max-h-[40%] sm:max-h-none">
             <h4 className="font-semibold mb-2">{t("cronjobs.logFiles")}</h4>
             <div className="flex-1 overflow-y-auto space-y-2">
               {isLoadingLogs ? (
@@ -288,8 +325,8 @@ export const LogsModal = ({
 
         <div className="mt-4 pt-4 border-t border-border flex justify-end">
           <Button onClick={onClose} className="btn-primary glow-primary">
-            <XIcon className="w-4 h-4 mr-2" />
-            {t("common.close")}
+            <XIcon className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t("common.close")}</span>
           </Button>
         </div>
       </div>

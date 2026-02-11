@@ -92,7 +92,7 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
         >
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -right-3 top-[21.5vh] w-6 h-6 bg-background0 ascii-border items-center justify-center transition-colors z-40 hidden lg:flex"
+            className="sidebar-shrinker absolute -right-3 top-[21.5vh] w-6 h-6 bg-background0 ascii-border items-center justify-center transition-colors z-40 hidden lg:flex"
           >
             {isCollapsed ? (
               <CaretRightIcon className="h-3 w-3" />
