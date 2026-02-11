@@ -1,4 +1,4 @@
-name: Reusable Docker Build Logic
+name: Builder
 
 on:
   workflow_call:

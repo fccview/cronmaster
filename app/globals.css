@@ -261,3 +261,19 @@ pre::-webkit-scrollbar {
     margin: inherit;
   }
 }
+
+.sidebar-shrinker {
+  z-index: 1;
+}
+
+.sidebar-shrinker:before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 6px solid var(--box-border-color, var(--foreground2));
+  border-right: 12px solid transparent;
+  position: absolute;
+  right: -1px;
+  bottom: -6px;
+  z-index: -1;
+}

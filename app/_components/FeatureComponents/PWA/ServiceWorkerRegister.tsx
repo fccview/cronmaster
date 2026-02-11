@@ -13,7 +13,10 @@ export const ServiceWorkerRegister = (): null => {
           r.scope.endsWith("/")
         );
         if (alreadyRegistered) return;
-        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        await navigator.serviceWorker.register("/serwist/sw.js", {
+          scope: "/",
+          updateViaCache: "none",
+        });
       } catch (_err) {}
     };
     register();

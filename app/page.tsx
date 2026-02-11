@@ -81,7 +81,9 @@ export default async function Home() {
                     Cr<span className="text-status-error">*</span>nMaster
                   </h1>
                   <p className="text-xs terminal-font flex items-center gap-2">
-                    {t("common.version").replace("{version}", version)}
+                    <a href={`https://github.com/fccview/cronmaster/releases/tag/${version}`} target="_blank" rel="noopener noreferrer">
+                      {t("common.version").replace("{version}", version)}
+                    </a>
                   </p>
                 </div>
               </div>

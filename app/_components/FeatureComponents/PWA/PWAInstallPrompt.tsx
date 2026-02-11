@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type JSX } from "react";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
