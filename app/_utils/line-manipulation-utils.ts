@@ -316,11 +316,19 @@ export const parseJobsFromLines = (
         const nextLine = lines[i + 1].trim();
         if (nextLine.startsWith("# ")) {
           const commentedCron = nextLine.substring(2);
-          const parts = commentedCron.split(/\s+/);
-          if (parts.length >= 6) {
-            const schedule = parts.slice(0, 5).join(" ");
-            const command = parts.slice(5).join(" ");
+          const parts = commentedCron.split(/(?:\s|\t)+/);
+          let schedule: string | undefined;
+          let command: string | undefined;
 
+          if (parts[0].startsWith("@") && parts.length >= 2) {
+            schedule = parts[0];
+            command = commentedCron.slice(commentedCron.indexOf(parts[1]));
+          } else if (parts.length >= 6) {
+            schedule = parts.slice(0, 5).join(" ");
+            command = commentedCron.slice(commentedCron.indexOf(parts[5]));
+          }
+
+          if (schedule && command) {
             const jobId =
               uuid || generateStableJobId(schedule, command, user, comment, i);
 
