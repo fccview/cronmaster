@@ -76,7 +76,7 @@ export const wrapCommandWithLogger = async (
 };
 
 export const unwrapCommand = (command: string): string => {
-  const wrapperPattern = /^(.+\/cron-log-wrapper\.sh)\s+"([^"]+)"\s+(.+)$/;
+  const wrapperPattern = /^(.+\/cron-log-wrapper\.sh)\s+"([^"]+)"\s+([\s\S]+)$/;
 
   const match = command.match(wrapperPattern);
 
