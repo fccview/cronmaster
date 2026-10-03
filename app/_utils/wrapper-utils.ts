@@ -62,7 +62,9 @@ export const wrapCommandWithLogger = async (
       const hostWrapperPath = path.join(hostDataPath, "cron-log-wrapper.sh");
       return `${hostWrapperPath} "${logFolderName}" ${safeCmd}`;
     }
-    console.warn("Could not determine host data path, using container path");
+    throw new Error(
+      "Cannot determine the host data path for logging. Check the Docker socket and /app/data mount."
+    );
   }
 
   const localWrapperPath = path.join(
