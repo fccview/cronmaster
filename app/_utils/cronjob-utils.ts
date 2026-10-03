@@ -150,16 +150,14 @@ export const addCronJob = async (
       const cronContent = await readUserCrontab(user);
 
       let finalCommand = command;
-      if (logsEnabled && !isCommandWrapped(command)) {
+      if (logsEnabled) {
         const docker = await isDocker();
         finalCommand = await wrapCommandWithLogger(
           jobId,
-          command,
+          unwrapCommand(command),
           docker,
           comment
         );
-      } else if (logsEnabled && isCommandWrapped(command)) {
-        finalCommand = command;
       }
 
       const formattedComment = formatCommentWithMetadata(
@@ -183,16 +181,14 @@ export const addCronJob = async (
       const cronContent = await readCronFiles();
 
       let finalCommand = command;
-      if (logsEnabled && !isCommandWrapped(command)) {
+      if (logsEnabled) {
         const docker = await isDocker();
         finalCommand = await wrapCommandWithLogger(
           jobId,
-          command,
+          unwrapCommand(command),
           docker,
           comment
         );
-      } else if (logsEnabled && isCommandWrapped(command)) {
-        finalCommand = command;
       }
 
       const formattedComment = formatCommentWithMetadata(
