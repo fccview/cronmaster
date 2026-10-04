@@ -7,7 +7,14 @@ export interface CronExplanation {
   error?: string;
 }
 
-export const parseCronExpression = (expression: string, locale?: string): CronExplanation => {
+const CRONSTRUE_LOCALE_ALIASES: Record<string, string> = {
+  zh: "zh_CN",
+};
+
+export const toCronstrueLocale = (locale?: string) =>
+  (locale && CRONSTRUE_LOCALE_ALIASES[locale]) || locale || "en";
+
+export const parseCronExpression =(expression: string, locale?: string): CronExplanation => {
   try {
     const cleanExpression = expression.trim();
 
@@ -23,7 +30,7 @@ export const parseCronExpression = (expression: string, locale?: string): CronEx
     const humanReadable = cronstrue.toString(cleanExpression, {
       verbose: true,
       throwExceptionOnParseError: false,
-      locale: locale || "en",
+      locale: toCronstrueLocale(locale),
     });
 
     return {
