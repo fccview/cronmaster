@@ -22,7 +22,15 @@
         "actionCannotBeUndone": "This action cannot be undone",
         "details": "Details",
         "error": "Error",
-        "dismissError": "Dismiss error"
+        "dismissError": "Dismiss error",
+        "clickForDetails": "Click for details",
+        "openMenu": "Open menu",
+        "loadingUsers": "Loading users...",
+        "selectUser": "Select user",
+        "switchToLightMode": "Switch to light mode",
+        "switchToDarkMode": "Switch to dark mode",
+        "install": "Install",
+        "logout": "Logout"
     },
     "cronjobs": {
         "cronJobs": "Cron Jobs",
@@ -251,7 +259,14 @@
         "diskMount": "Disk ({mount})",
         "inodesMount": "Inodes ({mount})",
         "diskDetail": "{free} free, {usage}% used",
-        "diskUsageMount": "Disk Usage ({mount})"
+        "diskUsageMount": "Disk Usage ({mount})",
+        "notAvailable": "N/A",
+        "memoryFree": "{free} free",
+        "cpuCores": "{cores, plural, one {# core} other {# cores}}",
+        "gpuVram": "{memory} VRAM",
+        "networkDetail": "{latency}ms latency • {speed}",
+        "performanceSummary": "Performance Summary",
+        "usage": "Usage"
     },
     "system": {
         "optimal": "Optimal",
@@ -269,7 +284,8 @@
         "gpuDetectionFailed": "GPU detection failed",
         "available": "Available",
         "systemStatus": "System Status",
-        "lastUpdated": "Last updated"
+        "lastUpdated": "Last updated",
+        "fetchingSystemInformation": "Fetching system information..."
     },
     "login": {
         "welcomeTitle": "Welcome to Cr*nMaster",
@@ -290,7 +306,8 @@
     },
     "warnings": {
         "wrapperScriptModified": "Wrapper Script Modified",
-        "wrapperScriptModifiedDescription": "Your cron-log-wrapper.sh script has been modified from the official version. This may affect logging functionality. Consider reverting to the official version or ensure your changes don't break the required format for log parsing."
+        "wrapperScriptModifiedDescription": "Your cron-log-wrapper.sh script has been modified from the official version. This may affect logging functionality. Consider reverting to the official version or ensure your changes don't break the required format for log parsing.",
+        "dismissWarning": "Dismiss warning"
     },
     "notFound": {
         "title": "404 - Page Not Found",

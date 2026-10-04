@@ -22,7 +22,15 @@
         "actionCannotBeUndone": "Diese Aktion kann nicht rückgängig gemacht werden",
         "details": "Details",
         "error": "Fehler",
-        "dismissError": "Fehler ausblenden"
+        "dismissError": "Fehler ausblenden",
+        "clickForDetails": "Für Details klicken",
+        "openMenu": "Menü öffnen",
+        "loadingUsers": "Benutzer werden geladen...",
+        "selectUser": "Benutzer auswählen",
+        "switchToLightMode": "Zum hellen Modus wechseln",
+        "switchToDarkMode": "Zum dunklen Modus wechseln",
+        "install": "Installieren",
+        "logout": "Abmelden"
     },
     "cronjobs": {
         "cronJobs": "Cron-Jobs",
@@ -251,7 +259,14 @@
         "diskMount": "Festplatte ({mount})",
         "inodesMount": "Inodes ({mount})",
         "diskDetail": "{free} frei, {usage}% belegt",
-        "diskUsageMount": "Festplattennutzung ({mount})"
+        "diskUsageMount": "Festplattennutzung ({mount})",
+        "notAvailable": "k. A.",
+        "memoryFree": "{free} frei",
+        "cpuCores": "{cores, plural, one {# Kern} other {# Kerne}}",
+        "gpuVram": "{memory} VRAM",
+        "networkDetail": "{latency} ms Latenz • {speed}",
+        "performanceSummary": "Leistungsübersicht",
+        "usage": "Auslastung"
     },
     "system": {
         "optimal": "Optimal",
@@ -269,7 +284,8 @@
         "gpuDetectionFailed": "GPU-Erkennung fehlgeschlagen",
         "available": "Verfügbar",
         "systemStatus": "Systemstatus",
-        "lastUpdated": "Letzte Aktualisierung"
+        "lastUpdated": "Letzte Aktualisierung",
+        "fetchingSystemInformation": "Systeminformationen werden abgerufen..."
     },
     "login": {
         "welcomeTitle": "Willkommen bei Cr*nMaster",
@@ -290,7 +306,8 @@
     },
     "warnings": {
         "wrapperScriptModified": "Wrapper-Skript geändert",
-        "wrapperScriptModifiedDescription": "Ihr cron-log-wrapper.sh-Skript wurde von der offiziellen Version geändert. Dies kann die Protokollierungsfunktionalität beeinflussen. Rückkehr zur offiziellen Version erwägen oder sicherstellen, dass Änderungen das erforderliche Format für die Protokollanalyse nicht beschädigen."
+        "wrapperScriptModifiedDescription": "Ihr cron-log-wrapper.sh-Skript wurde von der offiziellen Version geändert. Dies kann die Protokollierungsfunktionalität beeinflussen. Rückkehr zur offiziellen Version erwägen oder sicherstellen, dass Änderungen das erforderliche Format für die Protokollanalyse nicht beschädigen.",
+        "dismissWarning": "Warnung ausblenden"
     },
     "notFound": {
         "title": "404 - Seite nicht gefunden",

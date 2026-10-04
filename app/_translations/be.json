@@ -22,7 +22,15 @@
         "actionCannotBeUndone": "Гэта дзеянне немагчыма адрабіць",
         "details": "Падрабязнасці",
         "error": "Памылка",
-        "dismissError": "Схаваць памылку"
+        "dismissError": "Схаваць памылку",
+        "clickForDetails": "Націсніце, каб убачыць падрабязнасці",
+        "openMenu": "Адкрыць меню",
+        "loadingUsers": "Загрузка карыстальнікаў...",
+        "selectUser": "Выберыце карыстальніка",
+        "switchToLightMode": "Пераключыць на светлую тэму",
+        "switchToDarkMode": "Пераключыць на цёмную тэму",
+        "install": "Усталяваць",
+        "logout": "Выйсці"
     },
     "cronjobs": {
         "cronJobs": "Заданні Cron",
@@ -251,7 +259,14 @@
         "diskMount": "Дыск ({mount})",
         "inodesMount": "Inodes ({mount})",
         "diskDetail": "{free} вольна, {usage}% занята",
-        "diskUsageMount": "Выкарыстанне дыска ({mount})"
+        "diskUsageMount": "Выкарыстанне дыска ({mount})",
+        "notAvailable": "Н/Д",
+        "memoryFree": "вольна {free}",
+        "cpuCores": "{cores, plural, one {# ядро} few {# ядры} many {# ядзер} other {# ядра}}",
+        "gpuVram": "{memory} VRAM",
+        "networkDetail": "затрымка {latency} мс • {speed}",
+        "performanceSummary": "Зводка прадукцыйнасці",
+        "usage": "Выкарыстанне"
     },
     "system": {
         "optimal": "Аптымальны",
@@ -269,7 +284,8 @@
         "gpuDetectionFailed": "Не ўдалося выявіць ГП",
         "available": "Даступны",
         "systemStatus": "Стан загрузкі сістэмы",
-        "lastUpdated": "Апошняе абнаўленне"
+        "lastUpdated": "Апошняе абнаўленне",
+        "fetchingSystemInformation": "Атрыманне звестак пра сістэму..."
     },
     "login": {
         "welcomeTitle": "Вітаем у Cr*nMaster",
@@ -290,7 +306,8 @@
     },
     "warnings": {
         "wrapperScriptModified": "Скрыпт-абгортка зменены",
-        "wrapperScriptModifiedDescription": "Скрыпт cron-log-wrapper.sh не адпавядае афіцыйнай версіі. Гэта можа паўплываць на функцыянальнасць вядзення журнала. Паспрабуйце вярнуцца да афіцыйнай версіі або пераканайцеся, што вашы змены не парушаюць патрэбны фармат для аналізу журнала."
+        "wrapperScriptModifiedDescription": "Скрыпт cron-log-wrapper.sh не адпавядае афіцыйнай версіі. Гэта можа паўплываць на функцыянальнасць вядзення журнала. Паспрабуйце вярнуцца да афіцыйнай версіі або пераканайцеся, што вашы змены не парушаюць патрэбны фармат для аналізу журнала.",
+        "dismissWarning": "Схаваць папярэджанне"
     },
     "notFound": {
         "title": "404 - Старонка не знойдзена",

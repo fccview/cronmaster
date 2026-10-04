@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
   type JSX,
 } from "react";
+import { useTranslations } from "next-intl";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -19,6 +20,7 @@ const getIsStandalone = () => window.matchMedia(STANDALONE_QUERY).matches;
 const getIsStandaloneOnServer = () => false;
 
 export const PWAInstallPrompt = (): JSX.Element | null => {
+  const t = useTranslations();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null
   );
@@ -64,7 +66,7 @@ export const PWAInstallPrompt = (): JSX.Element | null => {
       className="px-3 py-2 ascii-border bg-background0 hover:bg-background1 transition-colors terminal-font text-sm"
       onClick={onInstall}
     >
-      Install
+      {t("common.install")}
     </button>
   );
 };

@@ -46,7 +46,7 @@ export const UserFilter = ({
         className={`flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md ${className}`}
       >
         <UserIcon className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Loading users...</span>
+        <span className="text-sm text-muted-foreground">{t("common.loadingUsers")}</span>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { XIcon, CheckCircleIcon, WarningCircleIcon, InfoIcon, WarningIcon } from "@phosphor-icons/react";
 import { cn } from "@/app/_utils/global-utils";
 import { ErrorDetailsModal } from "@/app/_components/FeatureComponents/Modals/ErrorDetailsModal";
+import { useTranslations } from "next-intl";
 
 export interface Toast {
   id: string;
@@ -48,6 +49,7 @@ const toastStyles = {
 };
 
 export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
+  const t = useTranslations();
   const [isVisible, setIsVisible] = useState(false);
   const Icon = toastIcons[toast.type];
 
@@ -87,7 +89,7 @@ export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
           <p className="text-sm opacity-90 mt-1">{toast.message}</p>
         )}
         {toast.type === "error" && toast.errorDetails && (
-          <p className="text-xs opacity-70 mt-1">Click for details</p>
+          <p className="text-xs opacity-70 mt-1">{t("common.clickForDetails")}</p>
         )}
       </div>
       <button

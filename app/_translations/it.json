@@ -21,7 +21,15 @@
         "actionCannotBeUndone": "Questa azione non può essere annullata",
         "details": "Dettagli",
         "error": "Errore",
-        "dismissError": "Ignora errore"
+        "dismissError": "Ignora errore",
+        "clickForDetails": "Clicca per i dettagli",
+        "openMenu": "Apri menu",
+        "loadingUsers": "Caricamento utenti...",
+        "selectUser": "Seleziona utente",
+        "switchToLightMode": "Passa alla modalità chiara",
+        "switchToDarkMode": "Passa alla modalità scura",
+        "install": "Installa",
+        "logout": "Esci"
     },
     "cronjobs": {
         "cronJobs": "Operazioni Cron",
@@ -247,7 +255,14 @@
         "diskMount": "Disco ({mount})",
         "inodesMount": "Inode ({mount})",
         "diskDetail": "{free} liberi, {usage}% usato",
-        "diskUsageMount": "Utilizzo Disco ({mount})"
+        "diskUsageMount": "Utilizzo Disco ({mount})",
+        "notAvailable": "N/D",
+        "memoryFree": "{free} liberi",
+        "cpuCores": "{cores, plural, one {# core} other {# core}}",
+        "gpuVram": "{memory} di VRAM",
+        "networkDetail": "{latency} ms di latenza • {speed}",
+        "performanceSummary": "Riepilogo Prestazioni",
+        "usage": "Utilizzo"
     },
     "system": {
         "optimal": "Ottimale",
@@ -265,7 +280,8 @@
         "gpuDetectionFailed": "Rilevamento GPU fallito",
         "available": "Disponibile",
         "systemStatus": "Stato del Sistema",
-        "lastUpdated": "Ultimo aggiornamento"
+        "lastUpdated": "Ultimo aggiornamento",
+        "fetchingSystemInformation": "Recupero delle informazioni di sistema..."
     },
     "login": {
         "welcomeTitle": "Benvenuto in Cr*nMaster",
@@ -286,7 +302,8 @@
     },
     "warnings": {
         "wrapperScriptModified": "Script Wrapper Modificato",
-        "wrapperScriptModifiedDescription": "Il tuo script cron-log-wrapper.sh è stato modificato dalla versione ufficiale. Questo potrebbe influenzare la funzionalità di logging. Considera di ripristinare la versione ufficiale o assicurati che le tue modifiche non interrompano il formato richiesto per l'analisi dei log."
+        "wrapperScriptModifiedDescription": "Il tuo script cron-log-wrapper.sh è stato modificato dalla versione ufficiale. Questo potrebbe influenzare la funzionalità di logging. Considera di ripristinare la versione ufficiale o assicurati che le tue modifiche non interrompano il formato richiesto per l'analisi dei log.",
+        "dismissWarning": "Ignora avviso"
     },
     "notFound": {
         "title": "404 - Pagina Non Trovata",

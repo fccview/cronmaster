@@ -62,7 +62,7 @@ export const WrapperScriptWarning = () => {
         <button
           onClick={dismissWarning}
           className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors ml-4"
-          aria-label="Dismiss warning"
+          aria-label={t("warnings.dismissWarning")}
         >
           <XIcon className="w-4 h-4" />
         </button>

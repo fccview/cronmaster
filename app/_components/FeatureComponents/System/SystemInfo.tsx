@@ -179,7 +179,9 @@ export const SystemInfoCard = ({
   const quickStats = {
     cpu: systemInfo.cpu.usage,
     memory: systemInfo.memory.usage,
-    network: systemInfo.network ? `${systemInfo.network.latency}ms` : "N/A",
+    network: systemInfo.network
+      ? `${systemInfo.network.latency}ms`
+      : t("sidebar.notAvailable"),
   };
 
   const basicInfoItems = [
@@ -195,7 +197,7 @@ export const SystemInfoCard = ({
       icon: HardDriveIcon,
       label: t("sidebar.memory"),
       value: `${systemInfo.memory.used} / ${systemInfo.memory.total}`,
-      detail: `${systemInfo.memory.free} free`,
+      detail: t("sidebar.memoryFree", { free: systemInfo.memory.free }),
       status: systemInfo.memory.status,
       showProgress: true,
       progressValue: systemInfo.memory.usage,
@@ -204,7 +206,7 @@ export const SystemInfoCard = ({
       icon: CpuIcon,
       label: t("sidebar.cpu"),
       value: systemInfo.cpu.model,
-      detail: `${systemInfo.cpu.cores} cores`,
+      detail: t("sidebar.cpuCores", { cores: systemInfo.cpu.cores }),
       status: systemInfo.cpu.status,
       showProgress: true,
       progressValue: systemInfo.cpu.usage,
@@ -214,7 +216,7 @@ export const SystemInfoCard = ({
       label: t("sidebar.gpu"),
       value: systemInfo.gpu.model,
       detail: systemInfo.gpu.memory
-        ? `${systemInfo.gpu.memory} VRAM`
+        ? t("sidebar.gpuVram", { memory: systemInfo.gpu.memory })
         : systemInfo.gpu.status,
       status: systemInfo.gpu.status,
     },
@@ -224,7 +226,10 @@ export const SystemInfoCard = ({
           icon: WifiHighIcon,
           label: t("sidebar.network"),
           value: `${systemInfo.network.latency}ms`,
-          detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
+          detail: t("sidebar.networkDetail", {
+            latency: systemInfo.network.latency,
+            speed: systemInfo.network.speed,
+          }),
           status: systemInfo.network.status,
         },
       ]

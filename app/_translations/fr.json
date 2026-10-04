@@ -22,7 +22,15 @@
         "actionCannotBeUndone": "Cette action est irréversible",
         "details": "Détails",
         "error": "Erreur",
-        "dismissError": "Ignorer l'erreur"
+        "dismissError": "Ignorer l'erreur",
+        "clickForDetails": "Cliquez pour plus de détails",
+        "openMenu": "Ouvrir le menu",
+        "loadingUsers": "Chargement des utilisateurs...",
+        "selectUser": "Sélectionner un utilisateur",
+        "switchToLightMode": "Passer en mode clair",
+        "switchToDarkMode": "Passer en mode sombre",
+        "install": "Installer",
+        "logout": "Se déconnecter"
     },
     "cronjobs": {
         "cronJobs": "Tâches Cron",
@@ -251,7 +259,14 @@
         "diskMount": "Disque ({mount})",
         "inodesMount": "Inodes ({mount})",
         "diskDetail": "{free} libre, {usage}% utilisé",
-        "diskUsageMount": "Utilisation disque ({mount})"
+        "diskUsageMount": "Utilisation disque ({mount})",
+        "notAvailable": "N/D",
+        "memoryFree": "{free} libre",
+        "cpuCores": "{cores, plural, one {# cœur} other {# cœurs}}",
+        "gpuVram": "{memory} de VRAM",
+        "networkDetail": "{latency} ms de latence • {speed}",
+        "performanceSummary": "Résumé des performances",
+        "usage": "Utilisation"
     },
     "system": {
         "optimal": "Optimal",
@@ -269,7 +284,8 @@
         "gpuDetectionFailed": "Échec détection GPU",
         "available": "Disponible",
         "systemStatus": "État du système",
-        "lastUpdated": "Dernière mise à jour"
+        "lastUpdated": "Dernière mise à jour",
+        "fetchingSystemInformation": "Récupération des informations système..."
     },
     "login": {
         "welcomeTitle": "Bienvenue sur Cr*nMaster",
@@ -290,7 +306,8 @@
     },
     "warnings": {
         "wrapperScriptModified": "Script wrapper modifié",
-        "wrapperScriptModifiedDescription": "Votre script 'cron-log-wrapper.sh' est différent de la version officielle. Cela peut affecter les logs. Revenez à la version officielle ou vérifiez que vos changements respectent le format attendu."
+        "wrapperScriptModifiedDescription": "Votre script 'cron-log-wrapper.sh' est différent de la version officielle. Cela peut affecter les logs. Revenez à la version officielle ou vérifiez que vos changements respectent le format attendu.",
+        "dismissWarning": "Ignorer l'avertissement"
     },
     "notFound": {
         "title": "404 - Page non trouvée",
