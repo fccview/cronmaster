@@ -63,7 +63,7 @@ export const wrapCommandWithLogger = async (
       return `${hostWrapperPath} "${logFolderName}" ${safeCmd}`;
     }
     throw new Error(
-      "Cannot determine the host data path for logging. Check the Docker socket and /app/data mount."
+      "Cannot determine the host data path for logging. Set HOST_DATA_DIR to the host directory mounted at /app/data, or check the Docker socket and /app/data mount."
     );
   }
 
@@ -104,56 +104,4 @@ export const extractJobIdFromWrappedCommand = (
   }
 
   return null;
-};
-
-export const cleanupOldLogFiles = async (
-  jobId: string,
-  maxFiles: number = 10
-): Promise<void> => {
-  try {
-    const { readdir, stat, unlink } = await import("fs/promises");
-    const logFolderName = generateLogFolderName(jobId);
-    const logDir = path.join(process.cwd(), "data", "logs", logFolderName);
-
-    try {
-      await stat(logDir);
-    } catch {
-      return;
-    }
-
-    const files = await readdir(logDir);
-    const logFiles = files
-      .filter((f) => f.endsWith(".log"))
-      .map((f) => ({
-        name: f,
-        path: path.join(logDir, f),
-        stats: null as any,
-      }));
-
-    for (const file of logFiles) {
-      try {
-        file.stats = await stat(file.path);
-      } catch (error) {
-        console.error(`Error stat-ing log file ${file.path}:`, error);
-      }
-    }
-
-    const validFiles = logFiles
-      .filter((f) => f.stats)
-      .sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime());
-
-    if (validFiles.length > maxFiles) {
-      const filesToDelete = validFiles.slice(maxFiles);
-      for (const file of filesToDelete) {
-        try {
-          await unlink(file.path);
-          console.log(`Cleaned up old log file: ${file.path}`);
-        } catch (error) {
-          console.error(`Error deleting log file ${file.path}:`, error);
-        }
-      }
-    }
-  } catch (error) {
-    console.error(`Error cleaning up log files for job ${jobId}:`, error);
-  }
 };

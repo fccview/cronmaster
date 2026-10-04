@@ -60,6 +60,17 @@ environment:
 - MAX_LOGS_PER_JOB=50 # Maximum logs per job (default: 50)
 ```
 
+#### Host Paths
+
+Crontab entries run on the host, so the app needs the host paths of its `/app/data` and `/app/scripts` mounts. By default it asks Docker through the mounted socket. Set these when that is not possible (no socket, rootless or remote Docker, unusual mounts):
+
+```yaml
+- HOST_DATA_DIR=/home/user/cronmaster/data
+- HOST_SCRIPTS_DIR=/home/user/cronmaster/scripts
+```
+
+Both must be absolute host paths matching the `volumes` entries. The legacy `HOST_PROJECT_DIR=/home/user/cronmaster` is still honoured as a last resort and maps to `HOST_PROJECT_DIR/data` and `HOST_PROJECT_DIR/scripts`.
+
 #### SSO Authentication (OIDC)
 
 ```yaml

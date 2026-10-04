@@ -1,9 +1,14 @@
 "use server";
 
-import { readdir, readFile, unlink, stat } from "fs/promises";
+import { readdir, readFile, unlink } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
-import { DATA_DIR } from "@/app/_consts/file";
+import {
+  getLogsBaseDir,
+  listLogFiles,
+  pruneLogDirectory,
+  pruneLogDirectoryIfDue,
+} from "@/app/_utils/log-files-utils";
 
 export interface LogEntry {
   filename: string;
@@ -24,19 +29,8 @@ export interface JobLogError {
   hasHistoricalFailures?: boolean;
 }
 
-const MAX_LOGS_PER_JOB = process.env.MAX_LOGS_PER_JOB
-  ? parseInt(process.env.MAX_LOGS_PER_JOB)
-  : 50;
-const MAX_LOG_AGE_DAYS = process.env.MAX_LOG_AGE_DAYS
-  ? parseInt(process.env.MAX_LOG_AGE_DAYS)
-  : 30;
-
-const getLogBasePath = async (): Promise<string> => {
-  return path.join(process.cwd(), DATA_DIR, "logs");
-};
-
 const getJobLogPath = async (jobId: string): Promise<string | null> => {
-  const basePath = await getLogBasePath();
+  const basePath = getLogsBaseDir();
 
   if (!existsSync(basePath)) {
     return null;
@@ -73,17 +67,13 @@ export const getJobLogs = async (
     }
 
     if (!skipCleanup) {
-      await cleanupJobLogs(jobId);
+      await pruneLogDirectoryIfDue(logDir);
     }
 
-    const files = await readdir(logDir);
-    const logFiles = files.filter((f) => f.endsWith(".log"));
+    const logFiles = await listLogFiles(logDir);
 
     const entries: LogEntry[] = [];
-    for (const file of logFiles) {
-      const fullPath = path.join(logDir, file);
-      const stats = await stat(fullPath);
-
+    for (const { name: file, fullPath, size, date } of logFiles) {
       let exitCode: number | undefined;
       let hasError: boolean | undefined;
 
@@ -99,16 +89,14 @@ export const getJobLogs = async (
         filename: file,
         timestamp: file.replace(".log", ""),
         fullPath,
-        size: stats.size,
-        dateCreated: stats.birthtime,
+        size,
+        dateCreated: date,
         exitCode,
         hasError,
       });
     }
 
-    return entries.sort(
-      (a, b) => b.dateCreated.getTime() - a.dateCreated.getTime()
-    );
+    return entries;
   } catch (error) {
     console.error(`Error reading logs for job ${jobId}:`, error);
     return [];
@@ -169,7 +157,7 @@ export const deleteAllJobLogs = async (
   jobId: string
 ): Promise<{ success: boolean; message: string; deletedCount: number }> => {
   try {
-    const logs = await getJobLogs(jobId);
+    const logs = await getJobLogs(jobId, true);
 
     let deletedCount = 0;
     for (const log of logs) {
@@ -198,40 +186,9 @@ export const cleanupJobLogs = async (
   jobId: string
 ): Promise<{ success: boolean; message: string; deletedCount: number }> => {
   try {
-    const logs = await getJobLogs(jobId, true);
-
-    if (logs.length === 0) {
-      return {
-        success: true,
-        message: "No logs to clean up",
-        deletedCount: 0,
-      };
-    }
-
-    let deletedCount = 0;
-    const now = new Date();
-    const maxAgeMs = MAX_LOG_AGE_DAYS * 24 * 60 * 60 * 1000;
-
-    for (const log of logs) {
-      const ageMs = now.getTime() - log.dateCreated.getTime();
-      if (ageMs > maxAgeMs) {
-        const result = await deleteLogFile(jobId, log.filename);
-        if (result.success) {
-          deletedCount++;
-        }
-      }
-    }
-
-    const remainingLogs = await getJobLogs(jobId, true);
-    if (remainingLogs.length > MAX_LOGS_PER_JOB) {
-      const logsToDelete = remainingLogs.slice(MAX_LOGS_PER_JOB);
-      for (const log of logsToDelete) {
-        const result = await deleteLogFile(jobId, log.filename);
-        if (result.success) {
-          deletedCount++;
-        }
-      }
-    }
+    const logDir = await getJobLogPath(jobId);
+    const deletedCount =
+      logDir && existsSync(logDir) ? await pruneLogDirectory(logDir) : 0;
 
     return {
       success: true,
@@ -252,7 +209,7 @@ export const getJobLogStats = async (
   jobId: string
 ): Promise<{ count: number; totalSize: number; totalSizeMB: number }> => {
   try {
-    const logs = await getJobLogs(jobId);
+    const logs = await getJobLogs(jobId, true);
 
     const totalSize = logs.reduce((sum, log) => sum + log.size, 0);
     const totalSizeMB = totalSize / (1024 * 1024);

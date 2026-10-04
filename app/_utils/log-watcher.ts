@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import path from "path";
 import { sseBroadcaster } from "./sse-broadcaster";
 import { getRunningJob } from "./running-jobs-utils";
+import { isLogFileFromRun } from "./log-files-utils";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const LOGS_DIR = path.join(DATA_DIR, "logs");
@@ -103,7 +104,6 @@ export const watchForLogFile = (
   callback: (logFileName: string) => void
 ): NodeJS.Timeout => {
   const logDir = path.join(LOGS_DIR, logFolderName);
-  const startTime = jobStartTime.getTime();
   const maxAttempts = 30;
   let attempts = 0;
 
@@ -121,31 +121,25 @@ export const watchForLogFile = (
         return;
       }
 
-      const files = readdirSync(logDir);
-      const logFiles = files
+      const matchingFile = readdirSync(logDir)
         .filter((f) => f.endsWith(".log"))
-        .map((f) => {
-          const filePath = path.join(logDir, f);
+        .sort()
+        .reverse()
+        .find((f) => {
           try {
-            const stats = statSync(filePath);
-            return {
-              name: f,
-              birthtime: stats.birthtime || stats.mtime,
-            };
+            return isLogFileFromRun(
+              f,
+              statSync(path.join(logDir, f)),
+              jobStartTime
+            );
           } catch {
-            return null;
+            return false;
           }
-        })
-        .filter((f): f is { name: string; birthtime: Date } => f !== null);
-
-      const matchingFile = logFiles.find((f) => {
-        const fileTime = f.birthtime.getTime();
-        return fileTime >= startTime - 5000 && fileTime <= startTime + 30000;
-      });
+        });
 
       if (matchingFile) {
         clearInterval(checkInterval);
-        callback(matchingFile.name);
+        callback(matchingFile);
       }
     } catch (error) {
       console.error(`[LogWatcher] Error watching for log file ${runId}:`, error);

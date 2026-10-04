@@ -49,6 +49,11 @@ Translation loading priority:
 | Variable            | Default | Description                                                                     |
 | ------------------- | ------- | ------------------------------------------------------------------------------- |
 | `HOST_CRONTAB_USER` | `root`  | Comma-separated list of users whose crontabs to read (e.g., `root,user1,user2`) |
+| `HOST_DATA_DIR`     | `N/A`   | Absolute host path of the directory mounted at `/app/data`. Skips `docker inspect` when set. Needed for logging when the Docker socket is not mounted or inspection fails |
+| `HOST_SCRIPTS_DIR`  | `N/A`   | Absolute host path of the directory mounted at `/app/scripts`. Skips `docker inspect` when set. Used to build the host path of scripts scheduled from the library |
+| `HOST_PROJECT_DIR`  | `N/A`   | Legacy. Absolute host path of the folder holding `data/` and `scripts/`. Only used as a last resort when `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR` are unset and `docker inspect` finds nothing |
+
+Host paths are resolved in this order: `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR`, then `docker inspect`, then `HOST_PROJECT_DIR/data` / `HOST_PROJECT_DIR/scripts`.
 
 ## UI Configuration
 
@@ -67,6 +72,8 @@ Translation loading priority:
 | `MAX_LOG_AGE_DAYS`             | `30`    | Days to keep job execution logs before cleanup                   |
 | `NEXT_PUBLIC_MAX_LOG_AGE_DAYS` | `30`    | Days to keep error history in browser localStorage (client-side) |
 | `MAX_LOGS_PER_JOB`             | `50`    | Maximum number of log files to keep per job                      |
+
+See [LOGS.md](LOGS.md#automatic-cleanup) for when cleanup runs.
 
 ## Authentication & Security
 

@@ -17,14 +17,19 @@ import { isDocker } from "@/app/_server/actions/global";
 import {
   runJobSynchronously,
   runJobInBackground,
+  describeJobExecutionError,
 } from "@/app/_utils/job-execution-utils";
+import { unwrapCommand } from "@/app/_utils/wrapper-utils";
 import {
   pauseJobInLines,
   resumeJobInLines,
   deleteJobInLines,
 } from "@/app/_utils/line-manipulation-utils";
 import { cleanCrontabContent } from "@/app/_utils/files-manipulation-utils";
+import { createLogger } from "@/app/_utils/logger";
 import { resolveJobCommand } from "@/app/_utils/script-command-utils";
+
+const log = createLogger("cronjobs");
 
 const resolveCommandFromForm = async (formData: FormData) => {
   const { fetchScripts } = await import("@/app/_server/actions/scripts");
@@ -181,9 +186,10 @@ export const cloneCronJob = async (
 
     const success = await addCronJob(
       originalJob.schedule,
-      originalJob.command,
+      unwrapCommand(originalJob.command),
       newComment,
-      originalJob.user
+      originalJob.user,
+      originalJob.logsEnabled || false
     );
 
     if (success) {
@@ -364,19 +370,18 @@ export const runCronJob = async (
       process.env.LIVE_UPDATES !== "false";
 
     if (job.logsEnabled && liveUpdatesEnabled) {
-      return runJobInBackground(job, docker);
+      return await runJobInBackground(job, docker);
     }
 
-    return runJobSynchronously(job, docker);
+    return await runJobSynchronously(job, docker);
   } catch (error: any) {
     console.error("Error running cron job:", error);
-    const errorMessage =
-      error.stderr || error.message || "Unknown error occurred";
+    const { message, output } = describeJobExecutionError(error);
     return {
       success: false,
-      message: "Failed to execute cron job",
-      output: errorMessage.trim(),
-      details: error.stack,
+      message,
+      output,
+      details: error?.stack,
     };
   }
 };
@@ -407,19 +412,18 @@ export const executeJob = async (
     const docker = await isDocker();
 
     if (runInBackground) {
-      return runJobInBackground(job, docker);
+      return await runJobInBackground(job, docker);
     }
 
-    return runJobSynchronously(job, docker);
+    return await runJobSynchronously(job, docker);
   } catch (error: any) {
     console.error("Error executing cron job:", error);
-    const errorMessage =
-      error.stderr || error.message || "Unknown error occurred";
+    const { message, output } = describeJobExecutionError(error);
     return {
       success: false,
-      message: "Failed to execute cron job",
-      output: errorMessage.trim(),
-      details: error.stack,
+      message,
+      output,
+      details: error?.stack,
     };
   }
 };
@@ -576,13 +580,18 @@ export const restoreAllCronJobs = async (): Promise<{
 
     for (const backup of backups) {
       const job = backup.job;
-      const success = await addCronJob(
-        job.schedule,
-        job.command,
-        job.comment || "",
-        job.user,
-        job.logsEnabled || false
-      );
+      let success = false;
+      try {
+        success = await addCronJob(
+          job.schedule,
+          job.command,
+          job.comment || "",
+          job.user,
+          job.logsEnabled || false
+        );
+      } catch (error) {
+        log.error(`Error restoring backup ${backup.filename}`, error);
+      }
 
       if (success) {
         successCount++;

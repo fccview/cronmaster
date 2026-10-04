@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRunningJob } from "@/app/_utils/running-jobs-utils";
 import { readFile, open } from "fs/promises";
-import { existsSync } from "fs";
+import { existsSync, type Stats } from "fs";
 import path from "path";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
+import { isLogFileFromRun } from "@/app/_utils/log-files-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,7 @@ export const GET = async (request: NextRequest) => {
     const sortedFiles = files.sort().reverse();
 
     let latestLogFile: string | null = null;
-    let latestStats: any = null;
+    let latestStats: Stats | null = null;
     const jobStartTime = new Date(job.startTime);
     const TIME_TOLERANCE_MS = 5000;
 
@@ -98,32 +99,14 @@ export const GET = async (request: NextRequest) => {
         try {
           const { stat } = await import("fs/promises");
           const stats = await stat(filePath);
-          const fileCreateTime = stats.birthtime || stats.mtime;
 
-          if (fileCreateTime.getTime() >= jobStartTime.getTime() - TIME_TOLERANCE_MS) {
+          if (isLogFileFromRun(file, stats, jobStartTime, TIME_TOLERANCE_MS)) {
             latestLogFile = filePath;
             latestStats = stats;
             break;
           }
         } catch (error) {
           console.error(`Error checking file ${file}:`, error);
-        }
-      }
-
-      if (!latestLogFile && sortedFiles.length > 0) {
-        try {
-          const { stat } = await import("fs/promises");
-          const fallbackPath = path.join(logDir, sortedFiles[0]);
-          const fallbackStats = await stat(fallbackPath);
-          const now = new Date();
-          const fileAge = now.getTime() - (fallbackStats.birthtime || fallbackStats.mtime).getTime();
-
-          if (fileAge <= TIME_TOLERANCE_MS) {
-            latestLogFile = fallbackPath;
-            latestStats = fallbackStats;
-          }
-        } catch (error) {
-          console.error(`Error stat-ing fallback file:`, error);
         }
       }
     }

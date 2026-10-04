@@ -211,7 +211,7 @@ export const addCronJob = async (
     }
   } catch (error) {
     console.error("Error adding cron job:", error);
-    return false;
+    throw error;
   }
 };
 
@@ -312,7 +312,7 @@ export const updateCronJob = async (
     return await writeUserCrontab(user, newCron);
   } catch (error) {
     console.error("Error updating cron job:", error);
-    return false;
+    throw error;
   }
 };
 

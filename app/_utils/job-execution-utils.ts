@@ -1,4 +1,5 @@
 import { exec, spawn } from "child_process";
+import path from "path";
 import { promisify } from "util";
 import { CronJob } from "./cronjob-utils";
 import { getUserInfo } from "./crontab-utils";
@@ -10,10 +11,55 @@ import {
   removeRunningJob,
 } from "./running-jobs-utils";
 import { sseBroadcaster } from "./sse-broadcaster";
-import { generateLogFolderName, cleanupOldLogFiles } from "./wrapper-utils";
+import { generateLogFolderName } from "./wrapper-utils";
 import { watchForLogFile } from "./log-watcher";
+import { getLogsBaseDir, pruneLogDirectory } from "./log-files-utils";
 
 const execAsync = promisify(exec);
+
+export const JOB_TIMEOUT_MS = 300000;
+
+interface ExecFailure {
+  message?: unknown;
+  stdout?: unknown;
+  stderr?: unknown;
+  code?: unknown;
+  signal?: unknown;
+  killed?: unknown;
+}
+
+export const describeJobExecutionError = (
+  failure: unknown
+): { message: string; output: string } => {
+  const error = (failure ?? undefined) as ExecFailure | undefined;
+  const pick = (value: unknown): string =>
+    typeof value === "string" ? value.trim() : "";
+  const output =
+    pick(error?.stderr) ||
+    pick(error?.stdout) ||
+    pick(error?.message) ||
+    "Unknown error occurred";
+
+  if (error?.killed && error?.signal) {
+    return {
+      message: `Job timed out after ${JOB_TIMEOUT_MS / 1000} seconds and was stopped`,
+      output,
+    };
+  }
+
+  if (error?.signal) {
+    return { message: `Job was terminated by ${String(error.signal)}`, output };
+  }
+
+  if (typeof error?.code === "number") {
+    return { message: `Job exited with code ${error.code}`, output };
+  }
+
+  return {
+    message: pick(error?.message) || "Failed to execute cron job",
+    output,
+  };
+};
 
 export const runJobSynchronously = async (
   job: CronJob,
@@ -36,7 +82,7 @@ export const runJobSynchronously = async (
   }
 
   const { stdout, stderr } = await execAsync(command, {
-    timeout: 300000,
+    timeout: JOB_TIMEOUT_MS,
     cwd: process.env.HOME || "/home",
   });
 
@@ -143,7 +189,11 @@ const monitorRunningJob = (runId: string, pid: number): void => {
         setTimeout(async () => {
           try {
             removeRunningJob(runId);
-            await cleanupOldLogFiles(runningJob?.cronJobId || "");
+            if (runningJob?.logFolderName) {
+              await pruneLogDirectory(
+                path.join(getLogsBaseDir(), runningJob.logFolderName)
+              );
+            }
           } catch (error) {
             console.error(`Error cleaning up job ${runId}:`, error);
           }
