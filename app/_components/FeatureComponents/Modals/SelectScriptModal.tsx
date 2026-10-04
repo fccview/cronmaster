@@ -54,7 +54,7 @@ export const SelectScriptModal = ({
       const content = await getScriptContent(script.filename);
       setPreviewContent(content);
     } catch {
-      setPreviewContent("Error loading script content");
+      setPreviewContent(t("scripts.errorLoadingScriptContent"));
     }
   };
 

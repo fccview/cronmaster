@@ -3,6 +3,7 @@
 import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 import { ScriptModal } from "@/app/_components/FeatureComponents/Modals/ScriptModal";
+import { useTranslations } from "next-intl";
 
 interface EditScriptModalProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ export const EditScriptModal = ({
   form,
   onFormChange,
 }: EditScriptModalProps) => {
+  const t = useTranslations();
+
   if (!script) return null;
 
   return (
@@ -34,8 +37,8 @@ export const EditScriptModal = ({
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={onSubmit}
-      title="Edit Script"
-      submitButtonText="Update Script"
+      title={t("scripts.editScript")}
+      submitButtonText={t("scripts.updateScript")}
       submitButtonIcon={<PencilSimpleIcon className="h-4 w-4 mr-2" />}
       form={form}
       onFormChange={onFormChange}

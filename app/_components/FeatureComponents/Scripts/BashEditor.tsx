@@ -8,6 +8,7 @@ import { StreamLanguage } from "@codemirror/language";
 import { useTheme } from 'next-themes';
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { TerminalIcon, CopyIcon, CheckIcon } from "@phosphor-icons/react";
+import { useTranslations } from "next-intl";
 
 interface BashEditorProps {
   value: string;
@@ -24,6 +25,7 @@ export const BashEditor = ({
   className = "",
   label,
 }: BashEditorProps) => {
+  const t = useTranslations();
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
@@ -241,7 +243,7 @@ export const BashEditor = ({
             ) : (
               <CopyIcon className="h-3 w-3 mr-1" />
             )}
-            {copied ? "Copied!" : "CopyIcon"}
+            {copied ? t("common.copied") : t("common.copy")}
           </Button>
         </div>
       )}
