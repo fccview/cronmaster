@@ -29,7 +29,8 @@
         "switchToLightMode": "Passa alla modalità chiara",
         "switchToDarkMode": "Passa alla modalità scura",
         "install": "Installa",
-        "logout": "Esci"
+        "logout": "Esci",
+        "appDescription": "La piattaforma definitiva per la gestione delle operazioni cron, con pianificazione intelligente, monitoraggio in tempo reale e potenti strumenti di automazione"
     },
     "cronjobs": {
         "cronJobs": "Operazioni Cron",
@@ -298,7 +299,8 @@
         "pleaseWait": "Attendere prego...",
         "orContinueWith": "Oppure continua con",
         "loginFailed": "Accesso fallito",
-        "genericError": "Si è verificato un errore. Riprova."
+        "genericError": "Si è verificato un errore. Riprova.",
+        "invalidPassword": "Password non valida"
     },
     "warnings": {
         "wrapperScriptModified": "Script Wrapper Modificato",

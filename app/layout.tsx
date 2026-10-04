@@ -3,7 +3,10 @@ import { JetBrains_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { ThemeProvider } from "@/app/_providers/ThemeProvider";
 import { ServiceWorkerRegister } from "@/app/_components/FeatureComponents/PWA/ServiceWorkerRegister";
-import { loadTranslationMessages } from "@/app/_server/actions/translations";
+import {
+  loadTranslationMessages,
+  getTranslations,
+} from "@/app/_server/actions/translations";
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/ibm-plex-mono/600.css';
@@ -17,24 +20,27 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Cr*nMaster - Cron Management made easy",
-  description:
-    "The ultimate cron job management platform with intelligent scheduling, real-time monitoring, and powerful automation tools",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Cr*nMaster",
-  },
-  formatDetection: {
-    telephone: false,
-  },
-  icons: {
-    icon: "/favicon.png",
-    shortcut: "/logo.png",
-    apple: "/logo-pwa.png",
-  },
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations();
+
+  return {
+    title: `Cr*nMaster - ${t("common.cronManagementMadeEasy")}`,
+    description: t("common.appDescription"),
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Cr*nMaster",
+    },
+    formatDetection: {
+      telephone: false,
+    },
+    icons: {
+      icon: "/favicon.png",
+      shortcut: "/logo.png",
+      apple: "/logo-pwa.png",
+    },
+  };
 };
 
 export const viewport = {
@@ -54,7 +60,7 @@ export default async function RootLayout({
   const messages = await loadTranslationMessages(locale);
 
   return (
-    <html lang="en" suppressHydrationWarning data-webtui-theme="catppuccin-latte">
+    <html lang={locale} suppressHydrationWarning data-webtui-theme="catppuccin-latte">
       <head>
         <meta name="application-name" content="Cr*nMaster" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

@@ -30,7 +30,8 @@
         "switchToLightMode": "Zum hellen Modus wechseln",
         "switchToDarkMode": "Zum dunklen Modus wechseln",
         "install": "Installieren",
-        "logout": "Abmelden"
+        "logout": "Abmelden",
+        "appDescription": "Die ultimative Plattform zur Verwaltung von Cron-Jobs mit intelligenter Zeitplanung, Echtzeit-Überwachung und leistungsstarken Automatisierungswerkzeugen"
     },
     "cronjobs": {
         "cronJobs": "Cron-Jobs",
@@ -302,7 +303,8 @@
         "pleaseWait": "Bitte warten...",
         "orContinueWith": "Oder fortfahren mit",
         "loginFailed": "Anmeldung fehlgeschlagen",
-        "genericError": "Es ist ein Fehler aufgetreten. Bitte erneut versuchen."
+        "genericError": "Es ist ein Fehler aufgetreten. Bitte erneut versuchen.",
+        "invalidPassword": "Ungültiges Passwort"
     },
     "warnings": {
         "wrapperScriptModified": "Wrapper-Skript geändert",

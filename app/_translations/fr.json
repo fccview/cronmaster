@@ -30,7 +30,8 @@
         "switchToLightMode": "Passer en mode clair",
         "switchToDarkMode": "Passer en mode sombre",
         "install": "Installer",
-        "logout": "Se déconnecter"
+        "logout": "Se déconnecter",
+        "appDescription": "La plateforme ultime de gestion des tâches cron, avec planification intelligente, surveillance en temps réel et outils d'automatisation puissants"
     },
     "cronjobs": {
         "cronJobs": "Tâches Cron",
@@ -302,7 +303,8 @@
         "pleaseWait": "Veuillez patienter...",
         "orContinueWith": "Ou continuer avec",
         "loginFailed": "Échec de connexion",
-        "genericError": "Une erreur est survenue. Veuillez réessayer."
+        "genericError": "Une erreur est survenue. Veuillez réessayer.",
+        "invalidPassword": "Mot de passe incorrect"
     },
     "warnings": {
         "wrapperScriptModified": "Script wrapper modifié",

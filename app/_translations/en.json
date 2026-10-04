@@ -30,7 +30,8 @@
         "switchToLightMode": "Switch to light mode",
         "switchToDarkMode": "Switch to dark mode",
         "install": "Install",
-        "logout": "Logout"
+        "logout": "Logout",
+        "appDescription": "The ultimate cron job management platform with intelligent scheduling, real-time monitoring, and powerful automation tools"
     },
     "cronjobs": {
         "cronJobs": "Cron Jobs",
@@ -302,7 +303,8 @@
         "pleaseWait": "Please wait...",
         "orContinueWith": "Or continue with",
         "loginFailed": "Login failed",
-        "genericError": "An error occurred. Please try again."
+        "genericError": "An error occurred. Please try again.",
+        "invalidPassword": "Invalid password"
     },
     "warnings": {
         "wrapperScriptModified": "Wrapper Script Modified",
