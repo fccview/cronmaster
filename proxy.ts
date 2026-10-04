@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("proxy");
 
 export const proxy = async (request: NextRequest) => {
   const { pathname } = request.nextUrl;
@@ -36,17 +39,19 @@ export const proxy = async (request: NextRequest) => {
       : "cronmaster-session";
   const sessionId = request.cookies.get(cookieName)?.value;
 
-  if (process.env.DEBUGGER) {
-    console.log("MIDDLEWARE - cookieName:", cookieName);
-    console.log("MIDDLEWARE - NODE_ENV:", process.env.NODE_ENV);
-    console.log("MIDDLEWARE - HTTPS:", process.env.HTTPS);
-    console.log("MIDDLEWARE - sessionId:", sessionId);
-    console.log("MIDDLEWARE - cookies:", request.cookies.getAll());
-  }
+  log.debug("Checking session", {
+    pathname,
+    credentialName: cookieName,
+    nodeEnv: process.env.NODE_ENV,
+    https: process.env.HTTPS,
+    hasCredential: !!sessionId,
+    jarSize: request.cookies.getAll().length,
+  });
 
   const loginUrl = new URL("/login", request.url);
 
   if (!sessionId) {
+    log.debug("No session cookie, redirecting to login", { pathname });
     return NextResponse.redirect(loginUrl);
   }
 
@@ -56,22 +61,16 @@ export const proxy = async (request: NextRequest) => {
       process.env.APP_URL ||
       request.nextUrl.origin;
 
-    if (process.env.DEBUGGER) {
-      console.log("MIDDLEWARE - URL Resolution:");
-      console.log(
-        "  INTERNAL_API_URL:",
-        process.env.INTERNAL_API_URL || "(not set)"
-      );
-      console.log("  APP_URL:", process.env.APP_URL || "(not set)");
-      console.log("  request.nextUrl.origin:", request.nextUrl.origin);
-      console.log("  → Using:", internalApiUrl);
-    }
+    log.debug("URL resolution", {
+      internalApiUrl: process.env.INTERNAL_API_URL || "(not set)",
+      appUrl: process.env.APP_URL || "(not set)",
+      origin: request.nextUrl.origin,
+      using: internalApiUrl,
+    });
 
     const sessionCheckUrl = new URL(`${internalApiUrl}/api/auth/check-session`);
 
-    if (process.env.DEBUGGER) {
-      console.log("MIDDLEWARE - Session Check URL:", sessionCheckUrl.href);
-    }
+    log.debug("Session check URL", { url: sessionCheckUrl.href });
 
     const sessionCheck = await fetch(sessionCheckUrl, {
       headers: {
@@ -80,25 +79,25 @@ export const proxy = async (request: NextRequest) => {
       cache: "no-store",
     });
 
-    if (process.env.DEBUGGER) {
-      console.log("MIDDLEWARE - Session Check Response:");
-      console.log("  status:", sessionCheck.status);
-      console.log("  statusText:", sessionCheck.statusText);
-      console.log("  ok:", sessionCheck.ok);
-    }
+    log.debug("Session check response", {
+      status: sessionCheck.status,
+      statusText: sessionCheck.statusText,
+      ok: sessionCheck.ok,
+    });
 
     if (!sessionCheck.ok) {
       const redirectResponse = NextResponse.redirect(loginUrl);
       redirectResponse.cookies.delete(cookieName);
 
-      if (process.env.DEBUGGER) {
-        console.log("MIDDLEWARE - session is not ok");
-      }
+      log.info("Session rejected, redirecting to login", {
+        pathname,
+        status: sessionCheck.status,
+      });
 
       return redirectResponse;
     }
   } catch (error) {
-    console.error("Session check error:", error);
+    log.error("Session check error", error);
     return NextResponse.redirect(loginUrl);
   }
 
