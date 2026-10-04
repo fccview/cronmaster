@@ -10,6 +10,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
+import { useTranslations } from "next-intl";
 
 interface DeleteTaskModalProps {
   isOpen: boolean;
@@ -24,13 +25,14 @@ export const DeleteTaskModal = ({
   onConfirm,
   job,
 }: DeleteTaskModalProps) => {
+  const t = useTranslations();
   if (!job) return null;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Scheduled Task"
+      title={t("cronjobs.deleteScheduledTask")}
       size="sm"
     >
       <div className="space-y-3">
@@ -66,10 +68,10 @@ export const DeleteTaskModal = ({
             <WarningCircleIcon className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-xs font-medium text-destructive mb-0.5">
-                This action cannot be undone
+                {t("common.actionCannotBeUndone")}
               </p>
               <p className="text-xs text-muted-foreground">
-                The task will be permanently removed.
+                {t("cronjobs.taskWillBeRemoved")}
               </p>
             </div>
           </div>
@@ -77,14 +79,14 @@ export const DeleteTaskModal = ({
 
         <div className="flex justify-end gap-2 pt-2 border-t border-border">
           <Button variant="outline" onClick={onClose} className="btn-outline">
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
             onClick={onConfirm}
           >
             <TrashIcon className="h-4 w-4 mr-2" />
-            Delete Task
+            {t("cronjobs.deleteTask")}
           </Button>
         </div>
       </div>

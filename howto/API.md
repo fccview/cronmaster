@@ -16,6 +16,8 @@ Authorization: Bearer YOUR_API_KEY
 
 **Note:** If no `API_KEY` is set, the API is publicly accessible (for development).
 
+`API_KEY` only protects the `/api/*` REST routes, not the web UI. To protect the UI set `AUTH_PASSWORD` or `SSO_MODE`.
+
 ### 2. Session Cookies
 
 Login with password to get a session cookie, then use it for subsequent requests:
@@ -273,6 +275,26 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ---
 
+### GET /api/health
+
+Liveness probe used by the Docker healthcheck. It needs no authentication.
+
+**Response:**
+
+```json
+{
+  "status": "healthy"
+}
+```
+
+**Example:**
+
+```bash
+curl https://your-cronmaster-url.com/api/health
+```
+
+---
+
 ### GET /api/events
 
 Server-Sent Events stream for real-time updates.
@@ -302,7 +324,7 @@ Stream job execution logs.
 
 - `runId` (string, required) - The run ID of the job execution
 - `offset` (number, optional) - Byte offset for streaming new content. Defaults to `0`.
-- `maxLines` (number, optional) - Maximum lines to return. Defaults to `500`, min `100`, max `5000`.
+- `maxLines` (number, optional) - Maximum lines to return. Defaults to `500`, min `100`, max `50000`.
 
 **Note:** When `offset=0`, the endpoint only reads the last `maxLines` from the file for performance. This means `totalLines` is only returned when the file is small enough to read entirely (not truncated).
 

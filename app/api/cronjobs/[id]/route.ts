@@ -5,6 +5,10 @@ import {
   editCronJob,
   removeCronJob,
 } from "@/app/_server/actions/cronjobs";
+import { createLogger } from "@/app/_utils/logger";
+import { getErrorMessage } from "@/app/_utils/error-utils";
+
+const log = createLogger("api:cronjobs");
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +29,13 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     }
 
     return NextResponse.json({ success: true, data: cronJob });
-  } catch (error: any) {
-    console.error("[API] Error fetching cron job:", error);
+  } catch (error: unknown) {
+    log.error("Error fetching cron job", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to fetch cron job",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );
@@ -47,13 +51,27 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     const body = await request.json();
     const { schedule, command, comment, logsEnabled } = body;
 
+    const cronJobs = await fetchCronJobs();
+    const existing = cronJobs.find((job) => job.id === params.id);
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Cron job not found" },
+        { status: 404 }
+      );
+    }
+
     const formData = new FormData();
     formData.append("id", params.id);
-    if (schedule) formData.append("schedule", schedule);
-    if (command) formData.append("command", command);
-    if (comment !== undefined) formData.append("comment", comment);
-    if (logsEnabled !== undefined)
-      formData.append("logsEnabled", logsEnabled ? "true" : "false");
+    formData.append("schedule", schedule || existing.schedule);
+    formData.append("command", command || existing.command);
+    formData.append(
+      "comment",
+      comment !== undefined ? comment : existing.comment || ""
+    );
+    const nextLogsEnabled =
+      logsEnabled !== undefined ? !!logsEnabled : !!existing.logsEnabled;
+    formData.append("logsEnabled", nextLogsEnabled ? "true" : "false");
 
     const result = await editCronJob(formData);
 
@@ -62,13 +80,13 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     } else {
       return NextResponse.json(result, { status: 400 });
     }
-  } catch (error: any) {
-    console.error("[API] Error updating cron job:", error);
+  } catch (error: unknown) {
+    log.error("Error updating cron job", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to update cron job",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );
@@ -81,20 +99,30 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
   if (authError) return authError;
 
   try {
-    const result = await removeCronJob({ id: params.id, schedule: "", command: "", user: "" });
+    const cronJobs = await fetchCronJobs();
+    const existing = cronJobs.find((job) => job.id === params.id);
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Cron job not found" },
+        { status: 404 }
+      );
+    }
+
+    const result = await removeCronJob(existing);
 
     if (result.success) {
       return NextResponse.json(result);
     } else {
       return NextResponse.json(result, { status: 400 });
     }
-  } catch (error: any) {
-    console.error("[API] Error deleting cron job:", error);
+  } catch (error: unknown) {
+    log.error("Error deleting cron job", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to delete cron job",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );

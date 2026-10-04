@@ -1,5 +1,6 @@
 import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
+import { useTranslations } from "next-intl";
 
 export interface ProgressBarProps extends HTMLAttributes<HTMLDivElement> {
   value: number;
@@ -22,6 +23,7 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
     },
     ref
   ) => {
+    const t = useTranslations();
     const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
     const getColorClass = (percentage: number) => {
@@ -39,7 +41,7 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(
       <div ref={ref} className={cn("w-full terminal-font", className)} {...props}>
         {showLabel && (
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs">Usage</span>
+            <span className="text-xs">{t("sidebar.usage")}</span>
             <span className="text-xs font-medium">
               {Math.round(percentage)}%
             </span>

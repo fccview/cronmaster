@@ -1,9 +1,20 @@
 "use server";
 
-import { readdir, readFile, unlink, stat } from "fs/promises";
+import { readdir, readFile, unlink } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
-import { DATA_DIR } from "@/app/_consts/file";
+import {
+  getLogsBaseDir,
+  listLogFiles,
+  pruneLogDirectoryIfDue,
+  readLogExitCode,
+} from "@/app/_utils/log-files-utils";
+import { createLogger } from "@/app/_utils/logger";
+import { requireActionAuth } from "@/app/_utils/server-action-auth";
+import { isSafePathSegment } from "@/app/_utils/security-utils";
+import { getErrorMessage } from "@/app/_utils/error-utils";
+
+const logger = createLogger("logs");
 
 export interface LogEntry {
   filename: string;
@@ -24,19 +35,13 @@ export interface JobLogError {
   hasHistoricalFailures?: boolean;
 }
 
-const MAX_LOGS_PER_JOB = process.env.MAX_LOGS_PER_JOB
-  ? parseInt(process.env.MAX_LOGS_PER_JOB)
-  : 50;
-const MAX_LOG_AGE_DAYS = process.env.MAX_LOG_AGE_DAYS
-  ? parseInt(process.env.MAX_LOG_AGE_DAYS)
-  : 30;
-
-const getLogBasePath = async (): Promise<string> => {
-  return path.join(process.cwd(), DATA_DIR, "logs");
-};
-
 const getJobLogPath = async (jobId: string): Promise<string | null> => {
-  const basePath = await getLogBasePath();
+  const basePath = getLogsBaseDir();
+
+  if (!isSafePathSegment(jobId)) {
+    logger.warn("Rejected unsafe log job id", { jobId });
+    return null;
+  }
 
   if (!existsSync(basePath)) {
     return null;
@@ -55,9 +60,17 @@ const getJobLogPath = async (jobId: string): Promise<string | null> => {
 
     return path.join(basePath, jobId);
   } catch (error) {
-    console.error("Error finding log path:", error);
+    logger.error("Error finding log path", error);
     return path.join(basePath, jobId);
   }
+};
+
+const isSafeLogFilename = (filename: string): boolean => {
+  if (!isSafePathSegment(filename)) {
+    logger.warn("Rejected unsafe log file name", { filename });
+    return false;
+  }
+  return true;
 };
 
 export const getJobLogs = async (
@@ -65,6 +78,7 @@ export const getJobLogs = async (
   skipCleanup: boolean = false,
   includeExitCodes: boolean = false
 ): Promise<LogEntry[]> => {
+  await requireActionAuth();
   try {
     const logDir = await getJobLogPath(jobId);
 
@@ -73,17 +87,13 @@ export const getJobLogs = async (
     }
 
     if (!skipCleanup) {
-      await cleanupJobLogs(jobId);
+      await pruneLogDirectoryIfDue(logDir);
     }
 
-    const files = await readdir(logDir);
-    const logFiles = files.filter((f) => f.endsWith(".log"));
+    const logFiles = await listLogFiles(logDir);
 
     const entries: LogEntry[] = [];
-    for (const file of logFiles) {
-      const fullPath = path.join(logDir, file);
-      const stats = await stat(fullPath);
-
+    for (const { name: file, fullPath, size, date } of logFiles) {
       let exitCode: number | undefined;
       let hasError: boolean | undefined;
 
@@ -99,18 +109,16 @@ export const getJobLogs = async (
         filename: file,
         timestamp: file.replace(".log", ""),
         fullPath,
-        size: stats.size,
-        dateCreated: stats.birthtime,
+        size,
+        dateCreated: date,
         exitCode,
         hasError,
       });
     }
 
-    return entries.sort(
-      (a, b) => b.dateCreated.getTime() - a.dateCreated.getTime()
-    );
+    return entries;
   } catch (error) {
-    console.error(`Error reading logs for job ${jobId}:`, error);
+    logger.error(`Error reading logs for job ${jobId}`, error);
     return [];
   }
 };
@@ -119,10 +127,15 @@ export const getLogContent = async (
   jobId: string,
   filename: string
 ): Promise<string> => {
+  await requireActionAuth();
   try {
     const logDir = await getJobLogPath(jobId);
     if (!logDir) {
       return "Log directory not found";
+    }
+
+    if (!isSafeLogFilename(filename)) {
+      return "Error reading log file";
     }
 
     const logPath = path.join(logDir, filename);
@@ -130,7 +143,7 @@ export const getLogContent = async (
     const content = await readFile(logPath, "utf-8");
     return content;
   } catch (error) {
-    console.error(`Error reading log file ${filename}:`, error);
+    logger.error(`Error reading log file ${filename}`, error);
     return "Error reading log file";
   }
 };
@@ -139,6 +152,7 @@ export const deleteLogFile = async (
   jobId: string,
   filename: string
 ): Promise<{ success: boolean; message: string }> => {
+  await requireActionAuth();
   try {
     const logDir = await getJobLogPath(jobId);
     if (!logDir) {
@@ -148,19 +162,24 @@ export const deleteLogFile = async (
       };
     }
 
+    if (!isSafeLogFilename(filename)) {
+      return { success: false, message: "Invalid log file name" };
+    }
+
     const logPath = path.join(logDir, filename);
 
     await unlink(logPath);
+    logger.debug("Deleted log file", { jobId, filename });
 
     return {
       success: true,
       message: "Log file deleted successfully",
     };
-  } catch (error: any) {
-    console.error(`Error deleting log file ${filename}:`, error);
+  } catch (error: unknown) {
+    logger.error(`Error deleting log file ${filename}`, error);
     return {
       success: false,
-      message: error.message || "Error deleting log file",
+      message: getErrorMessage(error) || "Error deleting log file",
     };
   }
 };
@@ -168,8 +187,9 @@ export const deleteLogFile = async (
 export const deleteAllJobLogs = async (
   jobId: string
 ): Promise<{ success: boolean; message: string; deletedCount: number }> => {
+  await requireActionAuth();
   try {
-    const logs = await getJobLogs(jobId);
+    const logs = await getJobLogs(jobId, true);
 
     let deletedCount = 0;
     for (const log of logs) {
@@ -179,70 +199,18 @@ export const deleteAllJobLogs = async (
       }
     }
 
+    logger.info("Deleted all logs for job", { jobId, deletedCount });
+
     return {
       success: true,
       message: `Deleted ${deletedCount} log files`,
       deletedCount,
     };
-  } catch (error: any) {
-    console.error(`Error deleting all logs for job ${jobId}:`, error);
+  } catch (error: unknown) {
+    logger.error(`Error deleting all logs for job ${jobId}`, error);
     return {
       success: false,
-      message: error.message || "Error deleting log files",
-      deletedCount: 0,
-    };
-  }
-};
-
-export const cleanupJobLogs = async (
-  jobId: string
-): Promise<{ success: boolean; message: string; deletedCount: number }> => {
-  try {
-    const logs = await getJobLogs(jobId, true);
-
-    if (logs.length === 0) {
-      return {
-        success: true,
-        message: "No logs to clean up",
-        deletedCount: 0,
-      };
-    }
-
-    let deletedCount = 0;
-    const now = new Date();
-    const maxAgeMs = MAX_LOG_AGE_DAYS * 24 * 60 * 60 * 1000;
-
-    for (const log of logs) {
-      const ageMs = now.getTime() - log.dateCreated.getTime();
-      if (ageMs > maxAgeMs) {
-        const result = await deleteLogFile(jobId, log.filename);
-        if (result.success) {
-          deletedCount++;
-        }
-      }
-    }
-
-    const remainingLogs = await getJobLogs(jobId, true);
-    if (remainingLogs.length > MAX_LOGS_PER_JOB) {
-      const logsToDelete = remainingLogs.slice(MAX_LOGS_PER_JOB);
-      for (const log of logsToDelete) {
-        const result = await deleteLogFile(jobId, log.filename);
-        if (result.success) {
-          deletedCount++;
-        }
-      }
-    }
-
-    return {
-      success: true,
-      message: `Cleaned up ${deletedCount} log files`,
-      deletedCount,
-    };
-  } catch (error: any) {
-    console.error(`Error cleaning up logs for job ${jobId}:`, error);
-    return {
-      success: false,
-      message: error.message || "Error cleaning up log files",
+      message: getErrorMessage(error) || "Error deleting log files",
       deletedCount: 0,
     };
   }
@@ -251,8 +219,9 @@ export const cleanupJobLogs = async (
 export const getJobLogStats = async (
   jobId: string
 ): Promise<{ count: number; totalSize: number; totalSizeMB: number }> => {
+  await requireActionAuth();
   try {
-    const logs = await getJobLogs(jobId);
+    const logs = await getJobLogs(jobId, true);
 
     const totalSize = logs.reduce((sum, log) => sum + log.size, 0);
     const totalSizeMB = totalSize / (1024 * 1024);
@@ -263,7 +232,7 @@ export const getJobLogStats = async (
       totalSizeMB: Math.round(totalSizeMB * 100) / 100,
     };
   } catch (error) {
-    console.error(`Error getting log stats for job ${jobId}:`, error);
+    logger.error(`Error getting log stats for job ${jobId}`, error);
     return {
       count: 0,
       totalSize: 0,
@@ -274,19 +243,15 @@ export const getJobLogStats = async (
 
 const getExitCodeForLog = async (logPath: string): Promise<number | null> => {
   try {
-    const content = await readFile(logPath, "utf-8");
-    const exitCodeMatch = content.match(/Exit Code\s*:\s*(-?\d+)/i);
-    if (exitCodeMatch) {
-      return parseInt(exitCodeMatch[1]);
-    }
-    return null;
+    return await readLogExitCode(logPath);
   } catch (error) {
-    console.error(`Error getting exit code for ${logPath}:`, error);
+    logger.error(`Error getting exit code for ${logPath}`, error);
     return null;
   }
 };
 
 export const getJobLogError = async (jobId: string): Promise<JobLogError> => {
+  await requireActionAuth();
   try {
     const logs = await getJobLogs(jobId);
 
@@ -333,7 +298,7 @@ export const getJobLogError = async (jobId: string): Promise<JobLogError> => {
       exitCode: failedExitCode,
     };
   } catch (error) {
-    console.error(`Error checking log errors for job ${jobId}:`, error);
+    logger.error(`Error checking log errors for job ${jobId}`, error);
     return { hasError: false };
   }
 };
@@ -341,6 +306,7 @@ export const getJobLogError = async (jobId: string): Promise<JobLogError> => {
 export const getAllJobLogErrors = async (
   jobIds: string[]
 ): Promise<Map<string, JobLogError>> => {
+  await requireActionAuth();
   const errorMap = new Map<string, JobLogError>();
 
   await Promise.all(

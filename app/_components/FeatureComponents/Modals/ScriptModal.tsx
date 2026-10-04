@@ -6,7 +6,7 @@ import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { BashEditor } from "@/app/_components/FeatureComponents/Scripts/BashEditor";
 import { BashSnippetHelper } from "@/app/_components/FeatureComponents/Scripts/BashSnippetHelper";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
-import { FileTextIcon, CodeIcon, InfoIcon, TrashIcon } from "@phosphor-icons/react";
+import { FileTextIcon, CodeIcon, TrashIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 interface ScriptModalProps {
@@ -48,12 +48,12 @@ export const ScriptModal = ({
     e.preventDefault();
 
     if (!form.name.trim()) {
-      showToast("error", "Validation Error", "Script name is required");
+      showToast("error", t("common.validationError"), t("scripts.scriptNameRequired"));
       return;
     }
 
     if (!form.content.trim()) {
-      showToast("error", "Validation Error", "Script content is required");
+      showToast("error", t("common.validationError"), t("scripts.scriptContentRequired"));
       return;
     }
 
@@ -69,8 +69,6 @@ export const ScriptModal = ({
     const result = await onSubmit(formData);
     if (result.success) {
       onClose();
-    } else {
-      showToast("error", `Failed to ${title.toLowerCase()}`, result.message);
     }
   };
 
@@ -84,12 +82,12 @@ export const ScriptModal = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">
-              Script Name <span className="text-status-error">*</span>
+              {t("scripts.scriptName")} <span className="text-status-error">*</span>
             </label>
             <Input
               value={form.name}
               onChange={(e) => onFormChange({ name: e.target.value })}
-              placeholder="My Script"
+              placeholder={t("scripts.scriptNamePlaceholder")}
               required
               className={
                 !form.name.trim()
@@ -100,13 +98,13 @@ export const ScriptModal = ({
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">
-              Description{" "}
-              <span className="text-xs opacity-60">(optional)</span>
+              {t("common.description")}{" "}
+              <span className="text-xs opacity-60">({t("common.optional")})</span>
             </label>
             <Input
               value={form.description}
               onChange={(e) => onFormChange({ description: e.target.value })}
-              placeholder="What does this script do?"
+              placeholder={t("scripts.scriptDescriptionPlaceholder")}
             />
           </div>
         </div>
@@ -115,7 +113,7 @@ export const ScriptModal = ({
           <div className="lg:col-span-1 bg-background0 ascii-border p-4 flex flex-col h-full overflow-hidden">
             <div className="flex items-center gap-2 mb-4 flex-shrink-0">
               <CodeIcon className="h-4 w-4" />
-              <h3 className="text-sm font-medium">Snippets</h3>
+              <h3 className="text-sm font-medium">{t("scripts.snippets")}</h3>
             </div>
             <div className="flex-1 overflow-y-auto min-h-0 !pr-0 tui-scrollbar">
               <BashSnippetHelper onInsertSnippet={handleInsertSnippet} />
@@ -126,7 +124,7 @@ export const ScriptModal = ({
             <div className="flex items-center gap-2 mb-4 flex-shrink-0">
               <FileTextIcon className="h-4 w-4" />
               <h3 className="text-sm font-medium">
-                Script Content <span className="text-status-error">*</span>
+                {t("scripts.scriptContent")} <span className="text-status-error">*</span>
               </h3>
               {isDraft && (
                 <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-background0 text-status-info ascii-border">

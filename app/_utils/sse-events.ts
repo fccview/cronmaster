@@ -53,7 +53,7 @@ export interface LogLineEvent extends BaseSSEEvent {
 
 export interface SystemStatsEvent extends BaseSSEEvent {
   type: "system-stats";
-  data: any;
+  data: unknown;
 }
 
 export interface HeartbeatEvent extends BaseSSEEvent {

@@ -1,68 +1,77 @@
-import { watch } from "fs";
-import { existsSync, readFileSync, readdirSync, statSync } from "fs";
+import { existsSync, watch } from "fs";
 import path from "path";
 import { sseBroadcaster } from "./sse-broadcaster";
-import { getRunningJob } from "./running-jobs-utils";
+import { getAllRunningJobs } from "./running-jobs-utils";
+import {
+  findRunLogFile,
+  getJobLogDir,
+  getLogsBaseDir,
+  readLogExitCode,
+} from "./log-files-utils";
+import { createLogger } from "@/app/_utils/logger";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const LOGS_DIR = path.join(DATA_DIR, "logs");
+const log = createLogger("logs:watcher");
+
+const SETTLE_DELAY_MS = 500;
 
 let watcher: ReturnType<typeof watch> | null = null;
+const pendingFiles = new Map<string, NodeJS.Timeout>();
 
-const parseExitCodeFromLog = (content: string): number | null => {
-  const match = content.match(/Exit Code\s*:\s*(\d+)/);
-  return match ? parseInt(match[1], 10) : null;
-};
-
-const processLogFile = (logFilePath: string) => {
+const processLogFile = async (logFilePath: string) => {
   try {
-    const pathParts = logFilePath.split(path.sep);
-    const logsIndex = pathParts.indexOf("logs");
+    const [jobFolderName, ...rest] = path
+      .relative(getLogsBaseDir(), logFilePath)
+      .split(path.sep);
 
-    if (logsIndex === -1 || logsIndex >= pathParts.length - 2) {
+    if (!jobFolderName || rest.length === 0 || jobFolderName === "..") {
       return;
     }
-
-    const jobFolderName = pathParts[logsIndex + 1];
 
     if (!existsSync(logFilePath)) {
       return;
     }
 
-    const content = readFileSync(logFilePath, "utf-8");
-
-    const exitCode = parseExitCodeFromLog(content);
+    const exitCode = await readLogExitCode(logFilePath);
 
     if (exitCode === null) {
       return;
     }
 
-    const runningJob = getRunningJob(`run-${jobFolderName}`);
+    log.debug("Detected job completion in log", {
+      jobFolder: jobFolderName,
+      exitCode,
+    });
+    const runningJob = getAllRunningJobs().find(
+      (job) => job.logFolderName === jobFolderName && job.status === "running"
+    );
 
-    if (exitCode === 0) {
-      sseBroadcaster.broadcast({
-        type: "job-completed",
-        timestamp: new Date().toISOString(),
-        data: {
-          runId: runningJob?.id || `run-${jobFolderName}`,
-          cronJobId: runningJob?.cronJobId || jobFolderName,
-          exitCode,
-        },
-      });
-    } else {
-      sseBroadcaster.broadcast({
-        type: "job-failed",
-        timestamp: new Date().toISOString(),
-        data: {
-          runId: runningJob?.id || `run-${jobFolderName}`,
-          cronJobId: runningJob?.cronJobId || jobFolderName,
-          exitCode,
-        },
-      });
-    }
+    sseBroadcaster.broadcast({
+      type: exitCode === 0 ? "job-completed" : "job-failed",
+      timestamp: new Date().toISOString(),
+      data: {
+        runId: runningJob?.id || `run-${jobFolderName}`,
+        cronJobId: runningJob?.cronJobId || jobFolderName,
+        exitCode,
+      },
+    });
   } catch (error) {
-    console.error("[LogWatcher] Error processing log file:", error);
+    log.error("Error processing log file", error);
   }
+};
+
+const scheduleLogFile = (fullPath: string) => {
+  const pending = pendingFiles.get(fullPath);
+  if (pending) {
+    clearTimeout(pending);
+  }
+
+  pendingFiles.set(
+    fullPath,
+    setTimeout(() => {
+      pendingFiles.delete(fullPath);
+      processLogFile(fullPath);
+    }, SETTLE_DELAY_MS)
+  );
 };
 
 export const startLogWatcher = () => {
@@ -70,30 +79,25 @@ export const startLogWatcher = () => {
     return;
   }
 
-  if (!existsSync(LOGS_DIR)) {
+  const logsDir = getLogsBaseDir();
+
+  if (!existsSync(logsDir)) {
+    log.debug("Logs directory missing, log watcher not started", {
+      dir: logsDir,
+    });
     return;
   }
 
-  watcher = watch(LOGS_DIR, { recursive: true }, (eventType, filename) => {
+  log.info("Log watcher started", { dir: logsDir });
+  watcher = watch(logsDir, { recursive: true }, (eventType, filename) => {
     if (!filename || !filename.endsWith(".log")) {
       return;
     }
 
-    const fullPath = path.join(LOGS_DIR, filename);
-
     if (eventType === "change") {
-      setTimeout(() => {
-        processLogFile(fullPath);
-      }, 500);
+      scheduleLogFile(path.join(logsDir, filename));
     }
   });
-};
-
-export const stopLogWatcher = () => {
-  if (watcher) {
-    watcher.close();
-    watcher = null;
-  }
 };
 
 export const watchForLogFile = (
@@ -102,53 +106,37 @@ export const watchForLogFile = (
   jobStartTime: Date,
   callback: (logFileName: string) => void
 ): NodeJS.Timeout => {
-  const logDir = path.join(LOGS_DIR, logFolderName);
-  const startTime = jobStartTime.getTime();
+  const logDir = getJobLogDir(logFolderName);
   const maxAttempts = 30;
   let attempts = 0;
+  let checking = false;
 
-  const checkInterval = setInterval(() => {
+  const checkInterval = setInterval(async () => {
+    if (checking) {
+      return;
+    }
+
     attempts++;
 
     if (attempts > maxAttempts) {
-      console.warn(`[LogWatcher] Timeout waiting for log file for ${runId}`);
+      log.warn(`Timeout waiting for log file for ${runId}`);
       clearInterval(checkInterval);
       return;
     }
 
+    checking = true;
     try {
-      if (!existsSync(logDir)) {
-        return;
-      }
+      const match = await findRunLogFile(logDir, jobStartTime);
 
-      const files = readdirSync(logDir);
-      const logFiles = files
-        .filter((f) => f.endsWith(".log"))
-        .map((f) => {
-          const filePath = path.join(logDir, f);
-          try {
-            const stats = statSync(filePath);
-            return {
-              name: f,
-              birthtime: stats.birthtime || stats.mtime,
-            };
-          } catch {
-            return null;
-          }
-        })
-        .filter((f): f is { name: string; birthtime: Date } => f !== null);
-
-      const matchingFile = logFiles.find((f) => {
-        const fileTime = f.birthtime.getTime();
-        return fileTime >= startTime - 5000 && fileTime <= startTime + 30000;
-      });
-
-      if (matchingFile) {
+      if (match) {
         clearInterval(checkInterval);
-        callback(matchingFile.name);
+        log.debug("Found log file for run", { runId, file: match.name });
+        callback(match.name);
       }
     } catch (error) {
-      console.error(`[LogWatcher] Error watching for log file ${runId}:`, error);
+      log.error(`Error watching for log file ${runId}`, error);
+    } finally {
+      checking = false;
     }
   }, 500);
 

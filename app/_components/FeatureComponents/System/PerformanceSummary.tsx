@@ -2,6 +2,7 @@ import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
 import { LightningIcon } from "@phosphor-icons/react";
 import { StatusBadge } from "@/app/_components/GlobalComponents/Badges/StatusBadge";
+import { useTranslations } from "next-intl";
 
 export interface PerformanceMetric {
   label: string;
@@ -16,6 +17,8 @@ export interface PerformanceSummaryProps
 
 export const PerformanceSummary = forwardRef<HTMLDivElement, PerformanceSummaryProps>(
   ({ className, metrics, ...props }, ref) => {
+    const t = useTranslations();
+
     return (
       <div
         ref={ref}
@@ -28,7 +31,7 @@ export const PerformanceSummary = forwardRef<HTMLDivElement, PerformanceSummaryP
         <div className="flex items-center gap-2 mb-3">
           <LightningIcon className="h-4 w-4" />
           <span className="text-sm font-medium">
-            Performance Summary
+            {t("sidebar.performanceSummary")}
           </span>
         </div>
 

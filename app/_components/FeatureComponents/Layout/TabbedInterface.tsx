@@ -20,6 +20,9 @@ export const TabbedInterface = ({
   const [activeTab, setActiveTab] = useState<"cronjobs" | "scripts">(
     "cronjobs"
   );
+  const [scriptToSchedule, setScriptToSchedule] = useState<Script | null>(
+    null
+  );
   const t = useTranslations();
 
   return (
@@ -28,7 +31,7 @@ export const TabbedInterface = ({
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("cronjobs")}
-            className={`flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium flex-1 justify-center terminal-font ${activeTab === "cronjobs"
+            className={`flex items-center gap-2 px-2 sm:px-4 py-2 border border-transparent text-sm font-medium flex-1 justify-center whitespace-nowrap terminal-font ${activeTab === "cronjobs"
               ? "bg-background0 ascii-border"
               : "hover:ascii-border"
               }`}
@@ -41,7 +44,7 @@ export const TabbedInterface = ({
           </button>
           <button
             onClick={() => setActiveTab("scripts")}
-            className={`flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium flex-1 justify-center terminal-font ${activeTab === "scripts"
+            className={`flex items-center gap-2 px-2 sm:px-4 py-2 border border-transparent text-sm font-medium flex-1 justify-center whitespace-nowrap terminal-font ${activeTab === "scripts"
               ? "bg-background0 ascii-border"
               : "hover:ascii-border"
               }`}
@@ -57,9 +60,20 @@ export const TabbedInterface = ({
 
       <div className="min-h-[60vh]">
         {activeTab === "cronjobs" ? (
-          <CronJobList cronJobs={cronJobs} scripts={scripts} />
+          <CronJobList
+            cronJobs={cronJobs}
+            scripts={scripts}
+            scriptToSchedule={scriptToSchedule}
+            onScriptScheduled={() => setScriptToSchedule(null)}
+          />
         ) : (
-          <ScriptsManager scripts={scripts} />
+          <ScriptsManager
+            scripts={scripts}
+            onSchedule={(script) => {
+              setScriptToSchedule(script);
+              setActiveTab("cronjobs");
+            }}
+          />
         )}
       </div>
     </div>

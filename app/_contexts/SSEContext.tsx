@@ -9,6 +9,9 @@ import React, {
 } from "react";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:sse");
 
 interface SSEContextType {
   isConnected: boolean;
@@ -31,7 +34,6 @@ export const SSEProvider: React.FC<{
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
-        setIsConnected(false);
       }
       return;
     }
@@ -61,7 +63,7 @@ export const SSEProvider: React.FC<{
           const data = JSON.parse(event.data) as SSEEvent;
           subscribersRef.current.forEach((callback) => callback(data));
         } catch (error) {
-          console.error(`[SSE] Failed to parse ${eventType} event:`, error);
+          log.error(`Failed to parse ${eventType} event`, error);
         }
       });
     });
@@ -70,6 +72,7 @@ export const SSEProvider: React.FC<{
 
     return () => {
       eventSource.close();
+      setIsConnected(false);
     };
   }, [liveUpdatesEnabled, isPageVisible]);
 

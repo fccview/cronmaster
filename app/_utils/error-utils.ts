@@ -85,10 +85,22 @@ export const getJobErrorsByJobId = (jobId: string): JobError[] => {
   return getJobErrors().filter((error) => error.jobId === jobId);
 };
 
-export const clearAllJobErrors = () => {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {}
+const readErrorField = (
+  error: unknown,
+  field: "message" | "stack" | "name"
+) => {
+  if (!error || typeof error !== "object" || !(field in error)) {
+    return undefined;
+  }
+  const value = (error as Record<string, unknown>)[field];
+  return typeof value === "string" ? value : undefined;
 };
+
+export const getErrorMessage = (error: unknown): string | undefined =>
+  readErrorField(error, "message");
+
+export const getErrorStack = (error: unknown): string | undefined =>
+  readErrorField(error, "stack");
+
+export const isAbortError = (error: unknown): boolean =>
+  readErrorField(error, "name") === "AbortError";

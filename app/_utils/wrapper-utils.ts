@@ -2,20 +2,20 @@ import { existsSync, copyFileSync } from "fs";
 import path from "path";
 import { DATA_DIR } from "../_consts/file";
 import { getHostDataPath } from "../_server/actions/global";
-import { toShellArg, fromShellArg } from "./wrapper-utils-client";
+import { toShellArg } from "./wrapper-utils-client";
+import { shellQuoteIfNeeded } from "./shell-utils";
+import { isSafeJobId } from "./security-utils";
+import { createLogger } from "@/app/_utils/logger";
 
-const sanitizeForFilesystem = (input: string): string => {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .substring(0, 50);
-};
+const log = createLogger("wrapper");
 
-export const generateLogFolderName = (
-  jobId: string,
-  comment?: string
-): string => {
+export {
+  unwrapCommand,
+  isCommandWrapped,
+  extractJobIdFromWrappedCommand,
+} from "./wrapper-utils-client";
+
+export const generateLogFolderName = (jobId: string): string => {
   return jobId;
 };
 
@@ -35,8 +35,11 @@ export const ensureWrapperScriptInData = (): string => {
   if (!existsSync(dataScriptPath)) {
     try {
       copyFileSync(sourceScriptPath, dataScriptPath);
+      log.info("Installed wrapper script into data directory", {
+        path: dataScriptPath,
+      });
     } catch (error) {
-      console.error("Failed to copy wrapper script to data directory:", error);
+      log.error("Failed to copy wrapper script to data directory", error);
       return sourceScriptPath;
     }
   }
@@ -47,12 +50,15 @@ export const ensureWrapperScriptInData = (): string => {
 export const wrapCommandWithLogger = async (
   jobId: string,
   command: string,
-  isDocker: boolean,
-  comment?: string
+  isDocker: boolean
 ): Promise<string> => {
+  if (!isSafeJobId(jobId)) {
+    throw new Error("Invalid cron job id");
+  }
+
   ensureWrapperScriptInData();
 
-  const logFolderName = generateLogFolderName(jobId, comment);
+  const logFolderName = generateLogFolderName(jobId);
 
   const safeCmd = toShellArg(command);
 
@@ -60,10 +66,15 @@ export const wrapCommandWithLogger = async (
     const hostDataPath = await getHostDataPath();
     if (hostDataPath) {
       const hostWrapperPath = path.join(hostDataPath, "cron-log-wrapper.sh");
-      return `${hostWrapperPath} "${logFolderName}" ${safeCmd}`;
+      log.debug("Wrapping command with host logger", {
+        jobId,
+        wrapperPath: hostWrapperPath,
+      });
+      return `${shellQuoteIfNeeded(hostWrapperPath)} "${logFolderName}" ${safeCmd}`;
     }
+    log.error("Cannot wrap command, host data path unknown", { jobId });
     throw new Error(
-      "Cannot determine the host data path for logging. Check the Docker socket and /app/data mount."
+      "Cannot determine the host data path for logging. Set HOST_DATA_DIR to the host directory mounted at /app/data, or check the Docker socket and /app/data mount."
     );
   }
 
@@ -72,88 +83,9 @@ export const wrapCommandWithLogger = async (
     DATA_DIR,
     "cron-log-wrapper.sh"
   );
-  return `${localWrapperPath} "${logFolderName}" ${safeCmd}`;
-};
-
-export const unwrapCommand = (command: string): string => {
-  const wrapperPattern = /^(.+\/cron-log-wrapper\.sh)\s+"([^"]+)"\s+([\s\S]+)$/;
-
-  const match = command.match(wrapperPattern);
-
-  if (match && match[3]) {
-    return fromShellArg(match[3]);
-  }
-
-  return command;
-};
-
-export const isCommandWrapped = (command: string): boolean => {
-  const wrapperPattern = /\/cron-log-wrapper\.sh\s+"[^"]+"\s+/;
-  return wrapperPattern.test(command);
-};
-
-export const extractJobIdFromWrappedCommand = (
-  command: string
-): string | null => {
-  const wrapperPattern = /\/cron-log-wrapper\.sh\s+"([^"]+)"\s+/;
-
-  const match = command.match(wrapperPattern);
-
-  if (match && match[1]) {
-    return match[1];
-  }
-
-  return null;
-};
-
-export const cleanupOldLogFiles = async (
-  jobId: string,
-  maxFiles: number = 10
-): Promise<void> => {
-  try {
-    const { readdir, stat, unlink } = await import("fs/promises");
-    const logFolderName = generateLogFolderName(jobId);
-    const logDir = path.join(process.cwd(), "data", "logs", logFolderName);
-
-    try {
-      await stat(logDir);
-    } catch {
-      return;
-    }
-
-    const files = await readdir(logDir);
-    const logFiles = files
-      .filter((f) => f.endsWith(".log"))
-      .map((f) => ({
-        name: f,
-        path: path.join(logDir, f),
-        stats: null as any,
-      }));
-
-    for (const file of logFiles) {
-      try {
-        file.stats = await stat(file.path);
-      } catch (error) {
-        console.error(`Error stat-ing log file ${file.path}:`, error);
-      }
-    }
-
-    const validFiles = logFiles
-      .filter((f) => f.stats)
-      .sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime());
-
-    if (validFiles.length > maxFiles) {
-      const filesToDelete = validFiles.slice(maxFiles);
-      for (const file of filesToDelete) {
-        try {
-          await unlink(file.path);
-          console.log(`Cleaned up old log file: ${file.path}`);
-        } catch (error) {
-          console.error(`Error deleting log file ${file.path}:`, error);
-        }
-      }
-    }
-  } catch (error) {
-    console.error(`Error cleaning up log files for job ${jobId}:`, error);
-  }
+  log.debug("Wrapping command with local logger", {
+    jobId,
+    wrapperPath: localWrapperPath,
+  });
+  return `${shellQuoteIfNeeded(localWrapperPath)} "${logFolderName}" ${safeCmd}`;
 };

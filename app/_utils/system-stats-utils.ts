@@ -1,16 +1,13 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import * as si from "systeminformation";
+import type {
+  AvailabilityStatus,
+  OverallStatus,
+  ResourceStatus,
+} from "@/app/_utils/status-utils";
 
 const execAsync = promisify(exec);
-
-export const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return "0 B";
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${
-    ["B", "KB", "MB", "GB", "TB"][i]
-  }`;
-};
 
 export const formatUptime = (seconds: number): string => {
   const days = Math.floor(seconds / 86400);
@@ -29,22 +26,19 @@ export const getPing = async (): Promise<number> => {
     );
     const match = stdout.match(/time=(\d+\.?\d*)/);
     return match ? Math.round(parseFloat(match[1])) : 0;
-  } catch (error) {
+  } catch {
     return 0;
   }
 };
 
 export const getStatus = (
   value: number,
-  thresholds: { critical?: number; high?: number; moderate?: number },
-  t: (key: string) => string
-): string => {
-  if (thresholds.critical && value > thresholds.critical)
-    return t("system.critical");
-  if (thresholds.high && value > thresholds.high) return t("system.high");
-  if (thresholds.moderate && value > thresholds.moderate)
-    return t("system.moderate");
-  return t("system.optimal");
+  thresholds: { critical?: number; high?: number; moderate?: number }
+): ResourceStatus => {
+  if (thresholds.critical && value > thresholds.critical) return "critical";
+  if (thresholds.high && value > thresholds.high) return "high";
+  if (thresholds.moderate && value > thresholds.moderate) return "moderate";
+  return "optimal";
 };
 
 export const findMainInterface = (
@@ -63,43 +57,44 @@ export const findMainInterface = (
 export const formatGpuInfo = (
   graphics: si.Systeminformation.GraphicsData | null,
   t: (key: string) => string
-) => {
+): { model: string; memory?: string; status: AvailabilityStatus } => {
   if (graphics && graphics.controllers && graphics.controllers.length > 0) {
     const gpu = graphics.controllers[0];
     return {
       model: gpu.model || t("system.unknownGPU"),
       memory: gpu.vram ? `${gpu.vram} MB` : undefined,
-      status: t("system.available"),
+      status: "available",
     };
   }
   return {
     model: t(graphics ? "system.noGPUDetected" : "system.gpuDetectionFailed"),
-    status: t("system.unknown"),
+    status: "unknown",
   };
 };
+
+interface DiskUsageSample {
+  usage: number;
+  inodes?: { usage: number } | null;
+}
 
 export const getOverallStatus = (
   memUsage: number,
   cpuLoad: number,
-  t: (key: string) => string
-) => {
+  disks: DiskUsageSample[] = []
+): { overall: OverallStatus } => {
   const criticalThreshold = 90;
   const warningThreshold = 80;
+  const peak = Math.max(
+    memUsage,
+    cpuLoad,
+    ...disks.flatMap((disk) => [disk.usage, disk.inodes?.usage ?? 0])
+  );
 
-  if (memUsage > criticalThreshold || cpuLoad > criticalThreshold) {
-    return {
-      overall: t("system.critical"),
-      details: t("system.highResourceUsageDetectedImmediateAttentionRequired"),
-    };
+  if (peak > criticalThreshold) {
+    return { overall: "critical" };
   }
-  if (memUsage > warningThreshold || cpuLoad > warningThreshold) {
-    return {
-      overall: t("system.warning"),
-      details: t("system.moderateResourceUsageMonitoringRecommended"),
-    };
+  if (peak > warningThreshold) {
+    return { overall: "warning" };
   }
-  return {
-    overall: t("system.optimal"),
-    details: t("system.allSystemsRunningNormally"),
-  };
+  return { overall: "optimal" };
 };

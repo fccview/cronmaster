@@ -1,4 +1,10 @@
 import { SSEEvent, formatSSEEvent } from "./sse-events";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("sse");
+
+export const isLiveUpdatesEnabled = (): boolean =>
+  process.env.LIVE_UPDATES !== "false";
 
 type SSEClient = {
   id: string;
@@ -15,20 +21,12 @@ class SSEBroadcaster {
       controller,
       connectedAt: new Date(),
     });
-    if (process.env.DEBUGGER) {
-      console.log(
-        `[SSE] Client ${id} connected. Total clients: ${this.clients.size}`
-      );
-    }
+    log.debug(`Client ${id} connected. Total clients: ${this.clients.size}`);
   }
 
   removeClient(id: string): void {
     this.clients.delete(id);
-    if (process.env.DEBUGGER) {
-      console.log(
-        `[SSE] Client ${id} disconnected. Total clients: ${this.clients.size}`
-      );
-    }
+    log.debug(`Client ${id} disconnected. Total clients: ${this.clients.size}`);
   }
 
   broadcast(event: SSEEvent): void {
@@ -44,29 +42,23 @@ class SSEBroadcaster {
         client.controller.enqueue(encoded);
         successCount++;
       } catch (error) {
-        if (process.env.DEBUGGER) {
-          console.error(`[SSE] Failed to send to client ${id}:`, error);
-        }
+        log.debug(`Failed to send to client ${id}`, error);
         this.removeClient(id);
         failCount++;
       }
     });
 
     if (this.clients.size > 0) {
-      if (process.env.DEBUGGER) {
-        console.log(
-          `[SSE] Broadcast ${event.type} to ${successCount} clients (${failCount} failed)`
-        );
-      }
+      log.debug(
+        `Broadcast ${event.type} to ${successCount} clients (${failCount} failed)`
+      );
     }
   }
 
   sendToClient(clientId: string, event: SSEEvent): void {
     const client = this.clients.get(clientId);
     if (!client) {
-      if (process.env.DEBUGGER) {
-        console.warn(`[SSE] Client ${clientId} not found`);
-      }
+      log.debug(`Client ${clientId} not found`);
       return;
     }
 
@@ -75,9 +67,7 @@ class SSEBroadcaster {
       const encoder = new TextEncoder();
       client.controller.enqueue(encoder.encode(formattedEvent));
     } catch (error) {
-      if (process.env.DEBUGGER) {
-        console.error(`[SSE] Failed to send to client ${clientId}:`, error);
-      }
+      log.debug(`Failed to send to client ${clientId}`, error);
       this.removeClient(clientId);
     }
   }

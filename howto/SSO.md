@@ -36,6 +36,8 @@ services:
       - OIDC_CLIENT_SECRET=your_client_secret # For confidential client mode (uses client secret instead of PKCE)
       - OIDC_LOGOUT_URL=https://provider.com/logout # Custom logout URL (bypasses discovery)
       - OIDC_GROUPS_SCOPE=groups # Scope for groups claim, set to "no" or "false" to disable
+      - OIDC_USER_GROUPS=cronmaster_users,ops # Restrict access to users in these groups
+      - OIDC_USER_ROLES=user,member # Restrict access to users with these roles
       - INTERNAL_API_URL=http://localhost:3000 # Use if getting 403 errors after login (reverse proxy issues)
       - DEBUGGER=true # Enable detailed OIDC flow logging
       - HTTPS=true # Set if running in production with HTTPS (affects secure cookie flag)
@@ -80,6 +82,9 @@ Users can choose either method to authenticate.
 | `OIDC_CLIENT_SECRET` | None | Client secret for confidential client mode |
 | `OIDC_LOGOUT_URL` | None | Custom logout URL (skips OIDC discovery for logout) |
 | `OIDC_GROUPS_SCOPE` | `groups` | Scope to request groups claim. Set to `no` or `false` to disable |
+| `OIDC_USER_GROUPS` | None | Comma-separated OIDC groups allowed to log in. If set, only members of these groups get in |
+| `OIDC_USER_ROLES` | None | Comma-separated OIDC roles allowed to log in. If set, only users with one of these roles get in |
+| `SESSION_MAX_AGE_DAYS` | `30` | How long a login stays valid, in days |
 | `INTERNAL_API_URL` | `APP_URL` | Internal URL for API calls (use if behind reverse proxy with 403 errors) |
 | `HTTPS` | `false` | Set to `true` in production with HTTPS (enables `__Host-` cookie prefix and secure flag) |
 | `DEBUGGER` | `false` | Enable detailed logging for OIDC flow debugging |
@@ -95,6 +100,15 @@ These providers have been tested:
 - **Okta**
 
 Other standard OIDC providers should work as well.
+
+## Restricting who can log in
+
+By default anyone who can sign in at your provider can use Cr*nMaster. Set `OIDC_USER_GROUPS` and/or `OIDC_USER_ROLES` to only let members of those groups or roles in. A user gets in if they match at least one group or one role. Everyone else is sent back to the login page with an error.
+
+Groups are read from the `groups` claim and roles from the `roles` claim of the ID token. If the ID token has neither, Cr*nMaster asks the provider's userinfo endpoint for them.
+
+- **Google** doesn't support `groups` with OIDC, so do NOT set `OIDC_USER_GROUPS`.
+- **Entra ID** supports groups with `OIDC_USER_GROUPS={Entra Group ID}`. For that to work, add the optional `groups` claim in the 'Token Configuration' pane of your 'Enterprise Registration' AND set `OIDC_GROUPS_SCOPE="no"` or `OIDC_GROUPS_SCOPE=""`. Or use `OIDC_USER_ROLES=role-name` to use Application Groups configured in Entra.
 
 ## How It Works
 
@@ -117,7 +131,7 @@ Other standard OIDC providers should work as well.
 7. Secure session created with:
    - Cryptographically random session ID (32 bytes, base64url)
    - Stored in `data/sessions/sessions.json`
-   - 30-day expiration
+   - 30-day expiration by default (`SESSION_MAX_AGE_DAYS`)
 8. Session cookie set:
    - Name: `__Host-cronmaster-session` (production with HTTPS) or `cronmaster-session`
    - HttpOnly, Secure (if HTTPS), SameSite=Lax
@@ -216,7 +230,7 @@ If you authenticate but immediately see login page again:
 
 ## Security Notes
 
-- ✅ Sessions valid for 30 days, stored with cryptographically random IDs
+- ✅ Sessions valid for 30 days by default (`SESSION_MAX_AGE_DAYS`), stored with cryptographically random IDs
 - ✅ PKCE used by default (no client secret in authorization URL)
 - ✅ ID tokens verified with JWKS (provider's public keys)
 - ✅ State parameter prevents CSRF

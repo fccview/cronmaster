@@ -4,13 +4,14 @@ import { MetricCard } from "@/app/_components/GlobalComponents/Cards/MetricCard"
 import { SystemStatus } from "@/app/_components/FeatureComponents/System/SystemStatus";
 import { PerformanceSummary } from "@/app/_components/FeatureComponents/System/PerformanceSummary";
 import { Sidebar } from "@/app/_components/FeatureComponents/Layout/Sidebar";
-import { ClockIcon, HardDriveIcon, CpuIcon, MonitorIcon, WifiHighIcon } from "@phosphor-icons/react";
+import { ClockIcon, HardDriveIcon, HardDrivesIcon, FilesIcon, CpuIcon, MonitorIcon, WifiHighIcon } from "@phosphor-icons/react";
 
 interface SystemInfoType {
   hostname: string;
   platform: string;
   ip?: string;
   uptime: string;
+  uptimeSeconds?: number;
   memory: {
     total: string;
     used: string;
@@ -36,23 +37,35 @@ interface SystemInfoType {
     uploadSpeed: number;
     status: string;
   };
-  disk: {
+  disks?: {
+    mount: string;
     total: string;
     used: string;
     free: string;
     usage: number;
     status: string;
-  };
+    inodes: {
+      total: string;
+      used: string;
+      free: string;
+      usage: number;
+      status: string;
+    } | null;
+  }[];
   systemStatus: {
     overall: string;
-    details: string;
   };
 }
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useEffectEvent, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
+import { createLogger } from "@/app/_utils/logger";
+import { isAbortError } from "@/app/_utils/error-utils";
+import { overallDetailsKey, statusLabelKey } from "@/app/_utils/status-utils";
+
+const log = createLogger("ui:system");
 
 interface SystemInfoCardProps {
   systemInfo: SystemInfoType;
@@ -98,9 +111,9 @@ export const SystemInfoCard = ({
         return;
       }
       setSystemInfo(freshData);
-    } catch (error: any) {
-      if (error.name !== "AbortError") {
-        console.error("Failed to update system info:", error);
+    } catch (error: unknown) {
+      if (!isAbortError(error)) {
+        log.error("Failed to update system info", error);
       }
     } finally {
       if (!abortControllerRef.current?.signal.aborted) {
@@ -112,12 +125,14 @@ export const SystemInfoCard = ({
   useEffect(() => {
     const unsubscribe = subscribe((event: SSEEvent) => {
       if (event.type === "system-stats" && event.data !== null) {
-        setSystemInfo(event.data);
+        setSystemInfo(event.data as SystemInfoType);
       }
     });
 
     return unsubscribe;
   }, [subscribe]);
+
+  const refreshSystemInfo = useEffectEvent(() => updateSystemInfo());
 
   useEffect(() => {
     const updateTime = () => {
@@ -127,7 +142,7 @@ export const SystemInfoCard = ({
     updateTime();
 
     if (isPageVisible) {
-      updateSystemInfo();
+      refreshSystemInfo();
     }
 
     const updateInterval = parseInt(
@@ -140,7 +155,7 @@ export const SystemInfoCard = ({
     const doUpdate = () => {
       if (!mounted || !isPageVisible || isDisabled) return;
       updateTime();
-      updateSystemInfo().finally(() => {
+      refreshSystemInfo().finally(() => {
         if (mounted && isPageVisible && !isDisabled) {
           timeoutId = setTimeout(doUpdate, updateInterval);
         }
@@ -162,17 +177,31 @@ export const SystemInfoCard = ({
     };
   }, [isPageVisible, isDisabled]);
 
+  const formatUptime = (seconds: number) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (days > 0) return t("sidebar.uptimeDaysHours", { days, hours });
+    if (hours > 0) return t("sidebar.uptimeHoursMinutes", { hours, minutes });
+    return t("sidebar.uptimeMinutes", { minutes });
+  };
+
   const quickStats = {
     cpu: systemInfo.cpu.usage,
     memory: systemInfo.memory.usage,
-    network: systemInfo.network ? `${systemInfo.network.latency}ms` : "N/A",
+    network: systemInfo.network
+      ? `${systemInfo.network.latency}ms`
+      : t("sidebar.notAvailable"),
   };
 
   const basicInfoItems = [
     {
       icon: ClockIcon,
       label: t("sidebar.uptime"),
-      value: systemInfo.uptime,
+      value:
+        systemInfo.uptimeSeconds === undefined
+          ? systemInfo.uptime
+          : formatUptime(systemInfo.uptimeSeconds),
     },
   ];
 
@@ -181,7 +210,7 @@ export const SystemInfoCard = ({
       icon: HardDriveIcon,
       label: t("sidebar.memory"),
       value: `${systemInfo.memory.used} / ${systemInfo.memory.total}`,
-      detail: `${systemInfo.memory.free} free`,
+      detail: t("sidebar.memoryFree", { free: systemInfo.memory.free }),
       status: systemInfo.memory.status,
       showProgress: true,
       progressValue: systemInfo.memory.usage,
@@ -190,7 +219,7 @@ export const SystemInfoCard = ({
       icon: CpuIcon,
       label: t("sidebar.cpu"),
       value: systemInfo.cpu.model,
-      detail: `${systemInfo.cpu.cores} cores`,
+      detail: t("sidebar.cpuCores", { cores: systemInfo.cpu.cores }),
       status: systemInfo.cpu.status,
       showProgress: true,
       progressValue: systemInfo.cpu.usage,
@@ -200,8 +229,8 @@ export const SystemInfoCard = ({
       label: t("sidebar.gpu"),
       value: systemInfo.gpu.model,
       detail: systemInfo.gpu.memory
-        ? `${systemInfo.gpu.memory} VRAM`
-        : systemInfo.gpu.status,
+        ? t("sidebar.gpuVram", { memory: systemInfo.gpu.memory })
+        : t(statusLabelKey(systemInfo.gpu.status)),
       status: systemInfo.gpu.status,
     },
     ...(systemInfo.network
@@ -210,11 +239,41 @@ export const SystemInfoCard = ({
           icon: WifiHighIcon,
           label: t("sidebar.network"),
           value: `${systemInfo.network.latency}ms`,
-          detail: `${systemInfo.network.latency}ms latency • ${systemInfo.network.speed}`,
+          detail: t("sidebar.networkDetail", {
+            latency: systemInfo.network.latency,
+            speed: systemInfo.network.speed,
+          }),
           status: systemInfo.network.status,
         },
       ]
       : []),
+    ...(systemInfo.disks ?? []).flatMap((disk) => [
+      {
+        icon: HardDrivesIcon,
+        label: t("sidebar.diskMount", { mount: disk.mount }),
+        value: `${disk.used} / ${disk.total}`,
+        detail: t("sidebar.diskDetail", { free: disk.free, usage: disk.usage }),
+        status: disk.status,
+        showProgress: true,
+        progressValue: disk.usage,
+      },
+      ...(disk.inodes
+        ? [
+          {
+            icon: FilesIcon,
+            label: t("sidebar.inodesMount", { mount: disk.mount }),
+            value: `${disk.inodes.used} / ${disk.inodes.total}`,
+            detail: t("sidebar.diskDetail", {
+              free: disk.inodes.free,
+              usage: disk.inodes.usage,
+            }),
+            status: disk.inodes.status,
+            showProgress: true,
+            progressValue: disk.inodes.usage,
+          },
+        ]
+        : []),
+    ]),
   ];
 
   const performanceMetrics = [
@@ -237,13 +296,18 @@ export const SystemInfoCard = ({
         },
       ]
       : []),
+    ...(systemInfo.disks ?? []).map((disk) => ({
+      label: t("sidebar.diskUsageMount", { mount: disk.mount }),
+      value: `${disk.usage}%`,
+      status: disk.status,
+    })),
   ];
 
   return (
     <Sidebar defaultCollapsed={false} quickStats={quickStats}>
       <SystemStatus
         status={systemInfo.systemStatus.overall}
-        details={systemInfo.systemStatus.details}
+        details={t(overallDetailsKey(systemInfo.systemStatus.overall))}
         timestamp={currentTime}
         isUpdating={isUpdating}
       />

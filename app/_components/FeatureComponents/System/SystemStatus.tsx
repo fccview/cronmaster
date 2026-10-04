@@ -2,6 +2,7 @@ import { cn } from "@/app/_utils/global-utils";
 import { HTMLAttributes, forwardRef } from "react";
 import { PulseIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
+import { statusLabelKey } from "@/app/_utils/status-utils";
 
 export interface SystemStatusProps extends HTMLAttributes<HTMLDivElement> {
   status: string;
@@ -20,7 +21,7 @@ export const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
       const lowerStatus = status.toLowerCase();
 
       switch (lowerStatus) {
-        case "operational":
+        case "optimal":
           return {
             bgColor: "bg-background0",
             borderColor: "ascii-border",
@@ -66,7 +67,7 @@ export const SystemStatus = forwardRef<HTMLDivElement, SystemStatusProps>(
             <div className="flex items-center gap-2">
               <PulseIcon className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">
-                {t("system.systemStatus")}: {status}
+                {t("system.systemStatus")}: {t(statusLabelKey(status))}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">

@@ -1,6 +1,9 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { SCRIPTS_DIR } from "../_consts/file";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("scripts");
 
 export interface Script {
   id: string;
@@ -60,8 +63,10 @@ const scanScriptsDirectory = async (dirPath: string): Promise<Script[]> => {
         }
       }
     }
+
+    log.debug("Scanned scripts directory", { dirPath, count: scripts.length });
   } catch (error) {
-    console.warn(`Warning: Could not scan directory ${dirPath}:`, error);
+    log.warn(`Could not scan directory ${dirPath}`, error);
   }
 
   return scripts;
@@ -71,19 +76,3 @@ export const loadAllScripts = async (): Promise<Script[]> => {
   const scriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
   return await scanScriptsDirectory(scriptsDir);
 }
-
-export const searchScripts = (scripts: Script[], query: string): Script[] => {
-  const lowercaseQuery = query.toLowerCase();
-  return scripts.filter(
-    (script) =>
-      script.name.toLowerCase().includes(lowercaseQuery) ||
-      script.description.toLowerCase().includes(lowercaseQuery)
-  );
-}
-
-export const getScriptById = (
-  scripts: Script[],
-  id: string
-): Script | undefined => {
-  return scripts.find((script) => script.id === id);
-};

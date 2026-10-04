@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("auth:oidc");
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +23,7 @@ export async function GET(request: NextRequest) {
   const appUrl = process.env.APP_URL || request.nextUrl.origin;
 
   if (ssoMode && ssoMode?.toLowerCase() !== "oidc") {
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Login] SSO mode is not oidc");
-    }
+    log.debug("SSO mode is not oidc, redirecting to login", { ssoMode });
     return NextResponse.redirect(`${appUrl}/login`);
   }
 
@@ -33,9 +34,7 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.OIDC_CLIENT_ID || "";
 
   if (!issuer || !clientId) {
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Login] Issuer or clientId is not set");
-    }
+    log.warn("OIDC_ISSUER or OIDC_CLIENT_ID is not set");
     return NextResponse.redirect(`${appUrl}/login`);
   }
 
@@ -46,12 +45,10 @@ export async function GET(request: NextRequest) {
   try {
     const discoveryRes = await fetch(discoveryUrl, { cache: "no-store" });
     if (!discoveryRes.ok) {
-      if (process.env.DEBUGGER) {
-        console.log(
-          "[OIDC Login] Discovery URL is not ok",
-          discoveryRes.status
-        );
-      }
+      log.warn("OIDC discovery failed", {
+        url: discoveryUrl,
+        status: discoveryRes.status,
+      });
       return NextResponse.redirect(`${appUrl}/login`);
     }
 
@@ -91,12 +88,11 @@ export async function GET(request: NextRequest) {
     url.searchParams.set("state", state);
     url.searchParams.set("nonce", nonce);
 
-    if (process.env.DEBUGGER) {
-      console.log(
-        "[OIDC Login] Redirecting to authorization endpoint:",
-        url.toString()
-      );
-    }
+    log.debug("Redirecting to authorization endpoint", {
+      endpoint: authorizationEndpoint,
+      redirectUri,
+      scope: url.searchParams.get("scope"),
+    });
 
     const response = NextResponse.redirect(url);
     const isSecure =
@@ -126,7 +122,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[OIDC Login] Error:", error);
+    log.error("OIDC login failed", error);
     return NextResponse.redirect(`${appUrl}/login`);
   }
 }

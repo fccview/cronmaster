@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { CreateTaskModal } from "@/app/_components/FeatureComponents/Modals/CreateTaskModal";
 import { EditTaskModal } from "@/app/_components/FeatureComponents/Modals/EditTaskModal";
 import { DeleteTaskModal } from "@/app/_components/FeatureComponents/Modals/DeleteTaskModal";
@@ -16,14 +17,14 @@ interface CronJobListModalsProps {
     isNewCronModalOpen: boolean;
     onNewCronModalClose: () => void;
     onNewCronSubmit: (e: React.FormEvent) => Promise<void>;
-    newCronForm: any;
-    onNewCronFormChange: (updates: any) => void;
+    newCronForm: ComponentProps<typeof CreateTaskModal>["form"];
+    onNewCronFormChange: ComponentProps<typeof CreateTaskModal>["onFormChange"];
 
     isEditModalOpen: boolean;
     onEditModalClose: () => void;
     onEditSubmit: (e: React.FormEvent) => Promise<void>;
-    editForm: any;
-    onEditFormChange: (updates: any) => void;
+    editForm: ComponentProps<typeof EditTaskModal>["form"];
+    onEditFormChange: ComponentProps<typeof EditTaskModal>["onFormChange"];
 
     isDeleteModalOpen: boolean;
     onDeleteModalClose: () => void;
@@ -81,6 +82,7 @@ export const CronJobListModals = ({
                 isOpen={isEditModalOpen}
                 onClose={onEditModalClose}
                 onSubmit={onEditSubmit}
+                scripts={scripts}
                 form={editForm}
                 onFormChange={onEditFormChange}
             />

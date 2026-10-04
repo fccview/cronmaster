@@ -4,14 +4,14 @@
  * API Testing Script for Cronjob Manager
  *
  * This script tests all API endpoints and provides clear reporting on what's working and what's broken.
- * Usage: node test-api.js [baseUrl]
- * Example: node test-api.js http://localhost:3000
+ * Usage: node test-api.mjs [baseUrl]
+ * Example: node test-api.mjs http://localhost:3000
  * 
- * Running it with params: AUTH_PASSWORD=<password> node test-api.js http://localhost:<port>
+ * Running it with params: AUTH_PASSWORD=<password> node test-api.mjs http://localhost:<port>
  */
 
-const https = require('https');
-const http = require('http');
+import https from 'https';
+import http from 'http';
 
 class APITester {
   constructor(baseUrl = 'http://localhost:3000') {
@@ -329,7 +329,7 @@ class APITester {
         } else {
           console.log(`❌ ${endpoint} - Returns ${response.status}, expected 405`);
         }
-      } catch (error) {
+      } catch {
         console.log(`❓ ${endpoint} - Could not test (connection error)`);
       }
     }
@@ -342,7 +342,7 @@ class APITester {
         } else {
           console.log(`❌ /api/cronjobs/${cronJobId}/execute - Returns ${response.status}, expected 405 for POST`);
         }
-      } catch (error) {
+      } catch {
         console.log(`❓ /api/cronjobs/${cronJobId}/execute - Could not test (connection error)`);
       }
     }

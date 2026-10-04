@@ -19,6 +19,10 @@ import {
   searchSnippets,
   type BashSnippet,
 } from "@/app/_server/actions/snippets";
+import { createLogger } from "@/app/_utils/logger";
+import { useTranslations } from "next-intl";
+
+const log = createLogger("ui:scripts");
 
 interface BashSnippetHelperProps {
   onInsertSnippet: (snippet: string) => void;
@@ -30,13 +34,14 @@ const categoryIcons = {
   Conditionals: CodeIcon,
   "System Operations": GearIcon,
   "Database Operations": Database,
-  "UserIcon Examples": FolderOpen,
+  "User Examples": FolderOpen,
   "Custom Scripts": CodeIcon,
 };
 
 export const BashSnippetHelper = ({
   onInsertSnippet,
 }: BashSnippetHelperProps) => {
+  const t = useTranslations();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -55,7 +60,7 @@ export const BashSnippetHelper = ({
         setSnippets(snippetsData);
         setCategories(categoriesData);
       } catch (error) {
-        console.error("Error loading snippets:", error);
+        log.error("Error loading snippets", error);
       } finally {
         setLoading(false);
       }
@@ -97,7 +102,7 @@ export const BashSnippetHelper = ({
       setCopiedId(snippet.id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
+      log.warn("Failed to copy to clipboard", error);
     }
   };
 
@@ -110,7 +115,7 @@ export const BashSnippetHelper = ({
       <div className="space-y-3">
         <div className="text-center py-8">
           <CodeIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2 animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading snippets...</p>
+          <p className="text-sm text-muted-foreground">{t("scripts.loadingSnippets")}</p>
         </div>
       </div>
     );
@@ -123,7 +128,7 @@ export const BashSnippetHelper = ({
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search bash snippets..."
+          placeholder={t("scripts.searchSnippets")}
           className="pl-9"
         />
       </div>
@@ -138,7 +143,7 @@ export const BashSnippetHelper = ({
               onClick={() => setSelectedCategory(null)}
               className="text-xs flex-shrink-0 h-6 px-2"
             >
-              All
+              {t("common.all")}
             </Button>
             {categories.map((category) => {
               const Icon =
@@ -181,7 +186,7 @@ export const BashSnippetHelper = ({
                   </h4>
                   {snippet.source === "user" && (
                     <span className="inline-block px-1.5 py-0.5 text-xs text-status-success border border-border">
-                      User
+                      {t("common.user")}
                     </span>
                   )}
                 </div>
@@ -199,7 +204,7 @@ export const BashSnippetHelper = ({
                   ))}
                   {snippet.tags.length > 3 && (
                     <span className="inline-block px-2 py-1 text-xs text-muted-foreground">
-                      +{snippet.tags.length - 3} more
+                      {t("scripts.nMore", { count: snippet.tags.length - 3 })}
                     </span>
                   )}
                 </div>
@@ -223,7 +228,7 @@ export const BashSnippetHelper = ({
                     onClick={() => handleInsert(snippet)}
                     className="flex-1"
                   >
-                    Insert
+                    {t("scripts.insert")}
                   </Button>
                 </div>
               </div>
@@ -236,8 +241,8 @@ export const BashSnippetHelper = ({
             <CodeIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               {searchQuery
-                ? `No snippets found for "${searchQuery}"`
-                : "No snippets available"}
+                ? t("scripts.noSnippetsFound", { query: searchQuery })
+                : t("scripts.noSnippetsAvailable")}
             </p>
           </div>
         )}

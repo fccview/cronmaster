@@ -2,6 +2,7 @@
 
 import { PlusIcon } from "@phosphor-icons/react";
 import { ScriptModal } from "@/app/_components/FeatureComponents/Modals/ScriptModal";
+import { useTranslations } from "next-intl";
 
 interface CreateScriptModalProps {
   isOpen: boolean;
@@ -28,13 +29,15 @@ export const CreateScriptModal = ({
   isDraft,
   onClearDraft,
 }: CreateScriptModalProps) => {
+  const t = useTranslations();
+
   return (
     <ScriptModal
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={onSubmit}
-      title="Create New Script"
-      submitButtonText="Create Script"
+      title={t("scripts.createNewScript")}
+      submitButtonText={t("scripts.createScript")}
       submitButtonIcon={<PlusIcon className="h-4 w-4 mr-2" />}
       form={form}
       onFormChange={onFormChange}

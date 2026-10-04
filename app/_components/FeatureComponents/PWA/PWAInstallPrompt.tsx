@@ -1,17 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useState, type JSX } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type JSX,
+} from "react";
+import { useTranslations } from "next-intl";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+const STANDALONE_QUERY = "(display-mode: standalone)";
+const subscribeToNothing = () => () => {};
+const getIsStandalone = () => window.matchMedia(STANDALONE_QUERY).matches;
+const getIsStandaloneOnServer = () => false;
+
 export const PWAInstallPrompt = (): JSX.Element | null => {
+  const t = useTranslations();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null
   );
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
+  const isStandalone = useSyncExternalStore(
+    subscribeToNothing,
+    getIsStandalone,
+    getIsStandaloneOnServer
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -24,9 +42,6 @@ export const PWAInstallPrompt = (): JSX.Element | null => {
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
     window.addEventListener("appinstalled", onAppInstalled);
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-    }
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
       window.removeEventListener("appinstalled", onAppInstalled);
@@ -41,17 +56,17 @@ export const PWAInstallPrompt = (): JSX.Element | null => {
       if (choice.outcome === "accepted") {
         setDeferred(null);
       }
-    } catch (_err) { }
+    } catch { }
   }, [deferred]);
 
-  if (isInstalled || !deferred) return null;
+  if (isInstalled || isStandalone || !deferred) return null;
 
   return (
     <button
       className="px-3 py-2 ascii-border bg-background0 hover:bg-background1 transition-colors terminal-font text-sm"
       onClick={onInstall}
     >
-      Install
+      {t("common.install")}
     </button>
   );
 };

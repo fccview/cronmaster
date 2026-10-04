@@ -4,6 +4,7 @@ import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { FileTextIcon, WarningCircleIcon, TrashIcon } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
+import { useTranslations } from "next-intl";
 
 interface DeleteScriptModalProps {
   script: Script | null;
@@ -20,10 +21,11 @@ export const DeleteScriptModal = ({
   onConfirm,
   isDeleting,
 }: DeleteScriptModalProps) => {
+  const t = useTranslations();
   if (!isOpen || !script) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Delete Script" size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("scripts.deleteScript")} size="sm">
       <div className="space-y-3">
         <div className="bg-muted/30 rounded p-2 border border-border">
           <div className="space-y-1">
@@ -57,10 +59,10 @@ export const DeleteScriptModal = ({
             <WarningCircleIcon className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-xs font-medium text-destructive mb-0.5">
-                This action cannot be undone
+                {t("common.actionCannotBeUndone")}
               </p>
               <p className="text-xs text-muted-foreground">
-                The script will be permanently removed.
+                {t("scripts.scriptWillBeRemoved")}
               </p>
             </div>
           </div>
@@ -73,7 +75,7 @@ export const DeleteScriptModal = ({
             className="btn-outline"
             disabled={isDeleting}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -83,12 +85,12 @@ export const DeleteScriptModal = ({
             {isDeleting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Deleting...
+                {t("common.deleting")}
               </>
             ) : (
               <>
                 <TrashIcon className="h-4 w-4 mr-2" />
-                Delete Script
+                {t("scripts.deleteScript")}
               </>
             )}
           </Button>

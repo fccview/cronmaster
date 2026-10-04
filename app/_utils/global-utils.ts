@@ -1,5 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui");
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -24,7 +27,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
       return successful;
     }
   } catch (err) {
-    console.error("Failed to copy to clipboard:", err);
+    log.warn("Failed to copy to clipboard", err);
     return false;
   }
 };

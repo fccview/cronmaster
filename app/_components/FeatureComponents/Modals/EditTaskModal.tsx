@@ -5,17 +5,21 @@ import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { Switch } from "@/app/_components/GlobalComponents/UIElements/Switch";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
-import { PencilSimpleIcon, TerminalIcon, FileArrowDownIcon } from "@phosphor-icons/react";
+import { ScriptCommandPicker } from "@/app/_components/FeatureComponents/Cronjobs/Parts/ScriptCommandPicker";
+import { PencilSimpleIcon, FileArrowDownIcon } from "@phosphor-icons/react";
+import { Script } from "@/app/_utils/scripts-utils";
 import { useTranslations } from "next-intl";
 
 interface EditTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  scripts: Script[];
   form: {
     schedule: string;
     command: string;
     comment: string;
+    selectedScriptId: string | null;
     logsEnabled: boolean;
   };
   onFormChange: (updates: Partial<EditTaskModalProps["form"]>) => void;
@@ -25,6 +29,7 @@ export const EditTaskModal = ({
   isOpen,
   onClose,
   onSubmit,
+  scripts,
   form,
   onFormChange,
 }: EditTaskModalProps) => {
@@ -40,7 +45,7 @@ export const EditTaskModal = ({
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Schedule
+            {t("cronjobs.schedule")}
           </label>
           <CronExpressionHelper
             value={form.schedule}
@@ -50,25 +55,12 @@ export const EditTaskModal = ({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Command
-          </label>
-          <div className="space-y-3">
-            <div className="relative">
-              <Input
-                value={form.command}
-                onChange={(e) => onFormChange({ command: e.target.value })}
-                placeholder="/usr/bin/command"
-                className="font-mono bg-muted/30 border-border focus:border-primary/50"
-                required
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <TerminalIcon className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-          </div>
-        </div>
+        <ScriptCommandPicker
+          scripts={scripts}
+          command={form.command}
+          selectedScriptId={form.selectedScriptId}
+          onChange={onFormChange}
+        />
 
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
@@ -116,11 +108,11 @@ export const EditTaskModal = ({
             onClick={onClose}
             className="btn-outline"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" className="btn-primary glow-primary">
             <PencilSimpleIcon className="h-4 w-4 mr-2" />
-            Update Task
+            {t("cronjobs.updateTask")}
           </Button>
         </div>
       </form>

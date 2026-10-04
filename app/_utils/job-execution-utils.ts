@@ -1,8 +1,10 @@
 import { exec, spawn } from "child_process";
 import { promisify } from "util";
 import { CronJob } from "./cronjob-utils";
-import { getUserInfo } from "./crontab-utils";
+import { getUserInfo, getUserShell } from "./crontab-utils";
 import { NSENTER_RUN_JOB } from "../_consts/nsenter";
+import { isSafeUsername, resolveExecutionShell } from "./shell-utils";
+import { createLogger } from "./logger";
 import {
   saveRunningJob,
   updateRunningJob,
@@ -10,10 +12,101 @@ import {
   removeRunningJob,
 } from "./running-jobs-utils";
 import { sseBroadcaster } from "./sse-broadcaster";
-import { generateLogFolderName, cleanupOldLogFiles } from "./wrapper-utils";
+import { generateLogFolderName } from "./wrapper-utils";
 import { watchForLogFile } from "./log-watcher";
+import {
+  findRunLogFile,
+  getJobLogDir,
+  pruneLogDirectory,
+  readLogExitCode,
+} from "./log-files-utils";
 
 const execAsync = promisify(exec);
+
+export const JOB_TIMEOUT_MS = 300000;
+
+interface ExecFailure {
+  message?: unknown;
+  stdout?: unknown;
+  stderr?: unknown;
+  code?: unknown;
+  signal?: unknown;
+  killed?: unknown;
+}
+
+export const describeJobExecutionError = (
+  failure: unknown
+): { message: string; output: string } => {
+  const error = (failure ?? undefined) as ExecFailure | undefined;
+  const pick = (value: unknown): string =>
+    typeof value === "string" ? value.trim() : "";
+  const output =
+    pick(error?.stderr) ||
+    pick(error?.stdout) ||
+    pick(error?.message) ||
+    "Unknown error occurred";
+
+  if (error?.killed && error?.signal) {
+    return {
+      message: `Job timed out after ${JOB_TIMEOUT_MS / 1000} seconds and was stopped`,
+      output,
+    };
+  }
+
+  if (error?.signal) {
+    return { message: `Job was terminated by ${String(error.signal)}`, output };
+  }
+
+  if (typeof error?.code === "number") {
+    return { message: `Job exited with code ${error.code}`, output };
+  }
+
+  return {
+    message: pick(error?.message) || "Failed to execute cron job",
+    output,
+  };
+};
+
+const log = createLogger("job:exec");
+
+export const buildJobExecutionCommand = async (
+  job: CronJob,
+  docker: boolean
+): Promise<string> => {
+  if (!docker) {
+    return job.command;
+  }
+
+  if (!isSafeUsername(job.user)) {
+    throw new Error(`Refusing to run job for invalid user "${job.user}"`);
+  }
+
+  const userInfo = await getUserInfo(job.user);
+  const executionUser = userInfo ? userInfo.username : "root";
+  if (!userInfo && process.env.STRICT_EXECUTION_USER === "true") {
+    throw new Error(
+      `Could not resolve user "${job.user}" on the host, refusing to run as root because STRICT_EXECUTION_USER is enabled`
+    );
+  }
+  if (!userInfo) {
+    log.warn("Could not resolve the job user on the host, running as root", {
+      user: job.user,
+    });
+  }
+  const configuredShell = process.env.EXECUTION_SHELL?.trim();
+  const userShell = configuredShell ? null : await getUserShell(executionUser);
+  const shell = resolveExecutionShell(userShell, configuredShell);
+
+  if (shell) {
+    log.debug("Overriding login shell for job execution", {
+      user: executionUser,
+      loginShell: userShell,
+      shell,
+    });
+  }
+
+  return NSENTER_RUN_JOB(executionUser, job.command, shell);
+};
 
 export const runJobSynchronously = async (
   job: CronJob,
@@ -24,20 +117,27 @@ export const runJobSynchronously = async (
   output?: string;
   mode: "sync";
 }> => {
-  let command: string;
+  const command = await buildJobExecutionCommand(job, docker);
 
-  if (docker) {
-    const userInfo = await getUserInfo(job.user);
-    const executionUser = userInfo ? userInfo.username : "root";
-    const escapedCommand = job.command.replace(/'/g, "'\\''");
-    command = NSENTER_RUN_JOB(executionUser, escapedCommand);
-  } else {
-    command = job.command;
-  }
+  const startedAt = Date.now();
+  log.info("Job started", {
+    jobId: job.id,
+    user: job.user,
+    mode: "sync",
+    docker,
+  });
+  log.debug("Job command", { jobId: job.id, command: job.command });
 
   const { stdout, stderr } = await execAsync(command, {
-    timeout: 300000,
+    timeout: JOB_TIMEOUT_MS,
     cwd: process.env.HOME || "/home",
+  });
+
+  log.info("Job finished", {
+    jobId: job.id,
+    mode: "sync",
+    exitCode: 0,
+    durationMs: Date.now() - startedAt,
   });
 
   const output = stdout || stderr || "Command executed successfully";
@@ -60,30 +160,26 @@ export const runJobInBackground = async (
   mode: "async";
 }> => {
   const runId = `run-${job.id}-${Date.now()}`;
-  const logFolderName = generateLogFolderName(job.id, job.comment);
+  const logFolderName = generateLogFolderName(job.id);
 
-  let command: string;
-  let shellArgs: string[];
+  const shellCommand = await buildJobExecutionCommand(job, docker);
 
-  if (docker) {
-    const userInfo = await getUserInfo(job.user);
-    const executionUser = userInfo ? userInfo.username : "root";
-    const escapedCommand = job.command.replace(/'/g, "'\\''");
-    const nsenterCmd = NSENTER_RUN_JOB(executionUser, escapedCommand);
-
-    command = "sh";
-    shellArgs = ["-c", nsenterCmd];
-  } else {
-    command = "sh";
-    shellArgs = ["-c", job.command];
-  }
-
-  const child = spawn(command, shellArgs, {
+  const child = spawn("sh", ["-c", shellCommand], {
     detached: true,
     stdio: "ignore",
   });
 
   child.unref();
+
+  log.info("Job started", {
+    jobId: job.id,
+    runId,
+    pid: child.pid,
+    user: job.user,
+    mode: "async",
+    docker,
+  });
+  log.debug("Job command", { jobId: job.id, runId, command: job.command });
 
   const jobStartTime = new Date();
 
@@ -99,9 +195,9 @@ export const runJobInBackground = async (
   watchForLogFile(runId, logFolderName, jobStartTime, (logFileName) => {
     try {
       updateRunningJob(runId, { logFileName });
-      console.log(`[RunningJob] Cached logFileName for ${runId}: ${logFileName}`);
+      log.debug(`Cached logFileName for ${runId}: ${logFileName}`);
     } catch (error) {
-      console.error(`[RunningJob] Failed to cache logFileName for ${runId}:`, error);
+      log.error(`Failed to cache logFileName for ${runId}`, error);
     }
   });
 
@@ -143,40 +239,40 @@ const monitorRunningJob = (runId: string, pid: number): void => {
         setTimeout(async () => {
           try {
             removeRunningJob(runId);
-            await cleanupOldLogFiles(runningJob?.cronJobId || "");
+            if (runningJob?.logFolderName) {
+              await pruneLogDirectory(getJobLogDir(runningJob.logFolderName));
+            }
           } catch (error) {
-            console.error(`Error cleaning up job ${runId}:`, error);
+            log.error(`Error cleaning up job ${runId}`, error);
           }
         }, 5000);
 
         const runningJob = getRunningJob(runId);
 
+        log[exitCode === 0 ? "info" : "warn"]("Job finished", {
+          jobId: runningJob?.cronJobId,
+          runId,
+          mode: "async",
+          exitCode: exitCode ?? null,
+          durationMs: runningJob
+            ? Date.now() - new Date(runningJob.startTime).getTime()
+            : undefined,
+        });
+
         if (runningJob) {
-          if (exitCode === 0) {
-            sseBroadcaster.broadcast({
-              type: "job-completed",
-              timestamp: new Date().toISOString(),
-              data: {
-                runId,
-                cronJobId: runningJob.cronJobId,
-                exitCode,
-              },
-            });
-          } else {
-            sseBroadcaster.broadcast({
-              type: "job-failed",
-              timestamp: new Date().toISOString(),
-              data: {
-                runId,
-                cronJobId: runningJob.cronJobId,
-                exitCode: exitCode ?? -1,
-              },
-            });
-          }
+          sseBroadcaster.broadcast({
+            type: exitCode === 0 ? "job-completed" : "job-failed",
+            timestamp: new Date().toISOString(),
+            data: {
+              runId,
+              cronJobId: runningJob.cronJobId,
+              exitCode: exitCode ?? -1,
+            },
+          });
         }
       }
     } catch (error) {
-      console.error(`[Monitor] Error checking job ${runId}:`, error);
+      log.error(`Error checking job ${runId}`, error);
       clearInterval(checkInterval);
     }
   }, 2000);
@@ -195,42 +291,23 @@ const getExitCodeFromLog = async (
   runId: string
 ): Promise<number | undefined> => {
   try {
-    const { readdir, readFile, access } = await import("fs/promises");
-    const path = await import("path");
-
     const job = getRunningJob(runId);
     if (!job || !job.logFolderName) {
       return undefined;
     }
 
-    const logDir = path.join(process.cwd(), "data", "logs", job.logFolderName);
-
-    try {
-      await access(logDir);
-    } catch {
-      return undefined;
-    }
-
-    const files = await readdir(logDir);
-
-    const sortedFiles = files.sort().reverse();
-    if (sortedFiles.length === 0) {
-      return undefined;
-    }
-
-    const latestLog = await readFile(
-      path.join(logDir, sortedFiles[0]),
-      "utf-8"
+    const logFile = await findRunLogFile(
+      getJobLogDir(job.logFolderName),
+      new Date(job.startTime),
+      job.logFileName
     );
-
-    const exitCodeMatch = latestLog.match(/Exit Code\s*:\s*(\d+)/);
-    if (exitCodeMatch) {
-      return parseInt(exitCodeMatch[1], 10);
+    if (!logFile) {
+      return undefined;
     }
 
-    return undefined;
+    return (await readLogExitCode(logFile.fullPath)) ?? undefined;
   } catch (error) {
-    console.error("Error reading exit code from log:", error);
+    log.error("Error reading exit code from log", error);
     return undefined;
   }
 };

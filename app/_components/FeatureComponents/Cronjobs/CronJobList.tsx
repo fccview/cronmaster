@@ -12,16 +12,11 @@ import {
   ClockIcon,
   PlusIcon,
   Archive,
-  CaretDownIcon,
-  CodeIcon,
-  ChatTextIcon,
-  GearIcon,
   CircleNotchIcon,
   FunnelIcon,
 } from "@phosphor-icons/react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
-import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
 
 import { useCronJobState } from "@/app/_hooks/useCronJobState";
 import { CronJobItem } from "@/app/_components/FeatureComponents/Cronjobs/Parts/CronJobItem";
@@ -44,13 +39,24 @@ import {
   restoreAllCronJobs,
 } from "@/app/_server/actions/cronjobs";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
+import { createLogger } from "@/app/_utils/logger";
+import { useIsHydrated } from "@/app/_hooks/useIsHydrated";
+
+const log = createLogger("ui:jobs");
 
 interface CronJobListProps {
   cronJobs: CronJob[];
   scripts: Script[];
+  scriptToSchedule?: Script | null;
+  onScriptScheduled?: () => void;
 }
 
-export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
+export const CronJobList = ({
+  cronJobs,
+  scripts,
+  scriptToSchedule,
+  onScriptScheduled,
+}: CronJobListProps) => {
   const t = useTranslations();
   const router = useRouter();
   const { subscribe } = useSSEContext();
@@ -68,10 +74,11 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
   const [loadedSettings, setLoadedSettings] = useState<boolean>(false);
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
   const [minimalMode, setMinimalMode] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useIsHydrated();
+  const [settingsChecked, setSettingsChecked] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
+  if (isClient && !settingsChecked) {
+    setSettingsChecked(true);
 
     try {
       const savedScheduleMode = localStorage.getItem(
@@ -92,9 +99,9 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
 
       setLoadedSettings(true);
     } catch (error) {
-      console.warn("Failed to load settings from localStorage:", error);
+      log.warn("Failed to load settings from localStorage", error);
     }
-  }, []);
+  }
 
   useEffect(() => {
     const unsubscribe = subscribe((event) => {
@@ -115,8 +122,8 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
         scheduleDisplayMode
       );
     } catch (error) {
-      console.warn(
-        "Failed to save schedule display mode to localStorage:",
+      log.warn(
+        "Failed to save schedule display mode to localStorage",
         error
       );
     }
@@ -128,7 +135,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     try {
       localStorage.setItem("cronjob-minimal-mode", minimalMode.toString());
     } catch (error) {
-      console.warn("Failed to save minimal mode to localStorage:", error);
+      log.warn("Failed to save minimal mode to localStorage", error);
     }
   }, [minimalMode, isClient]);
 
@@ -151,18 +158,18 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
   const handleRestoreAll = async () => {
     const result = await restoreAllCronJobs();
     if (result.success) {
-      showToast("success", result.message);
+      showToast("success", t("cronjobs.restoreAllSuccess"), result.message);
       router.refresh();
       setIsBackupModalOpen(false);
     } else {
-      showToast("error", "Failed to restore all jobs", result.message);
+      showToast("error", t("cronjobs.restoreAllFailed"), result.message);
     }
   };
 
   const handleBackupAll = async () => {
     const result = await backupAllCronJobs();
     if (result.success) {
-      showToast("success", result.message);
+      showToast("success", t("cronjobs.backupAllSuccess"));
       loadBackupFiles();
     } else {
       showToast("error", t("cronjobs.backupAllFailed"), result.message);
@@ -175,7 +182,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
       showToast("success", t("cronjobs.backupDeleted"));
       loadBackupFiles();
     } else {
-      showToast("error", "Failed to delete backup", result.message);
+      showToast("error", t("cronjobs.deleteBackupFailed"), result.message);
     }
   };
 
@@ -225,10 +232,17 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     confirmDelete,
     confirmClone,
     handleEdit,
+    openNewCronWithScript,
     handleEditSubmitLocal,
     handleNewCronSubmitLocal,
     handleBackupLocal,
   } = useCronJobState({ cronJobs, scripts });
+
+  useEffect(() => {
+    if (!scriptToSchedule) return;
+    openNewCronWithScript(scriptToSchedule);
+    onScriptScheduled?.();
+  }, [scriptToSchedule, openNewCronWithScript, onScriptScheduled]);
 
   return (
     <>
@@ -301,7 +315,7 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
               onNewTaskClick={() => setIsNewCronModalOpen(true)}
             />
           ) : (
-            <div className="space-y-4 max-h-[55vh] min-h-[55vh] overflow-y-auto tui-scrollbar pr-1">
+            <div className="space-y-4 lg:max-h-[55vh] lg:min-h-[55vh] lg:overflow-y-auto tui-scrollbar lg:pr-1">
               {loadedSettings ? (
                 filteredJobs.map((job) =>
                   minimalMode ? (

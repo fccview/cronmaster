@@ -4,10 +4,23 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { CircleNotchIcon, CheckCircleIcon, XCircleIcon, WarningIcon, ArrowsInIcon, ArrowsOutIcon } from "@phosphor-icons/react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
+import { LogViewer } from "@/app/_components/GlobalComponents/UIElements/LogViewer";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
+import { splitLogLines } from "@/app/_utils/log-format-utils";
 import { useTranslations } from "next-intl";
+import { createLogger } from "@/app/_utils/logger";
+import { isAbortError } from "@/app/_utils/error-utils";
+import {
+  EMPTY_LIVE_LOG,
+  applyLiveLogChunk,
+  keepLastLines,
+  type LiveLogBuffer,
+} from "@/app/_utils/live-log-utils";
+import { formatBytes } from "@/app/_utils/format-utils";
+
+const log = createLogger("ui:logs");
 
 interface LiveLogModalProps {
   isOpen: boolean;
@@ -17,7 +30,6 @@ interface LiveLogModalProps {
   jobComment?: string;
 }
 
-const MAX_LINES_FULL_RENDER = 10000;
 const TAIL_LINES = 5000;
 
 export const LiveLogModal = ({
@@ -35,10 +47,9 @@ export const LiveLogModal = ({
   const [exitCode, setExitCode] = useState<number | null>(null);
   const [tailMode, setTailMode] = useState<boolean>(false);
   const [showSizeWarning, setShowSizeWarning] = useState<boolean>(false);
-  const logEndRef = useRef<HTMLDivElement>(null);
   const { subscribe } = useSSEContext();
   const isPageVisible = usePageVisibility();
-  const lastOffsetRef = useRef<number>(0);
+  const bufferRef = useRef<LiveLogBuffer>(EMPTY_LIVE_LOG);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [fileSize, setFileSize] = useState<number>(0);
   const [lineCount, setLineCount] = useState<number>(0);
@@ -47,27 +58,31 @@ export const LiveLogModal = ({
   const [truncated, setTruncated] = useState<boolean>(false);
   const [showFullLog, setShowFullLog] = useState<boolean>(false);
   const [isJobComplete, setIsJobComplete] = useState<boolean>(false);
+  const openRunId = isOpen ? runId : null;
+  const [resetForRunId, setResetForRunId] = useState<string | null>(null);
 
-  useEffect(() => {
+  if (openRunId !== resetForRunId) {
+    setResetForRunId(openRunId);
     if (isOpen) {
-      lastOffsetRef.current = 0;
       setLogContent("");
+      setStatus("running");
+      setExitCode(null);
       setTailMode(false);
       setShowSizeWarning(false);
       setFileSize(0);
       setLineCount(0);
+      setTotalLines(0);
+      setTruncated(false);
       setShowFullLog(false);
       setIsJobComplete(false);
     }
-  }, [isOpen, runId]);
+  }
 
   useEffect(() => {
-    if (isOpen && runId && !isJobComplete) {
-      lastOffsetRef.current = 0;
-      setLogContent("");
-      fetchLogs();
+    if (isOpen) {
+      bufferRef.current = EMPTY_LIVE_LOG;
     }
-  }, [maxLines]);
+  }, [isOpen, runId]);
 
   const fetchLogs = useCallback(async () => {
     if (abortControllerRef.current) {
@@ -77,15 +92,34 @@ export const LiveLogModal = ({
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    const requestOffset = bufferRef.current.offset;
+
     try {
-      const url = `/api/logs/stream?runId=${runId}&offset=${lastOffsetRef.current}&maxLines=${maxLines}`;
+      const url = `/api/logs/stream?runId=${encodeURIComponent(runId)}&offset=${requestOffset}&maxLines=${maxLines}`;
       const response = await fetch(url, {
         signal: abortController.signal,
       });
       const data = await response.json();
 
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      const next = applyLiveLogChunk(
+        bufferRef.current,
+        requestOffset,
+        data,
+        maxLines
+      );
+
+      if (!next) {
+        return;
+      }
+
+      bufferRef.current = next;
+      setLogContent(next.content);
+
       if (data.fileSize !== undefined) {
-        lastOffsetRef.current = data.fileSize;
         setFileSize(data.fileSize);
 
         if (data.fileSize > 10 * 1024 * 1024) {
@@ -93,47 +127,33 @@ export const LiveLogModal = ({
         }
       }
 
-      if (data.totalLines !== undefined) {
-        setTotalLines(data.totalLines);
-      }
-      setLineCount(data.displayedLines || 0);
+      if (requestOffset === 0) {
+        setLineCount(data.displayedLines || 0);
 
-      if (data.truncated !== undefined) {
-        setTruncated(data.truncated);
-      }
+        if (data.totalLines !== undefined) {
+          setTotalLines(data.totalLines);
+        }
 
-      if (lastOffsetRef.current === 0 && data.content) {
-        setLogContent(data.content);
+        if (data.truncated !== undefined) {
+          setTruncated(data.truncated);
+        }
 
         if (data.truncated) {
           setTailMode(true);
         }
-      } else if (data.newContent) {
-        setLogContent((prev) => {
-          const combined = prev + data.newContent;
-          const lines = combined.split("\n");
-
-          if (lines.length > maxLines) {
-            return lines.slice(-maxLines).join("\n");
-          }
-
-          return combined;
-        });
       }
 
-      const jobStatus = data.status || "running";
-      setStatus(jobStatus);
-
-      if (jobStatus === "completed" || jobStatus === "failed") {
+      if (data.status === "completed" || data.status === "failed") {
+        setStatus(data.status);
         setIsJobComplete(true);
       }
 
       if (data.exitCode !== undefined) {
         setExitCode(data.exitCode);
       }
-    } catch (error: any) {
-      if (error.name !== "AbortError") {
-        console.error("Failed to fetch logs:", error);
+    } catch (error: unknown) {
+      if (!isAbortError(error)) {
+        log.error("Failed to fetch logs", error);
       }
     }
   }, [runId, maxLines]);
@@ -162,67 +182,41 @@ export const LiveLogModal = ({
     if (!isOpen) return;
 
     const unsubscribe = subscribe((event: SSEEvent) => {
-      if (event.type === "job-completed" && event.data.runId === runId) {
-        setStatus("completed");
+      if (
+        (event.type === "job-completed" || event.type === "job-failed") &&
+        event.data.runId === runId
+      ) {
+        setStatus(event.type === "job-completed" ? "completed" : "failed");
         setExitCode(event.data.exitCode);
-
-        fetch(`/api/logs/stream?runId=${runId}&offset=0`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.content) {
-              const lines = data.content.split("\n");
-              setLineCount(lines.length);
-              if (tailMode && lines.length > TAIL_LINES) {
-                setLogContent(lines.slice(-TAIL_LINES).join("\n"));
-              } else {
-                setLogContent(data.content);
-              }
-            }
-          });
-      } else if (event.type === "job-failed" && event.data.runId === runId) {
-        setStatus("failed");
-        setExitCode(event.data.exitCode);
-
-        fetch(`/api/logs/stream?runId=${runId}&offset=0`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.content) {
-              const lines = data.content.split("\n");
-              setLineCount(lines.length);
-              if (tailMode && lines.length > TAIL_LINES) {
-                setLogContent(lines.slice(-TAIL_LINES).join("\n"));
-              } else {
-                setLogContent(data.content);
-              }
-            }
-          });
+        setIsJobComplete(true);
       }
     });
 
     return unsubscribe;
-  }, [isOpen, runId, subscribe, tailMode]);
+  }, [isOpen, runId, subscribe]);
 
-  useEffect(() => {
-    if (logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: "instant" });
+  const changeMaxLines = (nextMaxLines: number) => {
+    if (nextMaxLines !== maxLines && isOpen && runId && !isJobComplete) {
+      bufferRef.current = EMPTY_LIVE_LOG;
+      setLogContent("");
     }
-  }, [logContent]);
+    setMaxLines(nextMaxLines);
+  };
 
   const toggleTailMode = () => {
     setTailMode(!tailMode);
     if (!tailMode) {
-      const lines = logContent.split("\n");
-      if (lines.length > TAIL_LINES) {
-        setLogContent(lines.slice(-TAIL_LINES).join("\n"));
-      }
+      const content = keepLastLines(bufferRef.current.content, TAIL_LINES);
+      bufferRef.current = { ...bufferRef.current, content };
+      setLogContent(content);
     }
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+  const visibleLineCount = splitLogLines(logContent).length;
+  const startLine =
+    truncated && !showFullLog && totalLines > visibleLineCount
+      ? totalLines - visibleLineCount + 1
+      : 1;
 
   const titleWithStatus = (
     <div className="flex items-center gap-3">
@@ -252,7 +246,7 @@ export const LiveLogModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={titleWithStatus as any}
+      title={titleWithStatus}
       size="xl"
       preventCloseOnClickOutside={status === "running"}
     >
@@ -267,8 +261,8 @@ export const LiveLogModal = ({
                 <select
                   id="maxLines"
                   value={maxLines}
-                  onChange={(e) => setMaxLines(parseInt(e.target.value, 10))}
-                  className="bg-background0 border border-border rounded px-2 py-1 text-sm"
+                  onChange={(e) => changeMaxLines(parseInt(e.target.value, 10))}
+                  className="bg-background0 ascii-border px-2 py-1 text-sm"
                 >
                   <option value="100">{t("cronjobs.nLines", { count: "100" })}</option>
                   <option value="500">{t("cronjobs.nLines", { count: "500" })}</option>
@@ -283,7 +277,7 @@ export const LiveLogModal = ({
                     size="sm"
                     onClick={() => {
                       setShowFullLog(true);
-                      setMaxLines(50000);
+                      changeMaxLines(50000);
                     }}
                     className="text-xs"
                   >
@@ -306,7 +300,7 @@ export const LiveLogModal = ({
                   size="sm"
                   onClick={() => {
                     setShowFullLog(false);
-                    setMaxLines(500);
+                    changeMaxLines(500);
                   }}
                   className="text-xs"
                 >
@@ -331,7 +325,7 @@ export const LiveLogModal = ({
             <WarningIcon className="h-4 w-4 text-status-warning mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground">
-                <span className="font-medium">{t("cronjobs.largeLogFileDetected")}</span> ({formatFileSize(fileSize)})
+                <span className="font-medium">{t("cronjobs.largeLogFileDetected")}</span> ({formatBytes(fileSize)})
                 {tailMode && ` - ${t("cronjobs.tailModeEnabled", { tailLines: TAIL_LINES.toLocaleString() })}`}
               </p>
             </div>
@@ -348,18 +342,15 @@ export const LiveLogModal = ({
           </div>
         )}
 
-        <div className="bg-background0 p-4 max-h-[60vh] overflow-auto terminal-font ascii-border">
-          <pre className="text-xs text-status-success whitespace-pre-wrap break-words">
-            {logContent || t("cronjobs.waitingForJobToStart")}
-            <div ref={logEndRef} />
-          </pre>
-        </div>
-
-        <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <span>
-            {t("cronjobs.runIdJobId", { runId, jobId })}
-          </span>
-        </div>
+        <LogViewer
+          className="h-[55vh] min-h-[240px]"
+          content={logContent}
+          follow
+          startLine={startLine}
+          title={t("cronjobs.runIdJobId", { runId, jobId })}
+          meta={fileSize > 0 ? formatBytes(fileSize) : undefined}
+          placeholder={t("cronjobs.waitingForJobToStart")}
+        />
       </div>
     </Modal>
   );
