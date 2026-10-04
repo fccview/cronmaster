@@ -24,7 +24,6 @@ export const POST = async (request: NextRequest) => {
     log.info("Logout", { authType: authType || "none" });
 
     if (authType === "oidc") {
-      const appUrl = process.env.APP_URL || request.nextUrl.origin;
       const response = NextResponse.json(
         {
           success: true,

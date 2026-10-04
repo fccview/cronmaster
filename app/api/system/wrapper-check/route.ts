@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { readFileSync, existsSync } from "fs";
 import path from "path";
 import { DATA_DIR } from "@/app/_consts/file";
@@ -6,7 +6,7 @@ import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("api:system");
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const officialScriptPath = path.join(
       process.cwd(),

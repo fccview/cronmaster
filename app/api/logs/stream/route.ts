@@ -6,6 +6,7 @@ import path from "path";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
 import { isLogFileFromRun } from "@/app/_utils/log-files-utils";
 import { createLogger } from "@/app/_utils/logger";
+import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const log = createLogger("logs:stream");
 
@@ -209,10 +210,10 @@ export const GET = async (request: NextRequest) => {
       displayedLines: displayedLines.length,
       truncated,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error streaming log", error);
     return NextResponse.json(
-      { error: error.message || "Failed to stream log" },
+      { error: getErrorMessage(error) || "Failed to stream log" },
       { status: 500 }
     );
   }

@@ -6,6 +6,7 @@ import {
   removeCronJob,
 } from "@/app/_server/actions/cronjobs";
 import { createLogger } from "@/app/_utils/logger";
+import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const log = createLogger("api:cronjobs");
 
@@ -28,13 +29,13 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     }
 
     return NextResponse.json({ success: true, data: cronJob });
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error fetching cron job", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to fetch cron job",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );
@@ -65,13 +66,13 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     } else {
       return NextResponse.json(result, { status: 400 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error updating cron job", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to update cron job",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );
@@ -91,13 +92,13 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
     } else {
       return NextResponse.json(result, { status: 400 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error deleting cron job", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to delete cron job",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );

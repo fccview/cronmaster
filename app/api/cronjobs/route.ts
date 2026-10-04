@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
 import { fetchCronJobs } from "@/app/_server/actions/cronjobs";
 import { createLogger } from "@/app/_utils/logger";
+import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const log = createLogger("api:cronjobs");
 
@@ -17,13 +18,13 @@ export async function GET(request: NextRequest) {
   try {
     const cronJobs = await fetchCronJobs();
     return NextResponse.json({ success: true, data: cronJobs });
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error fetching cron jobs", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to fetch cron jobs",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );

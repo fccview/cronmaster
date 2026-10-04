@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify, createRemoteJWKSet } from "jose";
+import { jwtVerify, createRemoteJWKSet, type JWTPayload } from "jose";
 import {
   createSession,
   getSessionCookieName,
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${appUrl}/login`);
     }
 
-    let claims: { [key: string]: any };
+    let claims: JWTPayload;
     try {
       const { payload } = await jwtVerify(idToken, JWKS, {
         issuer: oidcIssuer,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
 import { executeJob } from "@/app/_server/actions/cronjobs";
 import { createLogger } from "@/app/_utils/logger";
+import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const log = createLogger("api:cronjobs");
 
@@ -23,13 +24,13 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     } else {
       return NextResponse.json(result, { status: 400 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error executing cron job", error);
     return NextResponse.json(
       {
         success: false,
         error: "Failed to execute cron job",
-        message: error.message,
+        message: getErrorMessage(error),
       },
       { status: 500 }
     );
