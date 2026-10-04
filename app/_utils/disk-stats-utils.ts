@@ -3,7 +3,7 @@ import path from "path";
 import { createLogger } from "@/app/_utils/logger";
 import { formatBytes, getStatus } from "@/app/_utils/system-stats-utils";
 
-const log = createLogger("disk-stats");
+const log = createLogger("system:disk");
 
 export const DEFAULT_DISK_MOUNTS = ["/"];
 export const MAX_DISK_MOUNTS = 8;
