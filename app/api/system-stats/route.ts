@@ -3,7 +3,6 @@ import { getTranslations } from "@/app/_server/actions/translations";
 import * as si from "systeminformation";
 import {
   getPing,
-  formatBytes,
   formatUptime,
   findMainInterface,
   getStatus,
@@ -11,6 +10,7 @@ import {
   formatGpuInfo,
 } from "@/app/_utils/system-stats-utils";
 import { getDiskStats, formatDiskStats } from "@/app/_utils/disk-stats-utils";
+import { formatBytes } from "@/app/_utils/format-utils";
 import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
 import { createLogger } from "@/app/_utils/logger";

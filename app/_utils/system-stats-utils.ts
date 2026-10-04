@@ -9,14 +9,6 @@ import type {
 
 const execAsync = promisify(exec);
 
-export const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return "0 B";
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${
-    ["B", "KB", "MB", "GB", "TB"][i]
-  }`;
-};
-
 export const formatUptime = (seconds: number): string => {
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);

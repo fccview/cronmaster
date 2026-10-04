@@ -15,6 +15,7 @@ import {
   getJobLogStats,
 } from "@/app/_server/actions/logs";
 import { createLogger } from "@/app/_utils/logger";
+import { formatBytes } from "@/app/_utils/format-utils";
 
 const logger = createLogger("ui:logs");
 
@@ -167,12 +168,6 @@ export const LogsModal = ({
 
   const selectedLogEntry = logs.find((log) => log.filename === selectedLog);
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
   const formatTimestamp = (timestamp: string): string => {
     const [datePart, timePart] = timestamp.split("_");
     const [year, month, day] = datePart.split("-");
@@ -196,7 +191,7 @@ export const LogsModal = ({
             <h3 className="font-semibold text-lg truncate">{jobComment || jobId}</h3>
             {stats && (
               <p className="text-sm text-muted-foreground">
-                {stats.count} {t("cronjobs.logs")} • {formatFileSize(stats.totalSize)}
+                {stats.count} {t("cronjobs.logs")} • {formatBytes(stats.totalSize)}
               </p>
             )}
           </div>
@@ -277,7 +272,7 @@ export const LogsModal = ({
                         </div>
                         <div className="flex items-center gap-2">
                           <p className="text-xs text-muted-foreground">
-                            {formatFileSize(log.size)}
+                            {formatBytes(log.size)}
                           </p>
                           {log.exitCode !== undefined && (
                             <span
@@ -316,7 +311,7 @@ export const LogsModal = ({
               title={selectedLog ?? t("cronjobs.logContent")}
               meta={
                 selectedLogEntry && !isLoadingContent
-                  ? formatFileSize(selectedLogEntry.size)
+                  ? formatBytes(selectedLogEntry.size)
                   : undefined
               }
               placeholder={

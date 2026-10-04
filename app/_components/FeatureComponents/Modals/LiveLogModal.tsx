@@ -18,6 +18,7 @@ import {
   keepLastLines,
   type LiveLogBuffer,
 } from "@/app/_utils/live-log-utils";
+import { formatBytes } from "@/app/_utils/format-utils";
 
 const log = createLogger("ui:logs");
 
@@ -211,12 +212,6 @@ export const LiveLogModal = ({
     }
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   const visibleLineCount = splitLogLines(logContent).length;
   const startLine =
     truncated && !showFullLog && totalLines > visibleLineCount
@@ -330,7 +325,7 @@ export const LiveLogModal = ({
             <WarningIcon className="h-4 w-4 text-status-warning mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground">
-                <span className="font-medium">{t("cronjobs.largeLogFileDetected")}</span> ({formatFileSize(fileSize)})
+                <span className="font-medium">{t("cronjobs.largeLogFileDetected")}</span> ({formatBytes(fileSize)})
                 {tailMode && ` - ${t("cronjobs.tailModeEnabled", { tailLines: TAIL_LINES.toLocaleString() })}`}
               </p>
             </div>
@@ -353,7 +348,7 @@ export const LiveLogModal = ({
           follow
           startLine={startLine}
           title={t("cronjobs.runIdJobId", { runId, jobId })}
-          meta={fileSize > 0 ? formatFileSize(fileSize) : undefined}
+          meta={fileSize > 0 ? formatBytes(fileSize) : undefined}
           placeholder={t("cronjobs.waitingForJobToStart")}
         />
       </div>

@@ -1,7 +1,8 @@
 import { statfs } from "fs/promises";
 import path from "path";
 import { createLogger } from "@/app/_utils/logger";
-import { formatBytes, getStatus } from "@/app/_utils/system-stats-utils";
+import { getStatus } from "@/app/_utils/system-stats-utils";
+import { formatBytes } from "@/app/_utils/format-utils";
 import { isDocker } from "@/app/_server/actions/global";
 
 const log = createLogger("system:disk");
