@@ -210,7 +210,7 @@ export const CronJobItem = ({
 
             <div
               className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border cursor-pointer hover:bg-background2 transition-colors relative terminal-font"
-              title="Click to copy Job UUID"
+              title={t("cronjobs.copyJobId")}
               onClick={async () => {
                 const success = await copyToClipboard(job.id);
                 if (success) {
@@ -246,7 +246,7 @@ export const CronJobItem = ({
                   onViewLogs(job);
                 }}
                 className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border hover:bg-background1 transition-colors cursor-pointer terminal-font"
-                title="Latest execution failed - Click to view error log"
+                title={t("cronjobs.latestExecutionFailed")}
               >
                 <WarningCircleIcon className="h-3 w-3 text-status-error" />
                 <span className="text-status-error">
@@ -266,7 +266,7 @@ export const CronJobItem = ({
                     onViewLogs(job);
                   }}
                   className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border hover:bg-background1 transition-colors cursor-pointer terminal-font"
-                  title="Latest execution succeeded, but has historical failures - Click to view logs"
+                  title={t("cronjobs.historicalFailures")}
                 >
                   <CheckCircleIcon className="h-3 w-3 text-status-success" />
                   <span className="text-status-warning">{t("cronjobs.healthy")}</span>
@@ -323,8 +323,16 @@ export const CronJobItem = ({
                 }
               }}
               className="btn-outline h-8 px-3"
-              title={t("cronjobs.pauseCronJob")}
-              aria-label={t("cronjobs.pauseCronJob")}
+              title={
+                job.paused
+                  ? t("cronjobs.resumeCronJob")
+                  : t("cronjobs.pauseCronJob")
+              }
+              aria-label={
+                job.paused
+                  ? t("cronjobs.resumeCronJob")
+                  : t("cronjobs.pauseCronJob")
+              }
             >
               {job.paused ? (
                 <PlayIcon className="h-3 w-3" />

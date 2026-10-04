@@ -210,7 +210,7 @@ export const MinimalCronJobItem = ({
           {job.logsEnabled && job.logError?.hasError && (
             <div
               className="w-2 h-2 bg-status-error ascii-border cursor-pointer"
-              title="Latest execution failed - Click to view error log"
+              title={t("cronjobs.latestExecutionFailed")}
               onClick={(e) => {
                 e.stopPropagation();
                 onViewLogs(job);
@@ -220,7 +220,7 @@ export const MinimalCronJobItem = ({
           {!job.logsEnabled && errors.length > 0 && (
             <div
               className="w-2 h-2 bg-status-warning ascii-border cursor-pointer"
-              title={`${errors.length} error(s)`}
+              title={t("cronjobs.nErrors", { count: errors.length })}
               onClick={() => onErrorClick(errors[0])}
             />
           )}
@@ -254,8 +254,16 @@ export const MinimalCronJobItem = ({
               }
             }}
             className="btn-outline h-8 px-3 hidden md:flex"
-            title={t("cronjobs.pauseCronJob")}
-            aria-label={t("cronjobs.pauseCronJob")}
+            title={
+              job.paused
+                ? t("cronjobs.resumeCronJob")
+                : t("cronjobs.pauseCronJob")
+            }
+            aria-label={
+              job.paused
+                ? t("cronjobs.resumeCronJob")
+                : t("cronjobs.pauseCronJob")
+            }
           >
             {job.paused ? (
               <PlayIcon className="h-3 w-3" />

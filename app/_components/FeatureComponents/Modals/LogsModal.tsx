@@ -81,7 +81,7 @@ export const LogsModal = ({
       setLogContent(content);
     } catch (error) {
       logger.error("Error loading log content", error);
-      setLogContent("Error loading log content");
+      setLogContent(t("cronjobs.errorLoadingLogContent"));
     } finally {
       setIsLoadingContent(false);
     }
@@ -121,7 +121,7 @@ export const LogsModal = ({
       }
     } catch (error) {
       logger.error("Error deleting log", error);
-      alert("Error deleting log file");
+      alert(t("cronjobs.errorDeletingLog"));
     }
   };
 
@@ -139,7 +139,7 @@ export const LogsModal = ({
       }
     } catch (error) {
       logger.error("Error deleting all logs", error);
-      alert("Error deleting all logs");
+      alert(t("cronjobs.errorDeletingAllLogs"));
     }
   };
 
@@ -286,7 +286,7 @@ export const LogsModal = ({
                                 : "text-status-success"
                                 }`}
                             >
-                              Exit: {log.exitCode}
+                              {t("cronjobs.exitCode", { exitCode: log.exitCode })}
                             </span>
                           )}
                         </div>

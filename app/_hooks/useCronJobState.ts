@@ -23,6 +23,7 @@ import { buildScriptSelection } from "@/app/_components/FeatureComponents/Cronjo
 import { findScriptForCommand } from "@/app/_utils/script-command-utils";
 import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
 import { useIsHydrated } from "@/app/_hooks/useIsHydrated";
+import { useTranslations } from "next-intl";
 
 interface CronJobListProps {
     cronJobs: CronJob[];
@@ -30,6 +31,7 @@ interface CronJobListProps {
 }
 
 export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
+    const t = useTranslations();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editingJob, setEditingJob] = useState<CronJob | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -110,6 +112,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const getHelperState = () => ({
+        t,
         setDeletingId,
         setIsDeleteModalOpen,
         setJobToDelete,
@@ -150,14 +153,14 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const handlePauseLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handlePause(job);
+            await handlePause(job, t);
         }
     };
 
     const handleResumeLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handleResume(job);
+            await handleResume(job, t);
         }
     };
 
@@ -170,7 +173,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const handleToggleLoggingLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handleToggleLogging(job);
+            await handleToggleLogging(job, t);
         }
     };
 
@@ -219,7 +222,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const handleBackupLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handleBackup(job);
+            await handleBackup(job, t);
         }
     };
 

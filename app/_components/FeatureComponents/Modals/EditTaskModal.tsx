@@ -45,7 +45,7 @@ export const EditTaskModal = ({
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Schedule
+            {t("cronjobs.schedule")}
           </label>
           <CronExpressionHelper
             value={form.schedule}
@@ -108,11 +108,11 @@ export const EditTaskModal = ({
             onClick={onClose}
             className="btn-outline"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" className="btn-primary glow-primary">
             <PencilSimpleIcon className="h-4 w-4 mr-2" />
-            Update Task
+            {t("cronjobs.updateTask")}
           </Button>
         </div>
       </form>

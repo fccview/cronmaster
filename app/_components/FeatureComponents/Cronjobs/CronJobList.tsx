@@ -158,18 +158,18 @@ export const CronJobList = ({
   const handleRestoreAll = async () => {
     const result = await restoreAllCronJobs();
     if (result.success) {
-      showToast("success", result.message);
+      showToast("success", t("cronjobs.restoreAllSuccess"), result.message);
       router.refresh();
       setIsBackupModalOpen(false);
     } else {
-      showToast("error", "Failed to restore all jobs", result.message);
+      showToast("error", t("cronjobs.restoreAllFailed"), result.message);
     }
   };
 
   const handleBackupAll = async () => {
     const result = await backupAllCronJobs();
     if (result.success) {
-      showToast("success", result.message);
+      showToast("success", t("cronjobs.backupAllSuccess"));
       loadBackupFiles();
     } else {
       showToast("error", t("cronjobs.backupAllFailed"), result.message);
@@ -182,7 +182,7 @@ export const CronJobList = ({
       showToast("success", t("cronjobs.backupDeleted"));
       loadBackupFiles();
     } else {
-      showToast("error", "Failed to delete backup", result.message);
+      showToast("error", t("cronjobs.deleteBackupFailed"), result.message);
     }
   };
 

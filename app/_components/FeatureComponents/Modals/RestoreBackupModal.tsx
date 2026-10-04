@@ -96,7 +96,7 @@ export const RestoreBackupModal = ({
           >
             <DownloadIcon className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">{t("cronjobs.backupAll")}</span>
-            <span className="sm:hidden">Backup</span>
+            <span className="sm:hidden">{t("cronjobs.backup")}</span>
           </Button>
           {backups.length > 0 && (
             <Button
@@ -106,7 +106,7 @@ export const RestoreBackupModal = ({
             >
               <UploadIcon className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{t("cronjobs.restoreAll")}</span>
-              <span className="sm:hidden">Restore</span>
+              <span className="sm:hidden">{t("cronjobs.restore")}</span>
             </Button>
           )}
           <Button
@@ -116,7 +116,7 @@ export const RestoreBackupModal = ({
             title={t("common.refresh")}
           >
             <ArrowsClockwiseIcon className="h-4 w-4" />
-            <span className="sm:hidden ml-2">Refresh</span>
+            <span className="sm:hidden ml-2">{t("common.refresh")}</span>
           </Button>
         </div>
 

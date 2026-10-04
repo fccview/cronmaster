@@ -5,6 +5,7 @@ import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { WarningCircleIcon, CopyIcon } from "@phosphor-icons/react";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { LogViewer } from "@/app/_components/GlobalComponents/UIElements/LogViewer";
+import { useTranslations } from "next-intl";
 
 interface ErrorDetails {
   title: string;
@@ -28,6 +29,7 @@ export const ErrorDetailsModal = ({
   onClose,
   error,
 }: ErrorDetailsModalProps) => {
+  const t = useTranslations();
   if (!isOpen || !error) return null;
 
   const handleCopyDetails = async () => {
@@ -44,14 +46,14 @@ Timestamp: ${error.timestamp}
 
     try {
       await navigator.clipboard.writeText(detailsText);
-      showToast("success", "Error details copied to clipboard");
+      showToast("success", t("cronjobs.errorDetailsCopied"));
     } catch {
-      showToast("error", "Failed to copy error details");
+      showToast("error", t("cronjobs.copyErrorDetailsFailed"));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Error Details" size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("cronjobs.errorDetails")} size="xl">
       <div className="space-y-4">
         <div className="ascii-border border-status-error bg-background1 p-4">
           <div className="flex items-start gap-3">
@@ -68,7 +70,7 @@ Timestamp: ${error.timestamp}
         {error.details && (
           <div>
             <h4 className="text-sm font-medium mb-2">
-              Details
+              {t("common.details")}
             </h4>
             <div className="bg-background1 p-3 ascii-border">
               <pre className="text-sm whitespace-pre-wrap break-words">
@@ -81,7 +83,7 @@ Timestamp: ${error.timestamp}
         {error.command && (
           <div>
             <h4 className="text-sm font-medium mb-2">
-              Command
+              {t("cronjobs.command")}
             </h4>
             <div className="bg-background1 p-3 ascii-border">
               <code className="text-sm break-all">
@@ -94,7 +96,7 @@ Timestamp: ${error.timestamp}
         {error.output && (
           <LogViewer
             className="max-h-64"
-            title="Output"
+            title={t("cronjobs.output")}
             content={error.output}
           />
         )}
@@ -102,22 +104,22 @@ Timestamp: ${error.timestamp}
         {error.stderr && (
           <LogViewer
             className="max-h-64 border-status-error"
-            title={<span className="text-status-error">Error Output</span>}
+            title={<span className="text-status-error">{t("cronjobs.errorOutput")}</span>}
             content={error.stderr}
           />
         )}
 
         <div className="text-xs text-muted-foreground">
-          Timestamp: {error.timestamp}
+          {t("cronjobs.timestamp")}: {error.timestamp}
         </div>
 
         <div className="flex justify-end gap-2 pt-3 border-t border-border">
           <Button variant="outline" onClick={handleCopyDetails}>
             <CopyIcon className="h-4 w-4 mr-2" />
-            Copy Details
+            {t("cronjobs.copyDetails")}
           </Button>
           <Button onClick={onClose}>
-            Close
+            {t("common.close")}
           </Button>
         </div>
       </div>
