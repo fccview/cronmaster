@@ -69,8 +69,6 @@ export const ScriptModal = ({
     const result = await onSubmit(formData);
     if (result.success) {
       onClose();
-    } else {
-      showToast("error", t("scripts.saveScriptFailed"), result.message);
     }
   };
 
