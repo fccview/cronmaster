@@ -77,7 +77,7 @@ export const CreateTaskModal = ({
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              {t("common.description")}
+              {t("common.description")}{" "}
               <span className="text-muted-foreground">
                 ({t("common.optional")})
               </span>
