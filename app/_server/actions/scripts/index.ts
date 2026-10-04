@@ -13,6 +13,7 @@ import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
 import { requireActionAuth } from "@/app/_utils/server-action-auth";
 import { isSafePathSegment, toSingleLine } from "@/app/_utils/security-utils";
 import { createLogger } from "@/app/_utils/logger";
+import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const log = createLogger("scripts");
 
@@ -364,11 +365,11 @@ export const executeScript = async (
       output: stdout,
       error: stderr,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.message || "Unknown error",
+      error: getErrorMessage(error) || "Unknown error",
     };
   }
 };

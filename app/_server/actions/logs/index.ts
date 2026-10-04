@@ -14,6 +14,7 @@ import {
 import { createLogger } from "@/app/_utils/logger";
 import { requireActionAuth } from "@/app/_utils/server-action-auth";
 import { isSafePathSegment } from "@/app/_utils/security-utils";
+import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const logger = createLogger("logs");
 
@@ -176,11 +177,11 @@ export const deleteLogFile = async (
       success: true,
       message: "Log file deleted successfully",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Error deleting log file ${filename}`, error);
     return {
       success: false,
-      message: error.message || "Error deleting log file",
+      message: getErrorMessage(error) || "Error deleting log file",
     };
   }
 };
@@ -207,11 +208,11 @@ export const deleteAllJobLogs = async (
       message: `Deleted ${deletedCount} log files`,
       deletedCount,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Error deleting all logs for job ${jobId}`, error);
     return {
       success: false,
-      message: error.message || "Error deleting log files",
+      message: getErrorMessage(error) || "Error deleting log files",
       deletedCount: 0,
     };
   }
@@ -240,11 +241,11 @@ export const cleanupJobLogs = async (
       message: `Cleaned up ${deletedCount} log files`,
       deletedCount,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Error cleaning up logs for job ${jobId}`, error);
     return {
       success: false,
-      message: error.message || "Error cleaning up log files",
+      message: getErrorMessage(error) || "Error cleaning up log files",
       deletedCount: 0,
     };
   }

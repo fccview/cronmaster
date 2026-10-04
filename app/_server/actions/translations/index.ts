@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import "server-only";
+import type { AbstractIntlMessages } from "next-intl";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("i18n");
@@ -13,7 +14,9 @@ const log = createLogger("i18n");
  * This function is server-only and should only be called from server components
  * or server actions.
  */
-export const loadTranslationMessages = async (locale: string): Promise<any> => {
+export const loadTranslationMessages = async (
+  locale: string
+): Promise<AbstractIntlMessages> => {
   const customTranslationPath = path.join(
     process.cwd(),
     "data",
@@ -55,10 +58,10 @@ export const getTranslations = async (
 
   return (key: string) => {
     const keys = key.split(".");
-    let value: any = messages;
+    let value: AbstractIntlMessages | string | undefined = messages;
     for (const k of keys) {
-      value = value?.[k];
+      value = typeof value === "object" ? value[k] : undefined;
     }
-    return value || key;
+    return (value as string | undefined) || key;
   };
 };
