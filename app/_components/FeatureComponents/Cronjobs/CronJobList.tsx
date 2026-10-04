@@ -315,7 +315,7 @@ export const CronJobList = ({
               onNewTaskClick={() => setIsNewCronModalOpen(true)}
             />
           ) : (
-            <div className="space-y-4 max-h-[55vh] min-h-[55vh] overflow-y-auto tui-scrollbar pr-1">
+            <div className="space-y-4 lg:max-h-[55vh] lg:min-h-[55vh] lg:overflow-y-auto tui-scrollbar lg:pr-1">
               {loadedSettings ? (
                 filteredJobs.map((job) =>
                   minimalMode ? (

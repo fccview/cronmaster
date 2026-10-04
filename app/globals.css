@@ -331,6 +331,16 @@ pre::-webkit-scrollbar {
     max-width: 100%;
     margin: inherit;
   }
+
+  .mobile-modal > div:last-child {
+    max-height: calc(90vh - 4.5rem);
+  }
+}
+
+@media (max-width: 639px) {
+  .tui-card {
+    box-shadow: 4px 3px 0 var(--box-border-color, var(--foreground2));
+  }
 }
 
 .sidebar-shrinker {

@@ -261,10 +261,10 @@ export const ScriptsManager = ({
                   key={script.id}
                   className="glass-card p-4 ascii-border hover:bg-accent/30 transition-colors terminal-font"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-medium text-foreground truncate">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0 w-full">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
+                        <h4 className="font-medium text-foreground truncate max-w-full">
                           {script.name}
                         </h4>
                         <span className="text-xs text-muted-foreground">
@@ -276,7 +276,7 @@ export const ScriptsManager = ({
                           {script.description}
                         </p>
                       )}
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground break-all">
                         {t("scripts.file")}: {script.filename}
                       </div>
                     </div>

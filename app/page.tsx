@@ -94,7 +94,7 @@ export default async function Home() {
         )}
 
         <main className="transition-all duration-300">
-          <div className="px-4 py-8 lg:px-8">
+          <div className="px-4 pt-6 pb-24 lg:px-8 lg:py-8">
             <WrapperScriptWarning />
             <TabbedInterface cronJobs={cronJobs} scripts={scripts} />
           </div>

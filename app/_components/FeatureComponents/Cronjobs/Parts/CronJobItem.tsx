@@ -142,12 +142,12 @@ export const CronJobItem = ({
   return (
     <div
       key={job.id}
-      className={`border border-border lg:tui-card p-4 terminal-font transition-colors ${isDropdownOpen ? "relative z-10" : ""
+      className={`border border-border lg:tui-card p-3 sm:p-4 terminal-font transition-colors ${isDropdownOpen ? "relative z-10" : ""
         }`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex flex-col items-start sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
             {(scheduleDisplayMode === "cron" ||
               scheduleDisplayMode === "both") && (
                 <code className="text-sm bg-background0 text-status-warning px-2 py-1 terminal-font ascii-border">
@@ -162,7 +162,7 @@ export const CronJobItem = ({
                 </p>
               </div>
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 w-full sm:w-auto">
               <div className="flex items-center gap-2 min-w-0 w-full">
                 {commandCopied === job.id && (
                   <CheckIcon className="h-3 w-3 text-status-success" />
@@ -174,7 +174,7 @@ export const CronJobItem = ({
                     setCommandCopied(job.id);
                     setTimeout(() => setCommandCopied(null), 3000);
                   }}
-                  className="w-full cursor-pointer overflow-x-auto text-sm font-medium terminal-font bg-background1 px-2 py-1 ascii-border hide-scrollbar"
+                  className="w-full cursor-pointer overflow-x-auto text-sm font-medium terminal-font bg-background1 px-2 py-1 ascii-border hide-scrollbar max-sm:whitespace-pre-wrap max-sm:break-all max-sm:max-h-36 max-sm:overflow-y-auto"
                 >
                   {unwrapCommand(displayCommand)}
                 </pre>
@@ -182,7 +182,7 @@ export const CronJobItem = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pb-2 pt-4">
+          <div className="flex flex-col items-start sm:flex-row sm:items-center gap-2 pb-2 pt-2 sm:pt-4">
             {scheduleDisplayMode === "both" && cronExplanation?.isValid && (
               <div className="flex items-start gap-1.5 ascii-border bg-background2 px-2 py-0.5">
                 <InfoIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
@@ -194,7 +194,7 @@ export const CronJobItem = ({
 
             {job.comment && (
               <p
-                className="text-xs italic truncate"
+                className="text-xs italic truncate max-sm:whitespace-normal max-sm:line-clamp-3 max-w-full"
                 title={job.comment}
               >
                 {job.comment}
@@ -202,7 +202,7 @@ export const CronJobItem = ({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 py-3">
+          <div className="flex flex-wrap items-center gap-2 py-2 sm:py-3">
             <div className="flex items-center gap-1 text-xs bg-background0 px-2 py-0.5 ascii-border cursor-pointer hover:bg-background2 transition-colors relative terminal-font">
               <UserIcon className="h-3 w-3" />
               <span>{job.user}</span>
