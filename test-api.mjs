@@ -4,10 +4,10 @@
  * API Testing Script for Cronjob Manager
  *
  * This script tests all API endpoints and provides clear reporting on what's working and what's broken.
- * Usage: node test-api.js [baseUrl]
- * Example: node test-api.js http://localhost:3000
+ * Usage: node test-api.mjs [baseUrl]
+ * Example: node test-api.mjs http://localhost:3000
  * 
- * Running it with params: AUTH_PASSWORD=<password> node test-api.js http://localhost:<port>
+ * Running it with params: AUTH_PASSWORD=<password> node test-api.mjs http://localhost:<port>
  */
 
 import https from 'https';
