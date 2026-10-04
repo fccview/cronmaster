@@ -76,12 +76,3 @@ export const loadAllScripts = async (): Promise<Script[]> => {
   const scriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
   return await scanScriptsDirectory(scriptsDir);
 }
-
-export const searchScripts = (scripts: Script[], query: string): Script[] => {
-  const lowercaseQuery = query.toLowerCase();
-  return scripts.filter(
-    (script) =>
-      script.name.toLowerCase().includes(lowercaseQuery) ||
-      script.description.toLowerCase().includes(lowercaseQuery)
-  );
-}
