@@ -79,6 +79,11 @@ export const buildJobExecutionCommand = async (
 
   const userInfo = await getUserInfo(job.user);
   const executionUser = userInfo ? userInfo.username : "root";
+  if (!userInfo && process.env.STRICT_EXECUTION_USER === "true") {
+    throw new Error(
+      `Could not resolve user "${job.user}" on the host, refusing to run as root because STRICT_EXECUTION_USER is enabled`
+    );
+  }
   if (!userInfo) {
     log.warn("Could not resolve the job user on the host, running as root", {
       user: job.user,

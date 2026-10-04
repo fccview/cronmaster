@@ -42,6 +42,15 @@ interface SessionStore {
   [sessionId: string]: Session;
 }
 
+const DEFAULT_SESSION_MAX_AGE_DAYS = 30;
+
+export const getSessionMaxAgeSeconds = (): number => {
+  const days = parseFloat(process.env.SESSION_MAX_AGE_DAYS || "");
+  const effective =
+    Number.isFinite(days) && days > 0 ? days : DEFAULT_SESSION_MAX_AGE_DAYS;
+  return Math.round(effective * 24 * 60 * 60);
+};
+
 export function generateSessionId(): string {
   return crypto.randomBytes(32).toString("base64url");
 }
@@ -85,7 +94,7 @@ export async function createSession(authType: AuthType): Promise<string> {
     const sessions = await loadSessions();
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(now.getTime() + getSessionMaxAgeSeconds() * 1000);
 
     sessions[sessionId] = {
       authType,

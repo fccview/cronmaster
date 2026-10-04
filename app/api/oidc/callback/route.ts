@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify, createRemoteJWKSet, type JWTPayload } from "jose";
+import {
+  jwtVerify,
+  createRemoteJWKSet,
+  decodeJwt,
+  type JWTPayload,
+} from "jose";
 import {
   createSession,
   getSessionCookieName,
+  getSessionMaxAgeSeconds,
 } from "@/app/_utils/session-utils";
 import { createLogger } from "@/app/_utils/logger";
+import {
+  isOidcAccessRestricted,
+  isOidcUserAllowed,
+  OIDC_UNAUTHORIZED_MESSAGE,
+} from "@/app/_utils/oidc-utils";
 
 const log = createLogger("auth:oidc");
 
@@ -56,6 +67,7 @@ export async function GET(request: NextRequest) {
       token_endpoint: string;
       jwks_uri: string;
       issuer: string;
+      userinfo_endpoint?: string;
     };
     const tokenEndpoint = discovery.token_endpoint;
     const jwksUri = discovery.jwks_uri;
@@ -93,7 +105,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${appUrl}/login`);
     }
 
-    const token = (await tokenRes.json()) as { id_token?: string };
+    const token = (await tokenRes.json()) as {
+      id_token?: string;
+      access_token?: string;
+    };
     const idToken = token.id_token;
     if (!idToken) {
       log.warn("OIDC token response had no id_token");
@@ -118,6 +133,50 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${appUrl}/login`);
     }
 
+    if (
+      isOidcAccessRestricted() &&
+      !claims.groups &&
+      !claims.roles &&
+      discovery.userinfo_endpoint &&
+      token.access_token
+    ) {
+      try {
+        const userinfoResponse = await fetch(discovery.userinfo_endpoint, {
+          headers: { Authorization: `Bearer ${token.access_token}` },
+        });
+
+        if (userinfoResponse.ok) {
+          const contentType = userinfoResponse.headers.get("content-type") || "";
+          const userinfoClaims = contentType.includes("jwt")
+            ? decodeJwt(await userinfoResponse.text())
+            : ((await userinfoResponse.json()) as JWTPayload);
+          claims = { ...userinfoClaims, ...claims };
+          log.debug("OIDC groups and roles loaded from userinfo", {
+            claimsFetched: Object.keys(userinfoClaims),
+          });
+        } else {
+          log.debug("OIDC userinfo request failed, using id_token claims", {
+            status: userinfoResponse.status,
+          });
+        }
+      } catch (error) {
+        log.debug("OIDC userinfo request failed, using id_token claims", error);
+      }
+    }
+
+    if (!isOidcUserAllowed(claims)) {
+      log.warn("OIDC login rejected, user not in allowed groups or roles", {
+        sub: claims.sub,
+        requiredGroups: process.env.OIDC_USER_GROUPS,
+        requiredRoles: process.env.OIDC_USER_ROLES,
+        userGroups: claims.groups,
+        userRoles: claims.roles,
+      });
+      return NextResponse.redirect(
+        `${appUrl}/login?error=${encodeURIComponent(OIDC_UNAUTHORIZED_MESSAGE)}`
+      );
+    }
+
     log.info("Login successful", { authType: "oidc", sub: claims.sub });
     log.debug("OIDC claims", {
       sub: claims.sub,
@@ -137,7 +196,7 @@ export async function GET(request: NextRequest) {
       secure: isSecure,
       sameSite: "lax",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: getSessionMaxAgeSeconds(),
     });
 
     response.cookies.delete("oidc_verifier");

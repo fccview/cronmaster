@@ -8,6 +8,12 @@ const log = createLogger("auth");
 export const isUiAuthEnabled = (): boolean =>
   !!process.env.AUTH_PASSWORD || process.env.SSO_MODE === "oidc";
 
+export const API_KEY_ONLY_WARNING =
+  "API_KEY is set without AUTH_PASSWORD or SSO_MODE: you chose to protect the /api/* REST routes only, the web UI and its server actions are open to anyone who can reach this instance";
+
+export const isApiKeyOnlyAuth = (): boolean =>
+  !!process.env.API_KEY && !isUiAuthEnabled();
+
 const hasValidBearer = (authHeader: string | null): boolean => {
   const apiKey = process.env.API_KEY;
   if (!apiKey || !authHeader) return false;
@@ -16,21 +22,8 @@ const hasValidBearer = (authHeader: string | null): boolean => {
   return !!match && safeCompare(match[1], apiKey);
 };
 
-let warnedApiKeyOnly = false;
-
-const warnApiKeyOnly = () => {
-  if (warnedApiKeyOnly || !process.env.API_KEY) return;
-  warnedApiKeyOnly = true;
-  log.warn(
-    "API_KEY is set but AUTH_PASSWORD and SSO_MODE are not, so the web UI and its server actions are unauthenticated"
-  );
-};
-
 export const isActionAuthorized = async (): Promise<boolean> => {
-  if (!isUiAuthEnabled()) {
-    warnApiKeyOnly();
-    return true;
-  }
+  if (!isUiAuthEnabled()) return true;
 
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(getSessionCookieName())?.value;

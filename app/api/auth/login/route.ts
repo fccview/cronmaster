@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   createSession,
   getSessionCookieName,
+  getSessionMaxAgeSeconds,
 } from "@/app/_utils/session-utils";
 import { safeCompare } from "@/app/_utils/security-utils";
 import {
@@ -72,7 +73,7 @@ export const POST = async (request: NextRequest) => {
       secure:
         process.env.NODE_ENV === "production" && process.env.HTTPS === "true",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: getSessionMaxAgeSeconds(),
       path: "/",
     });
 

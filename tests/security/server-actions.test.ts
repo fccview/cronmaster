@@ -50,7 +50,7 @@ vi.mock("@/app/_utils/snippets-utils", () => ({
 }));
 
 import { cookies } from "next/headers";
-import { requireActionAuth } from "@/app/_utils/server-action-auth";
+import { isApiKeyOnlyAuth, requireActionAuth } from "@/app/_utils/server-action-auth";
 import * as cronjobUtils from "@/app/_utils/cronjob-utils";
 import * as cronActions from "@/app/_server/actions/cronjobs";
 import * as scriptActions from "@/app/_server/actions/scripts";
@@ -71,6 +71,19 @@ beforeEach(() => {
   vi.stubEnv("SSO_MODE", "");
   vi.stubEnv("API_KEY", "");
   vi.spyOn(console, "warn").mockImplementation(() => {});
+});
+
+describe("isApiKeyOnlyAuth", () => {
+  it("is only true when API_KEY is the sole protection", () => {
+    expect(isApiKeyOnlyAuth()).toBe(false);
+    vi.stubEnv("API_KEY", "k");
+    expect(isApiKeyOnlyAuth()).toBe(true);
+    vi.stubEnv("AUTH_PASSWORD", "pw");
+    expect(isApiKeyOnlyAuth()).toBe(false);
+    vi.stubEnv("AUTH_PASSWORD", "");
+    vi.stubEnv("SSO_MODE", "oidc");
+    expect(isApiKeyOnlyAuth()).toBe(false);
+  });
 });
 
 describe("requireActionAuth", () => {

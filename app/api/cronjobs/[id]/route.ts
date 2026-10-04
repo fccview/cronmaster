@@ -51,13 +51,27 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     const body = await request.json();
     const { schedule, command, comment, logsEnabled } = body;
 
+    const cronJobs = await fetchCronJobs();
+    const existing = cronJobs.find((job) => job.id === params.id);
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Cron job not found" },
+        { status: 404 }
+      );
+    }
+
     const formData = new FormData();
     formData.append("id", params.id);
-    if (schedule) formData.append("schedule", schedule);
-    if (command) formData.append("command", command);
-    if (comment !== undefined) formData.append("comment", comment);
-    if (logsEnabled !== undefined)
-      formData.append("logsEnabled", logsEnabled ? "true" : "false");
+    formData.append("schedule", schedule || existing.schedule);
+    formData.append("command", command || existing.command);
+    formData.append(
+      "comment",
+      comment !== undefined ? comment : existing.comment || ""
+    );
+    const nextLogsEnabled =
+      logsEnabled !== undefined ? !!logsEnabled : !!existing.logsEnabled;
+    formData.append("logsEnabled", nextLogsEnabled ? "true" : "false");
 
     const result = await editCronJob(formData);
 
@@ -85,7 +99,17 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
   if (authError) return authError;
 
   try {
-    const result = await removeCronJob({ id: params.id, schedule: "", command: "", user: "" });
+    const cronJobs = await fetchCronJobs();
+    const existing = cronJobs.find((job) => job.id === params.id);
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Cron job not found" },
+        { status: 404 }
+      );
+    }
+
+    const result = await removeCronJob(existing);
 
     if (result.success) {
       return NextResponse.json(result);

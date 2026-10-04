@@ -16,6 +16,8 @@ Authorization: Bearer YOUR_API_KEY
 
 **Note:** If no `API_KEY` is set, the API is publicly accessible (for development).
 
+`API_KEY` only protects the `/api/*` REST routes, not the web UI. To protect the UI set `AUTH_PASSWORD` or `SSO_MODE`.
+
 ### 2. Session Cookies
 
 Login with password to get a session cookie, then use it for subsequent requests:

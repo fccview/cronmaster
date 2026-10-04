@@ -26,4 +26,11 @@ export const register = async () => {
     maxLogsPerJob: process.env.MAX_LOGS_PER_JOB || "50",
     maxLogAgeDays: process.env.MAX_LOG_AGE_DAYS || "30",
   });
+
+  const { API_KEY_ONLY_WARNING, isApiKeyOnlyAuth } = await import(
+    "@/app/_utils/server-action-auth"
+  );
+  if (isApiKeyOnlyAuth()) {
+    log.warn(API_KEY_ONLY_WARNING);
+  }
 };

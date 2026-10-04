@@ -81,7 +81,9 @@ Both must be absolute host paths matching the `volumes` entries. The legacy `HOS
 # Optional SSO settings:
 - OIDC_CLIENT_SECRET=your_secret
 - OIDC_LOGOUT_URL=https://provider/logout
-- OIDC_GROUPS_SCOPE=groups
+- OIDC_GROUPS_SCOPE=groups # Scope to request for groups (set to empty string or "no" to disable for providers like Entra ID)
+- OIDC_USER_GROUPS=cronmaster_users,ops # Restrict access to users in these groups
+- OIDC_USER_ROLES=user,member # Restrict access to users with these roles
 - NODE_TLS_REJECT_UNAUTHORIZED=0 # For self-signed certificates
 ```
 
@@ -115,6 +117,7 @@ By default only the host root filesystem is shown. With `pid: "host"` and `privi
 
 ```yaml
 - EXECUTION_SHELL=/bin/bash # Optional, shell used by "Run now" via su -s
+- STRICT_EXECUTION_USER=true # Optional, "Run now" fails instead of running as root when the job user is missing on the host
 ```
 
 "Run now" enters the host with `nsenter` and switches to the job's user with `su`. By default the user's login shell is used, and service users with no login shell (`/usr/sbin/nologin`, `/bin/false`) automatically fall back to `/bin/sh`, so jobs owned by users like `www-data` run fine. Set `EXECUTION_SHELL` to force one shell for every manual run. Scheduled runs go through the host's cron and ignore this setting.
@@ -202,6 +205,7 @@ services:
       - OIDC_CLIENT_SECRET=your_secret
       - OIDC_LOGOUT_URL=https://provider/logout
       - OIDC_GROUPS_SCOPE=groups
+      - OIDC_USER_GROUPS=cronmaster_users
 
       # API Key (optional)
       - API_KEY=your-secret-api-key-here

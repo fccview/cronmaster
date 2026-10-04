@@ -7,6 +7,7 @@ vi.mock("@/app/_utils/session-utils", () => ({
   getSessionCookieName: () => "cronmaster-session",
   validateSession: vi.fn(async (id: string) => sessions.valid.has(id)),
   createSession: vi.fn(async () => "fresh-session-id"),
+  getSessionMaxAgeSeconds: vi.fn(() => 2592000),
 }));
 
 vi.mock("@/app/_utils/security-utils", async (importOriginal) => {
@@ -88,6 +89,7 @@ describe("password login", () => {
     const good = await login(loginRequest("correct horse"));
     expect(good.status).toBe(200);
     expect(good.headers.get("set-cookie")).toContain("cronmaster-session=fresh-session-id");
+    expect(good.headers.get("set-cookie")).toContain("Max-Age=2592000");
   });
 
   it("rejects non-string passwords", async () => {

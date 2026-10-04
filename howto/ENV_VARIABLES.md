@@ -20,6 +20,7 @@ This document provides a comprehensive reference for all environment variables u
 | `AUTH_PASSWORD` | `N/A`         | Password for authentication (can be used alone or with SSO)                  |
 | `AUTH_MAX_LOGIN_ATTEMPTS` | unset | Opt-in brute force protection. After this many failed password logins from one client, further logins are refused with HTTP 429 until the lockout ends. The client is identified by the first `X-Forwarded-For` entry, then `X-Real-IP`, so only enable it behind a reverse proxy that sets those headers |
 | `AUTH_LOCKOUT_MINUTES` | `15` | Window and lockout length, in minutes, used by `AUTH_MAX_LOGIN_ATTEMPTS` |
+| `SESSION_MAX_AGE_DAYS` | `30` | How long a login (password or SSO) stays valid, in days. Decimals work (`0.5` is 12 hours) |
 | `FRAME_ANCESTORS` | unset | Opt-in clickjacking protection. Space or comma separated list of origins allowed to embed the UI in an iframe, sent as `Content-Security-Policy: frame-ancestors`. Use `self` to allow only Cr*nMaster itself, `none` to forbid framing, or add dashboard origins like `self https://dash.example.com` |
 
 ## Custom Translations
@@ -56,6 +57,7 @@ Translation loading priority:
 | `HOST_SCRIPTS_DIR`  | `N/A`   | Absolute host path of the directory mounted at `/app/scripts`. Skips `docker inspect` when set. Used to build the host path of scripts scheduled from the library |
 | `HOST_PROJECT_DIR`  | `N/A`   | Legacy. Absolute host path of the folder holding `data/` and `scripts/`. Only used as a last resort when `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR` are unset and `docker inspect` finds nothing |
 | `EXECUTION_SHELL`   | unset   | Shell used for "Run now" (`su -s <shell>`). When unset, each user's login shell is used, and users whose shell is `nologin`, `false` or `true` (e.g. `www-data`) fall back to `/bin/sh` |
+| `STRICT_EXECUTION_USER` | `false` | Set to `true` to make "Run now" fail with an error when the job's user can't be found on the host. By default such jobs run as `root` (with a warning in the logs) |
 
 Host paths are resolved in this order: `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR`, then `docker inspect`, then `HOST_PROJECT_DIR/data` / `HOST_PROJECT_DIR/scripts`.
 
@@ -99,7 +101,9 @@ See [LOGS.md](LOGS.md#automatic-cleanup) for when cleanup runs.
 | `OIDC_CLIENT_ID`     | `N/A`                   | OIDC client ID from your provider                                                                           |
 | `OIDC_CLIENT_SECRET` | `N/A`                   | OIDC client secret (optional, for confidential clients)                                                     |
 | `OIDC_LOGOUT_URL`    | `N/A`                   | Custom logout URL for OIDC provider                                                                         |
-| `OIDC_GROUPS_SCOPE`  | `groups`                | Scope for requesting user groups                                                                            |
+| `OIDC_GROUPS_SCOPE`  | `groups`                | The scope requested to get a user's groups. Set it to an empty string, `no` or `false` for providers that don't support a groups scope, like Entra ID |
+| `OIDC_USER_GROUPS`   | `N/A`                   | Optional. Comma-separated OIDC groups allowed to log in, e.g. `cronmaster_users,ops`. If set, only members of these groups get in |
+| `OIDC_USER_ROLES`    | `N/A`                   | Optional. Comma-separated OIDC roles allowed to log in, e.g. `user,member`. If set, only users with one of these roles get in |
 | `OIDC_AUTO_REDIRECT` | `false`                 | Automatically redirect to OIDC provider when it's the only authentication method (no password set)          |
 | `INTERNAL_API_URL`   | `http://localhost:3000` | Internal API URL override for specific nginx configurations with SSO                                        |
 
@@ -108,6 +112,8 @@ See [LOGS.md](LOGS.md#automatic-cleanup) for when cleanup runs.
 | Variable  | Default | Description                                    |
 | --------- | ------- | ---------------------------------------------- |
 | `API_KEY` | `N/A`   | API key for external API access authentication |
+
+`API_KEY` only protects the `/api/*` REST routes, not the web UI. To protect the UI set `AUTH_PASSWORD` or `SSO_MODE`.
 
 ## Development & Debugging
 
