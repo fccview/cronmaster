@@ -11,6 +11,7 @@ If you run Cronmaster in Docker, read these with `docker logs <container>` or `d
 | `LOG_LEVEL`             | `info`  | Server log level: `error`, `warn`, `info` or `debug`                                            |
 | `NEXT_PUBLIC_LOG_LEVEL` | `info`  | Browser console log level. Also used on the server when `LOG_LEVEL` is not set. Build-time value |
 | `LOG_FORMAT`            | `text`  | Set to `json` for one JSON object per line, handy for Loki, Elastic, Datadog and friends        |
+| `NO_COLOR`              | unset   | Set to anything to turn off coloured text output (warnings are orange, errors red by default)   |
 | `DEBUGGER`              | `false` | Legacy switch. When set and `LOG_LEVEL` is not, the level becomes `debug`                       |
 
 Levels are cumulative: `warn` includes `error`, `info` includes `warn` and `error`, `debug` includes everything.

@@ -90,6 +90,35 @@ export const resolveLogLevel = (): LogLevel => {
 
 const isJsonFormat = (): boolean => readEnv("LOG_FORMAT")?.toLowerCase() === "json";
 
+const ANSI_RESET = "\x1b[0m";
+
+const LEVEL_COLOR: Record<LogLevel, string> = {
+  error: "\x1b[31m",
+  warn: "\x1b[38;5;208m",
+  info: "\x1b[36m",
+  debug: "\x1b[90m",
+};
+
+const isColorEnabled = (): boolean =>
+  typeof window === "undefined" && !readEnv("NO_COLOR");
+
+export const formatLine = (
+  level: LogLevel,
+  scope: string,
+  message: string,
+  time: Date = new Date()
+): string => {
+  const label = level.toUpperCase().padEnd(5);
+  const tag = `[cr*nmaster:${scope}]`;
+  if (!isColorEnabled()) return `${time.toISOString()} ${label} ${tag} ${message}`;
+
+  const color = LEVEL_COLOR[level];
+  if (level === "warn" || level === "error") {
+    return `${color}${time.toISOString()} ${label} ${tag} ${message}${ANSI_RESET}`;
+  }
+  return `${time.toISOString()} ${color}${label}${ANSI_RESET} ${tag} ${message}`;
+};
+
 export const redact = (value: unknown, depth = 0): unknown => {
   if (value instanceof Error) {
     return { name: value.name, message: value.message, stack: value.stack };
@@ -105,7 +134,6 @@ export const redact = (value: unknown, depth = 0): unknown => {
 };
 
 const emit = (level: LogLevel, scope: string, message: string, meta?: unknown) => {
-  const tag = `[cr*nmaster:${scope}]`;
   const safeMeta = meta === undefined ? undefined : redact(meta);
 
   if (isJsonFormat()) {
@@ -121,11 +149,11 @@ const emit = (level: LogLevel, scope: string, message: string, meta?: unknown) =
     return;
   }
 
-  const prefix = `${new Date().toISOString()} ${level.toUpperCase().padEnd(5)} ${tag}`;
+  const line = formatLine(level, scope, message);
   if (safeMeta === undefined) {
-    console[level](`${prefix} ${message}`);
+    console[level](line);
   } else {
-    console[level](`${prefix} ${message}`, safeMeta);
+    console[level](line, safeMeta);
   }
 };
 

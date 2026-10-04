@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createLogger, redact, resolveLogLevel } from "@/app/_utils/logger";
+import { createLogger, formatLine, redact, resolveLogLevel } from "@/app/_utils/logger";
 
 describe("logger", () => {
   it("defaults to info", () => {
@@ -78,5 +78,30 @@ describe("logger", () => {
     vi.stubEnv("DEBUGGER", "");
     vi.stubEnv("NEXT_PUBLIC_LOG_LEVEL", "error");
     expect(resolveLogLevel()).toBe("error");
+  });
+});
+
+describe("formatLine colours", () => {
+  const time = new Date("2026-10-04T12:00:00.000Z");
+
+  it("paints the whole warn line orange", () => {
+    vi.stubEnv("NO_COLOR", "");
+    expect(formatLine("warn", "auth", "careful", time)).toBe(
+      "\x1b[38;5;208m2026-10-04T12:00:00.000Z WARN  [cr*nmaster:auth] careful\x1b[0m"
+    );
+  });
+
+  it("only colours the label for info", () => {
+    vi.stubEnv("NO_COLOR", "");
+    expect(formatLine("info", "job", "ran", time)).toBe(
+      "2026-10-04T12:00:00.000Z \x1b[36mINFO \x1b[0m [cr*nmaster:job] ran"
+    );
+  });
+
+  it("respects NO_COLOR", () => {
+    vi.stubEnv("NO_COLOR", "1");
+    expect(formatLine("error", "job", "boom", time)).toBe(
+      "2026-10-04T12:00:00.000Z ERROR [cr*nmaster:job] boom"
+    );
   });
 });

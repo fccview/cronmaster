@@ -7,7 +7,7 @@ export const register = async () => {
   const { isDocker } = await import("@/app/_server/actions/global");
   const log = createLogger("system");
 
-  log.info("Cronmaster starting", {
+  log.info("Cr*nMaster starting", {
     nodeEnv: process.env.NODE_ENV,
     logLevel: resolveLogLevel(),
     logFormat: process.env.LOG_FORMAT || "text",
