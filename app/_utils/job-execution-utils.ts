@@ -2,8 +2,10 @@ import { exec, spawn } from "child_process";
 import path from "path";
 import { promisify } from "util";
 import { CronJob } from "./cronjob-utils";
-import { getUserInfo } from "./crontab-utils";
+import { getUserInfo, getUserShell } from "./crontab-utils";
 import { NSENTER_RUN_JOB } from "../_consts/nsenter";
+import { isSafeUsername, resolveExecutionShell } from "./shell-utils";
+import { createLogger } from "./logger";
 import {
   saveRunningJob,
   updateRunningJob,
@@ -61,6 +63,37 @@ export const describeJobExecutionError = (
   };
 };
 
+const log = createLogger("job-execution");
+
+export const buildJobExecutionCommand = async (
+  job: CronJob,
+  docker: boolean
+): Promise<string> => {
+  if (!docker) {
+    return job.command;
+  }
+
+  if (!isSafeUsername(job.user)) {
+    throw new Error(`Refusing to run job for invalid user "${job.user}"`);
+  }
+
+  const userInfo = await getUserInfo(job.user);
+  const executionUser = userInfo ? userInfo.username : "root";
+  const configuredShell = process.env.EXECUTION_SHELL?.trim();
+  const userShell = configuredShell ? null : await getUserShell(executionUser);
+  const shell = resolveExecutionShell(userShell, configuredShell);
+
+  if (shell) {
+    log.debug("Overriding login shell for job execution", {
+      user: executionUser,
+      loginShell: userShell,
+      shell,
+    });
+  }
+
+  return NSENTER_RUN_JOB(executionUser, job.command, shell);
+};
+
 export const runJobSynchronously = async (
   job: CronJob,
   docker: boolean
@@ -70,16 +103,7 @@ export const runJobSynchronously = async (
   output?: string;
   mode: "sync";
 }> => {
-  let command: string;
-
-  if (docker) {
-    const userInfo = await getUserInfo(job.user);
-    const executionUser = userInfo ? userInfo.username : "root";
-    const escapedCommand = job.command.replace(/'/g, "'\\''");
-    command = NSENTER_RUN_JOB(executionUser, escapedCommand);
-  } else {
-    command = job.command;
-  }
+  const command = await buildJobExecutionCommand(job, docker);
 
   const { stdout, stderr } = await execAsync(command, {
     timeout: JOB_TIMEOUT_MS,
@@ -108,23 +132,9 @@ export const runJobInBackground = async (
   const runId = `run-${job.id}-${Date.now()}`;
   const logFolderName = generateLogFolderName(job.id, job.comment);
 
-  let command: string;
-  let shellArgs: string[];
+  const shellCommand = await buildJobExecutionCommand(job, docker);
 
-  if (docker) {
-    const userInfo = await getUserInfo(job.user);
-    const executionUser = userInfo ? userInfo.username : "root";
-    const escapedCommand = job.command.replace(/'/g, "'\\''");
-    const nsenterCmd = NSENTER_RUN_JOB(executionUser, escapedCommand);
-
-    command = "sh";
-    shellArgs = ["-c", nsenterCmd];
-  } else {
-    command = "sh";
-    shellArgs = ["-c", job.command];
-  }
-
-  const child = spawn(command, shellArgs, {
+  const child = spawn("sh", ["-c", shellCommand], {
     detached: true,
     stdio: "ignore",
   });

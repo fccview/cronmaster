@@ -1,6 +1,7 @@
 import {
   GET_DOCKER_SOCKET_OWNER,
   GET_TARGET_USER,
+  GET_USER_SHELL,
   ID_G,
   ID_U,
   READ_CRONTAB,
@@ -171,6 +172,15 @@ export const getUserInfo = async (
     return { username, uid, gid };
   } catch (error) {
     console.error(`Error getting user info for ${username}:`, error);
+    return null;
+  }
+};
+
+export const getUserShell = async (username: string): Promise<string | null> => {
+  try {
+    const shell = (await execHostCrontab(GET_USER_SHELL(username))).trim();
+    return shell || null;
+  } catch {
     return null;
   }
 };

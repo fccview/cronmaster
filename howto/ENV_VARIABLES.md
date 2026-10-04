@@ -52,8 +52,11 @@ Translation loading priority:
 | `HOST_DATA_DIR`     | `N/A`   | Absolute host path of the directory mounted at `/app/data`. Skips `docker inspect` when set. Needed for logging when the Docker socket is not mounted or inspection fails |
 | `HOST_SCRIPTS_DIR`  | `N/A`   | Absolute host path of the directory mounted at `/app/scripts`. Skips `docker inspect` when set. Used to build the host path of scripts scheduled from the library |
 | `HOST_PROJECT_DIR`  | `N/A`   | Legacy. Absolute host path of the folder holding `data/` and `scripts/`. Only used as a last resort when `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR` are unset and `docker inspect` finds nothing |
+| `EXECUTION_SHELL`   | unset   | Shell used for "Run now" (`su -s <shell>`). When unset, each user's login shell is used, and users whose shell is `nologin`, `false` or `true` (e.g. `www-data`) fall back to `/bin/sh` |
 
 Host paths are resolved in this order: `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR`, then `docker inspect`, then `HOST_PROJECT_DIR/data` / `HOST_PROJECT_DIR/scripts`.
+
+"Run now" in Docker switches to the job's user on the host with `su`, which normally needs a login shell. Service users without one (e.g. `/usr/sbin/nologin`) work out of the box thanks to the `/bin/sh` fallback. Set `EXECUTION_SHELL` (e.g. `/bin/bash`) if you want every manual run to use the same shell regardless of the user's login shell. Scheduled runs are started by the host's cron and are not affected by this setting.
 
 ## UI Configuration
 

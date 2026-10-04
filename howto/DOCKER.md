@@ -111,6 +111,14 @@ Set `DISABLE_DISK_STATS=true` to turn the disk cards off entirely.
 
 By default only the host root filesystem is shown. With `pid: "host"` and `privileged: true` Cr\*nMaster reads host mounts through `/proc/1/root/<mount>`, so no extra volumes are needed. Each listed mount gets a single `statfs` call at most once per minute, and only when system stats are actually requested (the sidebar polls them while the page is visible). `statfs` reads filesystem counters, never file contents, but on some setups (mergerfs, network shares, sleepy USB disks) it can still wake the underlying drives, so only add mounts you are happy to have checked.
 
+#### Execution Shell
+
+```yaml
+- EXECUTION_SHELL=/bin/bash # Optional, shell used by "Run now" via su -s
+```
+
+"Run now" enters the host with `nsenter` and switches to the job's user with `su`. By default the user's login shell is used, and service users with no login shell (`/usr/sbin/nologin`, `/bin/false`) automatically fall back to `/bin/sh`, so jobs owned by users like `www-data` run fine. Set `EXECUTION_SHELL` to force one shell for every manual run. Scheduled runs go through the host's cron and ignore this setting.
+
 ## Volume Mounts
 
 ### Required Volumes
