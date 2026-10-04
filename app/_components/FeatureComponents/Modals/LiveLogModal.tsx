@@ -12,6 +12,12 @@ import { splitLogLines } from "@/app/_utils/log-format-utils";
 import { useTranslations } from "next-intl";
 import { createLogger } from "@/app/_utils/logger";
 import { isAbortError } from "@/app/_utils/error-utils";
+import {
+  EMPTY_LIVE_LOG,
+  applyLiveLogChunk,
+  keepLastLines,
+  type LiveLogBuffer,
+} from "@/app/_utils/live-log-utils";
 
 const log = createLogger("ui:logs");
 
@@ -42,7 +48,7 @@ export const LiveLogModal = ({
   const [showSizeWarning, setShowSizeWarning] = useState<boolean>(false);
   const { subscribe } = useSSEContext();
   const isPageVisible = usePageVisibility();
-  const lastOffsetRef = useRef<number>(0);
+  const bufferRef = useRef<LiveLogBuffer>(EMPTY_LIVE_LOG);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [fileSize, setFileSize] = useState<number>(0);
   const [lineCount, setLineCount] = useState<number>(0);
@@ -58,10 +64,14 @@ export const LiveLogModal = ({
     setResetForRunId(openRunId);
     if (isOpen) {
       setLogContent("");
+      setStatus("running");
+      setExitCode(null);
       setTailMode(false);
       setShowSizeWarning(false);
       setFileSize(0);
       setLineCount(0);
+      setTotalLines(0);
+      setTruncated(false);
       setShowFullLog(false);
       setIsJobComplete(false);
     }
@@ -69,7 +79,7 @@ export const LiveLogModal = ({
 
   useEffect(() => {
     if (isOpen) {
-      lastOffsetRef.current = 0;
+      bufferRef.current = EMPTY_LIVE_LOG;
     }
   }, [isOpen, runId]);
 
@@ -81,15 +91,34 @@ export const LiveLogModal = ({
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    const requestOffset = bufferRef.current.offset;
+
     try {
-      const url = `/api/logs/stream?runId=${runId}&offset=${lastOffsetRef.current}&maxLines=${maxLines}`;
+      const url = `/api/logs/stream?runId=${encodeURIComponent(runId)}&offset=${requestOffset}&maxLines=${maxLines}`;
       const response = await fetch(url, {
         signal: abortController.signal,
       });
       const data = await response.json();
 
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      const next = applyLiveLogChunk(
+        bufferRef.current,
+        requestOffset,
+        data,
+        maxLines
+      );
+
+      if (!next) {
+        return;
+      }
+
+      bufferRef.current = next;
+      setLogContent(next.content);
+
       if (data.fileSize !== undefined) {
-        lastOffsetRef.current = data.fileSize;
         setFileSize(data.fileSize);
 
         if (data.fileSize > 10 * 1024 * 1024) {
@@ -97,38 +126,24 @@ export const LiveLogModal = ({
         }
       }
 
-      if (data.totalLines !== undefined) {
-        setTotalLines(data.totalLines);
-      }
-      setLineCount(data.displayedLines || 0);
+      if (requestOffset === 0) {
+        setLineCount(data.displayedLines || 0);
 
-      if (data.truncated !== undefined) {
-        setTruncated(data.truncated);
-      }
+        if (data.totalLines !== undefined) {
+          setTotalLines(data.totalLines);
+        }
 
-      if (lastOffsetRef.current === 0 && data.content) {
-        setLogContent(data.content);
+        if (data.truncated !== undefined) {
+          setTruncated(data.truncated);
+        }
 
         if (data.truncated) {
           setTailMode(true);
         }
-      } else if (data.newContent) {
-        setLogContent((prev) => {
-          const combined = prev + data.newContent;
-          const lines = combined.split("\n");
-
-          if (lines.length > maxLines) {
-            return lines.slice(-maxLines).join("\n");
-          }
-
-          return combined;
-        });
       }
 
-      const jobStatus = data.status || "running";
-      setStatus(jobStatus);
-
-      if (jobStatus === "completed" || jobStatus === "failed") {
+      if (data.status === "completed" || data.status === "failed") {
+        setStatus(data.status);
         setIsJobComplete(true);
       }
 
@@ -166,49 +181,22 @@ export const LiveLogModal = ({
     if (!isOpen) return;
 
     const unsubscribe = subscribe((event: SSEEvent) => {
-      if (event.type === "job-completed" && event.data.runId === runId) {
-        setStatus("completed");
+      if (
+        (event.type === "job-completed" || event.type === "job-failed") &&
+        event.data.runId === runId
+      ) {
+        setStatus(event.type === "job-completed" ? "completed" : "failed");
         setExitCode(event.data.exitCode);
-
-        fetch(`/api/logs/stream?runId=${runId}&offset=0`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.content) {
-              const lines = data.content.split("\n");
-              setLineCount(lines.length);
-              if (tailMode && lines.length > TAIL_LINES) {
-                setLogContent(lines.slice(-TAIL_LINES).join("\n"));
-              } else {
-                setLogContent(data.content);
-              }
-            }
-          });
-      } else if (event.type === "job-failed" && event.data.runId === runId) {
-        setStatus("failed");
-        setExitCode(event.data.exitCode);
-
-        fetch(`/api/logs/stream?runId=${runId}&offset=0`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.content) {
-              const lines = data.content.split("\n");
-              setLineCount(lines.length);
-              if (tailMode && lines.length > TAIL_LINES) {
-                setLogContent(lines.slice(-TAIL_LINES).join("\n"));
-              } else {
-                setLogContent(data.content);
-              }
-            }
-          });
+        setIsJobComplete(true);
       }
     });
 
     return unsubscribe;
-  }, [isOpen, runId, subscribe, tailMode]);
+  }, [isOpen, runId, subscribe]);
 
   const changeMaxLines = (nextMaxLines: number) => {
     if (nextMaxLines !== maxLines && isOpen && runId && !isJobComplete) {
-      lastOffsetRef.current = 0;
+      bufferRef.current = EMPTY_LIVE_LOG;
       setLogContent("");
     }
     setMaxLines(nextMaxLines);
@@ -217,10 +205,9 @@ export const LiveLogModal = ({
   const toggleTailMode = () => {
     setTailMode(!tailMode);
     if (!tailMode) {
-      const lines = logContent.split("\n");
-      if (lines.length > TAIL_LINES) {
-        setLogContent(lines.slice(-TAIL_LINES).join("\n"));
-      }
+      const content = keepLastLines(bufferRef.current.content, TAIL_LINES);
+      bufferRef.current = { ...bufferRef.current, content };
+      setLogContent(content);
     }
   };
 
