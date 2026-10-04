@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { WarningIcon, XIcon } from "@phosphor-icons/react";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:system");
 
 export const WrapperScriptWarning = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,7 +30,7 @@ export const WrapperScriptWarning = () => {
         setIsVisible(data.modified);
       }
     } catch (error) {
-      console.error("Failed to check wrapper script:", error);
+      log.error("Failed to check wrapper script", error);
     } finally {
       setIsLoading(false);
     }

@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { CaretDownIcon, UserIcon } from "@phosphor-icons/react";
 import { fetchAvailableUsers } from "@/app/_server/actions/cronjobs";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:users");
 
 interface UserSwitcherProps {
   selectedUser: string;
@@ -29,7 +32,7 @@ export const UserSwitcher = ({
           onUserChange(availableUsers[0]);
         }
       } catch (error) {
-        console.error("Error loading users:", error);
+        log.error("Error loading users", error);
       } finally {
         setIsLoading(false);
       }

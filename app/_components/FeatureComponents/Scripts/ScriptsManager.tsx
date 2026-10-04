@@ -27,6 +27,9 @@ import { DeleteScriptModal } from "@/app/_components/FeatureComponents/Modals/De
 import { CloneScriptModal } from "@/app/_components/FeatureComponents/Modals/CloneScriptModal";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { useTranslations } from "next-intl";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:scripts");
 
 interface ScriptsManagerProps {
   scripts: Script[];
@@ -72,7 +75,7 @@ export const ScriptsManager = ({
         setCreateForm(parsedDraft);
       }
     } catch (error) {
-      console.error("Failed to load draft from localStorage:", error);
+      log.warn("Failed to load draft from localStorage", error);
     }
   }, []);
 
@@ -80,7 +83,7 @@ export const ScriptsManager = ({
     try {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(createForm));
     } catch (error) {
-      console.error("Failed to save draft to localStorage:", error);
+      log.warn("Failed to save draft to localStorage", error);
     }
   }, [createForm]);
 
@@ -101,7 +104,7 @@ export const ScriptsManager = ({
       const freshScripts = await fetchScripts();
       setScripts(freshScripts);
     } catch (error) {
-      console.error("Failed to refresh scripts:", error);
+      log.error("Failed to refresh scripts", error);
       showToast(
         "error",
         "Failed to refresh scripts",
@@ -198,7 +201,7 @@ export const ScriptsManager = ({
       setTimeout(() => setCopiedId(null), 2000);
       showToast("success", "Script content copied to clipboard");
     } catch (error) {
-      console.error("Failed to copy script content:", error);
+      log.error("Failed to copy script content", error);
       showToast("error", "Failed to copy script content");
     }
   };

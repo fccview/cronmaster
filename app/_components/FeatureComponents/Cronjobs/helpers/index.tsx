@@ -12,6 +12,9 @@ import {
   backupCronJob,
 } from "@/app/_server/actions/cronjobs";
 import { CronJob } from "@/app/_utils/cronjob-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:jobs");
 
 interface HandlerProps {
   setDeletingId: (id: string | null) => void;
@@ -200,7 +203,7 @@ export const handleToggleLogging = async (job: any) => {
       showToast("error", "Failed to toggle logging", result.message);
     }
   } catch (error: any) {
-    console.error("Error toggling logging:", error);
+    log.error("Error toggling logging", error);
     showToast("error", "Error toggling logging", error.message);
   }
 };
@@ -439,7 +442,7 @@ export const handleBackup = async (job: any) => {
       showToast("error", "Failed to backup job", result.message);
     }
   } catch (error: any) {
-    console.error("Error backing up job:", error);
+    log.error("Error backing up job", error);
     showToast("error", "Error backing up job", error.message);
   }
 };

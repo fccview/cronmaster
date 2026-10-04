@@ -44,6 +44,9 @@ import {
   restoreAllCronJobs,
 } from "@/app/_server/actions/cronjobs";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:jobs");
 
 interface CronJobListProps {
   cronJobs: CronJob[];
@@ -99,7 +102,7 @@ export const CronJobList = ({
 
       setLoadedSettings(true);
     } catch (error) {
-      console.warn("Failed to load settings from localStorage:", error);
+      log.warn("Failed to load settings from localStorage", error);
     }
   }, []);
 
@@ -122,8 +125,8 @@ export const CronJobList = ({
         scheduleDisplayMode
       );
     } catch (error) {
-      console.warn(
-        "Failed to save schedule display mode to localStorage:",
+      log.warn(
+        "Failed to save schedule display mode to localStorage",
         error
       );
     }
@@ -135,7 +138,7 @@ export const CronJobList = ({
     try {
       localStorage.setItem("cronjob-minimal-mode", minimalMode.toString());
     } catch (error) {
-      console.warn("Failed to save minimal mode to localStorage:", error);
+      log.warn("Failed to save minimal mode to localStorage", error);
     }
   }, [minimalMode, isClient]);
 

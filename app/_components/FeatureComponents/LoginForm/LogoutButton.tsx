@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { SignOutIcon } from "@phosphor-icons/react";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:auth");
 
 export const LogoutButton = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +24,7 @@ export const LogoutButton = () => {
         router.refresh();
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      log.error("Logout error", error);
     } finally {
       setIsLoading(false);
     }

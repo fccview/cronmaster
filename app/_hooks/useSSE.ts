@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { SSEEvent, SSEEventType } from "@/app/_utils/sse-events";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:sse");
 
 type SSEEventHandler = (event: SSEEvent) => void;
 type SSEErrorHandler = (error: Event) => void;
@@ -86,14 +89,14 @@ export const useSSE = (options: UseSSEOptions = {}) => {
             const data = JSON.parse(event.data) as SSEEvent;
             onEventRef.current?.(data);
           } catch (error) {
-            console.error(`[SSE] Failed to parse ${eventType} event:`, error);
+            log.error(`Failed to parse ${eventType} event`, error);
           }
         });
       });
 
       eventSourceRef.current = eventSource;
     } catch (error) {
-      console.error("[SSE] Failed to create EventSource:", error);
+      log.error("Failed to create EventSource", error);
     }
   }, [enabled]);
 

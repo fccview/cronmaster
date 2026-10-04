@@ -61,6 +61,9 @@ import { useTranslations } from "next-intl";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:system");
 
 interface SystemInfoCardProps {
   systemInfo: SystemInfoType;
@@ -108,7 +111,7 @@ export const SystemInfoCard = ({
       setSystemInfo(freshData);
     } catch (error: any) {
       if (error.name !== "AbortError") {
-        console.error("Failed to update system info:", error);
+        log.error("Failed to update system info", error);
       }
     } finally {
       if (!abortControllerRef.current?.signal.aborted) {

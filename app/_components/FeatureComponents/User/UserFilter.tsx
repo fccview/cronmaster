@@ -5,6 +5,9 @@ import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { CaretDownIcon, UserIcon, XIcon } from "@phosphor-icons/react";
 import { fetchAvailableUsers } from "@/app/_server/actions/cronjobs";
 import { useTranslations } from "next-intl";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:users");
 
 interface UserFilterProps {
   selectedUser: string | null;
@@ -28,7 +31,7 @@ export const UserFilter = ({
         const availableUsers = await fetchAvailableUsers();
         setUsers(availableUsers);
       } catch (error) {
-        console.error("Error loading users:", error);
+        log.error("Error loading users", error);
       } finally {
         setIsLoading(false);
       }

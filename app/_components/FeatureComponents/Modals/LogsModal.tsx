@@ -13,6 +13,9 @@ import {
   deleteAllJobLogs,
   getJobLogStats,
 } from "@/app/_server/actions/logs";
+import { createLogger } from "@/app/_utils/logger";
+
+const logger = createLogger("ui:logs");
 
 interface LogEntry {
   filename: string;
@@ -63,7 +66,7 @@ export const LogsModal = ({
       setLogs(logsData);
       setStats(statsData);
     } catch (error) {
-      console.error("Error loading logs:", error);
+      logger.error("Error loading logs", error);
     } finally {
       setIsLoadingLogs(false);
     }
@@ -90,7 +93,7 @@ export const LogsModal = ({
       const content = await getLogContent(jobId, filename);
       setLogContent(content);
     } catch (error) {
-      console.error("Error loading log content:", error);
+      logger.error("Error loading log content", error);
       setLogContent("Error loading log content");
     } finally {
       setIsLoadingContent(false);
@@ -112,7 +115,7 @@ export const LogsModal = ({
         alert(result.message);
       }
     } catch (error) {
-      console.error("Error deleting log:", error);
+      logger.error("Error deleting log", error);
       alert("Error deleting log file");
     }
   };
@@ -130,7 +133,7 @@ export const LogsModal = ({
         alert(result.message);
       }
     } catch (error) {
-      console.error("Error deleting all logs:", error);
+      logger.error("Error deleting all logs", error);
       alert("Error deleting all logs");
     }
   };

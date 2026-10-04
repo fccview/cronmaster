@@ -19,6 +19,9 @@ import {
   searchSnippets,
   type BashSnippet,
 } from "@/app/_server/actions/snippets";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:scripts");
 
 interface BashSnippetHelperProps {
   onInsertSnippet: (snippet: string) => void;
@@ -55,7 +58,7 @@ export const BashSnippetHelper = ({
         setSnippets(snippetsData);
         setCategories(categoriesData);
       } catch (error) {
-        console.error("Error loading snippets:", error);
+        log.error("Error loading snippets", error);
       } finally {
         setLoading(false);
       }
@@ -97,7 +100,7 @@ export const BashSnippetHelper = ({
       setCopiedId(snippet.id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
+      log.warn("Failed to copy to clipboard", error);
     }
   };
 

@@ -8,6 +8,9 @@ import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
 import { useTranslations } from "next-intl";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:logs");
 
 interface LiveLogModalProps {
   isOpen: boolean;
@@ -133,7 +136,7 @@ export const LiveLogModal = ({
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
-        console.error("Failed to fetch logs:", error);
+        log.error("Failed to fetch logs", error);
       }
     }
   }, [runId, maxLines]);
