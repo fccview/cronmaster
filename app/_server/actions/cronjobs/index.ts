@@ -28,6 +28,12 @@ import {
 import { cleanCrontabContent } from "@/app/_utils/files-manipulation-utils";
 import { commandFailure, createLogger } from "@/app/_utils/logger";
 import { resolveJobCommand } from "@/app/_utils/script-command-utils";
+import { requireActionAuth } from "@/app/_utils/server-action-auth";
+import {
+  debugDetails,
+  isSafeJobId,
+  isValidCronSchedule,
+} from "@/app/_utils/security-utils";
 
 const log = createLogger("job");
 
@@ -42,6 +48,7 @@ const resolveCommandFromForm = async (formData: FormData) => {
 };
 
 export const fetchCronJobs = async (): Promise<CronJob[]> => {
+  await requireActionAuth();
   try {
     return await getCronJobs();
   } catch (error) {
@@ -53,6 +60,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
 export const createCronJob = async (
   formData: FormData
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
   try {
     const schedule = formData.get("schedule") as string;
     const comment = formData.get("comment") as string;
@@ -62,6 +70,10 @@ export const createCronJob = async (
     if (!schedule) {
       log.warn("Create job rejected, schedule missing", { user });
       return { success: false, message: "Schedule is required" };
+    }
+
+    if (!isValidCronSchedule(schedule)) {
+      return { success: false, message: "Invalid cron schedule" };
     }
 
     const resolved = await resolveCommandFromForm(formData);
@@ -96,7 +108,7 @@ export const createCronJob = async (
     return {
       success: false,
       message: error.message || "Error creating cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -104,6 +116,10 @@ export const createCronJob = async (
 export const removeCronJob = async (
   jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
+  if (!isSafeJobId(jobData?.id)) {
+    return { success: false, message: "Invalid cron job id" };
+  }
   try {
     const cronContent = await readUserCrontab(jobData.user);
     const lines = cronContent.split("\n");
@@ -135,7 +151,7 @@ export const removeCronJob = async (
     return {
       success: false,
       message: error.message || "Error deleting cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -143,6 +159,7 @@ export const removeCronJob = async (
 export const editCronJob = async (
   formData: FormData
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
   try {
     const id = formData.get("id") as string;
     const schedule = formData.get("schedule") as string;
@@ -152,6 +169,10 @@ export const editCronJob = async (
     if (!id || !schedule) {
       log.warn("Update job rejected, missing required fields", { jobId: id });
       return { success: false, message: "Missing required fields" };
+    }
+
+    if (!isValidCronSchedule(schedule)) {
+      return { success: false, message: "Invalid cron schedule" };
     }
 
     const resolved = await resolveCommandFromForm(formData);
@@ -194,7 +215,7 @@ export const editCronJob = async (
     return {
       success: false,
       message: error.message || "Error updating cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -203,6 +224,7 @@ export const cloneCronJob = async (
   id: string,
   newComment: string
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
   try {
     const cronJobs = await getCronJobs(false);
     const originalJob = cronJobs.find((job) => job.id === id);
@@ -233,7 +255,7 @@ export const cloneCronJob = async (
     return {
       success: false,
       message: error.message || "Error cloning cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -241,6 +263,10 @@ export const cloneCronJob = async (
 export const pauseCronJobAction = async (
   jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
+  if (!isSafeJobId(jobData?.id)) {
+    return { success: false, message: "Invalid cron job id" };
+  }
   try {
     const cronContent = await readUserCrontab(jobData.user);
     const lines = cronContent.split("\n");
@@ -272,7 +298,7 @@ export const pauseCronJobAction = async (
     return {
       success: false,
       message: error.message || "Error pausing cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -280,6 +306,10 @@ export const pauseCronJobAction = async (
 export const resumeCronJobAction = async (
   jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
+  if (!isSafeJobId(jobData?.id)) {
+    return { success: false, message: "Invalid cron job id" };
+  }
   try {
     const cronContent = await readUserCrontab(jobData.user);
     const lines = cronContent.split("\n");
@@ -311,12 +341,13 @@ export const resumeCronJobAction = async (
     return {
       success: false,
       message: error.message || "Error resuming cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
 
 export const fetchAvailableUsers = async (): Promise<string[]> => {
+  await requireActionAuth();
   try {
     return await getAllTargetUsers();
   } catch (error) {
@@ -330,6 +361,7 @@ export const cleanupCrontabAction = async (): Promise<{
   message: string;
   details?: string;
 }> => {
+  await requireActionAuth();
   try {
     const success = await cleanupCrontab();
     if (success) {
@@ -345,7 +377,7 @@ export const cleanupCrontabAction = async (): Promise<{
     return {
       success: false,
       message: error.message || "Error cleaning crontab",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -353,6 +385,10 @@ export const cleanupCrontabAction = async (): Promise<{
 export const toggleCronJobLogging = async (
   jobData: { id: string; schedule: string; command: string; comment?: string; user: string; logsEnabled?: boolean }
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
+  if (!isSafeJobId(jobData?.id)) {
+    return { success: false, message: "Invalid cron job id" };
+  }
   try {
     const newLogsEnabled = !jobData.logsEnabled;
     log.info("Toggling job logging", {
@@ -386,7 +422,7 @@ export const toggleCronJobLogging = async (
     return {
       success: false,
       message: error.message || "Error toggling logging",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -401,6 +437,7 @@ export const runCronJob = async (
   runId?: string;
   mode?: "sync" | "async";
 }> => {
+  await requireActionAuth();
   try {
     const cronJobs = await getCronJobs(false);
     const job = cronJobs.find((j) => j.id === id);
@@ -439,7 +476,7 @@ export const runCronJob = async (
       success: false,
       message,
       output,
-      details: error?.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -455,6 +492,7 @@ export const executeJob = async (
   runId?: string;
   mode?: "sync" | "async";
 }> => {
+  await requireActionAuth();
   try {
     const cronJobs = await getCronJobs(false);
     const job = cronJobs.find((j) => j.id === id);
@@ -489,7 +527,7 @@ export const executeJob = async (
       success: false,
       message,
       output,
-      details: error?.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -497,6 +535,7 @@ export const executeJob = async (
 export const backupCronJob = async (
   job: CronJob
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
   try {
     const {
       backupJobToFile,
@@ -514,7 +553,7 @@ export const backupCronJob = async (
     return {
       success: false,
       message: error.message || "Error backing up cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -524,6 +563,7 @@ export const backupAllCronJobs = async (): Promise<{
   message: string;
   details?: string;
 }> => {
+  await requireActionAuth();
   try {
     const {
       backupAllJobsToFiles,
@@ -544,7 +584,7 @@ export const backupAllCronJobs = async (): Promise<{
     return {
       success: false,
       message: error.message || "Error backing up all cron jobs",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -554,6 +594,7 @@ export const fetchBackupFiles = async (): Promise<Array<{
   job: CronJob;
   backedUpAt: string;
 }>> => {
+  await requireActionAuth();
   try {
     const {
       getAllBackupFiles,
@@ -568,6 +609,7 @@ export const fetchBackupFiles = async (): Promise<Array<{
 export const restoreCronJob = async (
   filename: string
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
   try {
     const {
       restoreJobFromBackup,
@@ -606,7 +648,7 @@ export const restoreCronJob = async (
     return {
       success: false,
       message: error.message || "Error restoring cron job",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -614,6 +656,7 @@ export const restoreCronJob = async (
 export const deleteBackup = async (
   filename: string
 ): Promise<{ success: boolean; message: string; details?: string }> => {
+  await requireActionAuth();
   try {
     const {
       deleteBackupFile,
@@ -633,7 +676,7 @@ export const deleteBackup = async (
     return {
       success: false,
       message: error.message || "Error deleting backup",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };
@@ -643,6 +686,7 @@ export const restoreAllCronJobs = async (): Promise<{
   message: string;
   details?: string;
 }> => {
+  await requireActionAuth();
   try {
     const {
       getAllBackupFiles,
@@ -702,7 +746,7 @@ export const restoreAllCronJobs = async (): Promise<{
     return {
       success: false,
       message: error.message || "Error restoring all cron jobs",
-      details: error.stack,
+      details: debugDetails(error),
     };
   }
 };

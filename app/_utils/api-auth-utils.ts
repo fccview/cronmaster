@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSession, getSessionCookieName } from "./session-utils";
+import { safeCompare } from "./security-utils";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("auth:api");
@@ -23,7 +24,7 @@ export function validateApiKey(request: NextRequest): boolean {
   }
 
   const token = match[1];
-  return token === apiKey;
+  return safeCompare(token, apiKey);
 }
 
 export async function validateSessionRequest(

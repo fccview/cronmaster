@@ -3,6 +3,13 @@ import {
   createSession,
   getSessionCookieName,
 } from "@/app/_utils/session-utils";
+import { safeCompare } from "@/app/_utils/security-utils";
+import {
+  clearFailedLogins,
+  getClientKey,
+  getLockoutRemainingMs,
+  registerFailedLogin,
+} from "@/app/_utils/login-rate-limit";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("auth");
@@ -21,16 +28,30 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
-    if (password !== authPassword) {
-      log.warn("Login failed, invalid password", {
-        ip: request.headers.get("x-forwarded-for") || undefined,
-      });
+    const clientKey = getClientKey(request.headers);
+    const lockoutMs = getLockoutRemainingMs(clientKey);
+
+    if (lockoutMs > 0) {
+      log.warn("Login blocked by rate limit", { client: clientKey });
+      return NextResponse.json(
+        { success: false, message: "Too many failed attempts, try again later" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(lockoutMs / 1000)) },
+        }
+      );
+    }
+
+    if (!safeCompare(password, authPassword)) {
+      registerFailedLogin(clientKey);
+      log.warn("Login failed, invalid password", { client: clientKey });
       return NextResponse.json(
         { success: false, message: "Invalid password" },
         { status: 401 }
       );
     }
 
+    clearFailedLogins(clientKey);
     const sessionId = await createSession("password");
 
     const response = NextResponse.json(

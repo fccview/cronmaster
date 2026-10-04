@@ -19,7 +19,7 @@ export const GET = async (request: NextRequest) => {
     const searchParams = request.nextUrl.searchParams;
     const runId = searchParams.get("runId");
     const offsetStr = searchParams.get("offset");
-    const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+    const offset = offsetStr ? Math.max(parseInt(offsetStr, 10) || 0, 0) : 0;
 
     const maxLinesStr = searchParams.get("maxLines");
     const maxLines = maxLinesStr

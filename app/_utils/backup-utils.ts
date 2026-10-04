@@ -1,11 +1,20 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { getCronJobs, type CronJob } from "@/app/_utils/cronjob-utils";
+import { isSafePathSegment } from "@/app/_utils/security-utils";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("backup");
 
 const BACKUP_DIR = path.join(process.cwd(), "data", "backup");
+
+const isSafeBackupFilename = (filename: string): boolean => {
+  if (!isSafePathSegment(filename) || !filename.endsWith(".job")) {
+    log.warn("Rejected unsafe backup filename", { filename });
+    return false;
+  }
+  return true;
+};
 
 const ensureBackupDirectoryExists = async (): Promise<void> => {
   try {
@@ -96,6 +105,9 @@ export const readBackupFile = async (
   filename: string
 ): Promise<CronJob | null> => {
   try {
+    if (!isSafeBackupFilename(filename)) {
+      return null;
+    }
     const filepath = path.join(BACKUP_DIR, filename);
     const content = await fs.readFile(filepath, "utf8");
     const jobData = JSON.parse(content);
@@ -186,6 +198,9 @@ export const restoreJobFromBackup = async (
 
 export const deleteBackupFile = async (filename: string): Promise<boolean> => {
   try {
+    if (!isSafeBackupFilename(filename)) {
+      return false;
+    }
     const filepath = path.join(BACKUP_DIR, filename);
     await fs.unlink(filepath);
     log.debug("Deleted backup file", { filename });

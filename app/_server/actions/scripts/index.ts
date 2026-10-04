@@ -10,15 +10,26 @@ import { SCRIPTS_DIR } from "@/app/_consts/file";
 import { loadAllScripts, Script } from "@/app/_utils/scripts-utils";
 import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
 import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
+import { requireActionAuth } from "@/app/_utils/server-action-auth";
+import { isSafePathSegment, toSingleLine } from "@/app/_utils/security-utils";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("scripts");
 
 const execAsync = promisify(exec);
 
+const isSafeScriptFilename = (filename: string): boolean => {
+  if (!isSafePathSegment(filename)) {
+    log.warn("Rejected unsafe script filename", { filename });
+    return false;
+  }
+  return true;
+};
+
 export const getScriptPathForCron = async (
   filename: string
 ): Promise<string> => {
+  await requireActionAuth();
   const docker = await isDocker();
 
   if (docker) {
@@ -34,10 +45,12 @@ export const getScriptPathForCron = async (
 };
 
 export const getHostScriptPath = async (filename: string): Promise<string> => {
+  await requireActionAuth();
   return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
 };
 
 export const normalizeLineEndings = async (content: string): Promise<string> => {
+  await requireActionAuth();
   return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 };
 
@@ -101,12 +114,14 @@ const deleteScriptFile = async (filename: string) => {
 };
 
 export const fetchScripts = async (): Promise<Script[]> => {
+  await requireActionAuth();
   return await loadAllScripts();
 };
 
 export const createScript = async (
   formData: FormData
 ): Promise<{ success: boolean; message: string; script?: Script }> => {
+  await requireActionAuth();
   try {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
@@ -123,8 +138,8 @@ export const createScript = async (
     const filename = await generateUniqueFilename(name);
 
     const metadataHeader = `# @id: ${scriptId}
-# @title: ${name}
-# @description: ${description || ""}
+# @title: ${toSingleLine(name)}
+# @description: ${toSingleLine(description)}
 
 `;
 
@@ -157,6 +172,7 @@ export const createScript = async (
 export const updateScript = async (
   formData: FormData
 ): Promise<{ success: boolean; message: string }> => {
+  await requireActionAuth();
   try {
     const id = formData.get("id") as string;
     const name = formData.get("name") as string;
@@ -177,8 +193,8 @@ export const updateScript = async (
     }
 
     const metadataHeader = `# @id: ${id}
-# @title: ${name}
-# @description: ${description || ""}
+# @title: ${toSingleLine(name)}
+# @description: ${toSingleLine(description)}
 
 `;
 
@@ -202,6 +218,7 @@ export const updateScript = async (
 export const deleteScript = async (
   id: string
 ): Promise<{ success: boolean; message: string }> => {
+  await requireActionAuth();
   try {
     const scripts = await loadAllScripts();
     const script = scripts.find((s) => s.id === id);
@@ -226,6 +243,7 @@ export const cloneScript = async (
   id: string,
   newName: string
 ): Promise<{ success: boolean; message: string; script?: Script }> => {
+  await requireActionAuth();
   try {
     const scripts = await loadAllScripts();
     const originalScript = scripts.find((s) => s.id === id);
@@ -243,8 +261,8 @@ export const cloneScript = async (
     const originalContent = await getScriptContent(originalScript.filename);
 
     const metadataHeader = `# @id: ${scriptId}
-# @title: ${newName}
-# @description: ${originalScript.description}
+# @title: ${toSingleLine(newName)}
+# @description: ${toSingleLine(originalScript.description)}
 
 `;
 
@@ -279,7 +297,12 @@ export const cloneScript = async (
 };
 
 export const getScriptContent = async (filename: string): Promise<string> => {
+  await requireActionAuth();
   try {
+    if (!isSafeScriptFilename(filename)) {
+      return "";
+    }
+
     const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
 
     if (existsSync(scriptPath)) {
@@ -315,7 +338,12 @@ export const executeScript = async (
   output: string;
   error: string;
 }> => {
+  await requireActionAuth();
   try {
+    if (!isSafeScriptFilename(filename)) {
+      return { success: false, output: "", error: "Invalid script filename" };
+    }
+
     await ensureHostScriptsDirectory();
     const hostScriptPath = await getHostScriptPath(filename);
 

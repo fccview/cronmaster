@@ -12,6 +12,8 @@ import {
   pruneLogDirectoryIfDue,
 } from "@/app/_utils/log-files-utils";
 import { createLogger } from "@/app/_utils/logger";
+import { requireActionAuth } from "@/app/_utils/server-action-auth";
+import { isSafePathSegment } from "@/app/_utils/security-utils";
 
 const logger = createLogger("logs");
 
@@ -37,6 +39,11 @@ export interface JobLogError {
 const getJobLogPath = async (jobId: string): Promise<string | null> => {
   const basePath = getLogsBaseDir();
 
+  if (!isSafePathSegment(jobId)) {
+    logger.warn("Rejected unsafe log job id", { jobId });
+    return null;
+  }
+
   if (!existsSync(basePath)) {
     return null;
   }
@@ -59,11 +66,20 @@ const getJobLogPath = async (jobId: string): Promise<string | null> => {
   }
 };
 
+const isSafeLogFilename = (filename: string): boolean => {
+  if (!isSafePathSegment(filename)) {
+    logger.warn("Rejected unsafe log file name", { filename });
+    return false;
+  }
+  return true;
+};
+
 export const getJobLogs = async (
   jobId: string,
   skipCleanup: boolean = false,
   includeExitCodes: boolean = false
 ): Promise<LogEntry[]> => {
+  await requireActionAuth();
   try {
     const logDir = await getJobLogPath(jobId);
 
@@ -112,10 +128,15 @@ export const getLogContent = async (
   jobId: string,
   filename: string
 ): Promise<string> => {
+  await requireActionAuth();
   try {
     const logDir = await getJobLogPath(jobId);
     if (!logDir) {
       return "Log directory not found";
+    }
+
+    if (!isSafeLogFilename(filename)) {
+      return "Error reading log file";
     }
 
     const logPath = path.join(logDir, filename);
@@ -132,6 +153,7 @@ export const deleteLogFile = async (
   jobId: string,
   filename: string
 ): Promise<{ success: boolean; message: string }> => {
+  await requireActionAuth();
   try {
     const logDir = await getJobLogPath(jobId);
     if (!logDir) {
@@ -139,6 +161,10 @@ export const deleteLogFile = async (
         success: false,
         message: "Log directory not found",
       };
+    }
+
+    if (!isSafeLogFilename(filename)) {
+      return { success: false, message: "Invalid log file name" };
     }
 
     const logPath = path.join(logDir, filename);
@@ -162,6 +188,7 @@ export const deleteLogFile = async (
 export const deleteAllJobLogs = async (
   jobId: string
 ): Promise<{ success: boolean; message: string; deletedCount: number }> => {
+  await requireActionAuth();
   try {
     const logs = await getJobLogs(jobId, true);
 
@@ -193,6 +220,7 @@ export const deleteAllJobLogs = async (
 export const cleanupJobLogs = async (
   jobId: string
 ): Promise<{ success: boolean; message: string; deletedCount: number }> => {
+  await requireActionAuth();
   try {
     const logDir = await getJobLogPath(jobId);
     const deletedCount =
@@ -225,6 +253,7 @@ export const cleanupJobLogs = async (
 export const getJobLogStats = async (
   jobId: string
 ): Promise<{ count: number; totalSize: number; totalSizeMB: number }> => {
+  await requireActionAuth();
   try {
     const logs = await getJobLogs(jobId, true);
 
@@ -261,6 +290,7 @@ const getExitCodeForLog = async (logPath: string): Promise<number | null> => {
 };
 
 export const getJobLogError = async (jobId: string): Promise<JobLogError> => {
+  await requireActionAuth();
   try {
     const logs = await getJobLogs(jobId);
 
@@ -315,6 +345,7 @@ export const getJobLogError = async (jobId: string): Promise<JobLogError> => {
 export const getAllJobLogErrors = async (
   jobIds: string[]
 ): Promise<Map<string, JobLogError>> => {
+  await requireActionAuth();
   const errorMap = new Map<string, JobLogError>();
 
   await Promise.all(

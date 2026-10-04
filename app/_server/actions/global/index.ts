@@ -1,5 +1,3 @@
-"use server";
-
 import { existsSync, readFileSync } from "fs";
 import { execSync } from "child_process";
 import path from "path";

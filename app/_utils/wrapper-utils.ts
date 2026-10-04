@@ -3,6 +3,7 @@ import path from "path";
 import { DATA_DIR } from "../_consts/file";
 import { getHostDataPath } from "../_server/actions/global";
 import { toShellArg, fromShellArg } from "./wrapper-utils-client";
+import { isSafeJobId } from "./security-utils";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("wrapper");
@@ -56,6 +57,10 @@ export const wrapCommandWithLogger = async (
   isDocker: boolean,
   comment?: string
 ): Promise<string> => {
+  if (!isSafeJobId(jobId)) {
+    throw new Error("Invalid cron job id");
+  }
+
   ensureWrapperScriptInData();
 
   const logFolderName = generateLogFolderName(jobId, comment);

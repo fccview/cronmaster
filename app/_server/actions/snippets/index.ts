@@ -7,6 +7,7 @@ import {
   getSnippetById,
   type BashSnippet,
 } from "@/app/_utils/snippets-utils";
+import { requireActionAuth } from "@/app/_utils/server-action-auth";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("snippets");
@@ -14,6 +15,7 @@ const log = createLogger("snippets");
 export { type BashSnippet } from "@/app/_utils/snippets-utils";
 
 export const fetchSnippets = async (): Promise<BashSnippet[]> => {
+  await requireActionAuth();
   try {
     return await loadAllSnippets();
   } catch (error) {
@@ -23,6 +25,7 @@ export const fetchSnippets = async (): Promise<BashSnippet[]> => {
 }
 
 export const searchSnippets = async (query: string): Promise<BashSnippet[]> => {
+  await requireActionAuth();
   try {
     const snippets = await loadAllSnippets();
     return searchBashSnippets(snippets, query);
@@ -33,6 +36,7 @@ export const searchSnippets = async (query: string): Promise<BashSnippet[]> => {
 }
 
 export const fetchSnippetCategories = async (): Promise<string[]> => {
+  await requireActionAuth();
   try {
     const snippets = await loadAllSnippets();
     return getSnippetCategories(snippets);
@@ -45,6 +49,7 @@ export const fetchSnippetCategories = async (): Promise<string[]> => {
 export const fetchSnippetById = async (
   id: string
 ): Promise<BashSnippet | undefined> => {
+  await requireActionAuth();
   try {
     const snippets = await loadAllSnippets();
     return getSnippetById(snippets, id);
@@ -57,6 +62,7 @@ export const fetchSnippetById = async (
 export const fetchSnippetsByCategory = async (
   category: string
 ): Promise<BashSnippet[]> => {
+  await requireActionAuth();
   try {
     const snippets = await loadAllSnippets();
     return snippets.filter((snippet) => snippet.category === category);
@@ -69,6 +75,7 @@ export const fetchSnippetsByCategory = async (
 export const fetchSnippetsBySource = async (
   source: "builtin" | "user"
 ): Promise<BashSnippet[]> => {
+  await requireActionAuth();
   try {
     const snippets = await loadAllSnippets();
     return snippets.filter((snippet) => snippet.source === source);

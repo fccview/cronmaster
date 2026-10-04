@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { buildFrameAncestors } from "@/app/_utils/security-headers";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("proxy");
+
+const withPageSecurityHeaders = (response: NextResponse): NextResponse => {
+  const frameAncestors = buildFrameAncestors(process.env.FRAME_ANCESTORS);
+  if (frameAncestors) {
+    response.headers.set("Content-Security-Policy", frameAncestors);
+  }
+  return response;
+};
 
 export const proxy = async (request: NextRequest) => {
   const { pathname } = request.nextUrl;
@@ -18,7 +27,7 @@ export const proxy = async (request: NextRequest) => {
   ) {
     const response = NextResponse.next();
     response.headers.set("x-pathname", pathname);
-    return response;
+    return withPageSecurityHeaders(response);
   }
 
   if (pathname.startsWith("/api/")) {
@@ -30,7 +39,7 @@ export const proxy = async (request: NextRequest) => {
   const authRequired = authPassword || ssoMode === "oidc";
 
   if (!authRequired) {
-    return NextResponse.next();
+    return withPageSecurityHeaders(NextResponse.next());
   }
 
   const cookieName =
@@ -103,7 +112,7 @@ export const proxy = async (request: NextRequest) => {
 
   const response = NextResponse.next();
   response.headers.set("x-pathname", pathname);
-  return response;
+  return withPageSecurityHeaders(response);
 };
 
 export const config = {

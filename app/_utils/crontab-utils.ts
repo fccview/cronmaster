@@ -9,6 +9,7 @@ import {
   WRITE_HOST_CRONTAB,
 } from "@/app/_consts/commands";
 import { NSENTER_HOST_CRONTAB } from "@/app/_consts/nsenter";
+import { assertSafeUsername } from "@/app/_utils/security-utils";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { commandFailure, createLogger } from "@/app/_utils/logger";
@@ -155,6 +156,7 @@ export const writeHostCrontabForUser = async (
   content: string
 ): Promise<boolean> => {
   try {
+    assertSafeUsername(user);
     let finalContent = content;
     if (!finalContent.endsWith("\n")) {
       finalContent += "\n";
@@ -174,6 +176,7 @@ export const getUserInfo = async (
   username: string
 ): Promise<UserInfo | null> => {
   try {
+    assertSafeUsername(username);
     const uidResult = await execHostCrontab(ID_U(username));
     const gidResult = await execHostCrontab(ID_G(username));
 

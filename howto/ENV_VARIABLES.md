@@ -18,6 +18,9 @@ This document provides a comprehensive reference for all environment variables u
 | `LOCALE`        | `en`          | Application locale/language setting (supports custom translations)           |
 | `HOME`          | `/home`       | Path to home directory (optional override)                                   |
 | `AUTH_PASSWORD` | `N/A`         | Password for authentication (can be used alone or with SSO)                  |
+| `AUTH_MAX_LOGIN_ATTEMPTS` | unset | Opt-in brute force protection. After this many failed password logins from one client, further logins are refused with HTTP 429 until the lockout ends. The client is identified by the first `X-Forwarded-For` entry, then `X-Real-IP`, so only enable it behind a reverse proxy that sets those headers |
+| `AUTH_LOCKOUT_MINUTES` | `15` | Window and lockout length, in minutes, used by `AUTH_MAX_LOGIN_ATTEMPTS` |
+| `FRAME_ANCESTORS` | unset | Opt-in clickjacking protection. Space or comma separated list of origins allowed to embed the UI in an iframe, sent as `Content-Security-Policy: frame-ancestors`. Use `self` to allow only Cr*nMaster itself, `none` to forbid framing, or add dashboard origins like `self https://dash.example.com` |
 
 ## Custom Translations
 

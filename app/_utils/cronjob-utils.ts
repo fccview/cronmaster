@@ -25,6 +25,11 @@ import {
   isCommandWrapped,
 } from "@/app/_utils/wrapper-utils";
 import { generateShortUUID } from "@/app/_utils/uuid-utils";
+import {
+  assertSafeUsername,
+  isValidCronSchedule,
+  toSingleLine,
+} from "@/app/_utils/security-utils";
 import { commandFailure, createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("crontab");
@@ -50,6 +55,7 @@ export interface CronJob {
 }
 
 export const readUserCrontab = async (user: string): Promise<string> => {
+  assertSafeUsername(user);
   const docker = await isDocker();
 
   if (docker) {
@@ -72,6 +78,13 @@ export const writeUserCrontab = async (
   user: string,
   content: string
 ): Promise<boolean> => {
+  try {
+    assertSafeUsername(user);
+  } catch {
+    log.warn("Refusing to write crontab for invalid user", { user });
+    return false;
+  }
+
   const docker = await isDocker();
 
   if (docker) {
@@ -159,6 +172,10 @@ export const addCronJob = async (
   logsEnabled: boolean = false
 ): Promise<boolean> => {
   try {
+    if (!isValidCronSchedule(schedule)) {
+      throw new Error("Invalid cron schedule");
+    }
+    comment = toSingleLine(comment);
     const jobId = generateShortUUID();
     log.debug("Adding job to crontab", { jobId, user, logsEnabled });
 
@@ -276,6 +293,10 @@ export const updateCronJob = async (
   logsEnabled: boolean = false
 ): Promise<boolean> => {
   try {
+    if (!isValidCronSchedule(schedule)) {
+      throw new Error("Invalid cron schedule");
+    }
+    comment = toSingleLine(comment);
     const user = jobData.user;
     const cronContent = await readUserCrontab(user);
     const lines = cronContent.split("\n");

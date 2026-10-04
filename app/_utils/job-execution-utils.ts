@@ -79,6 +79,11 @@ export const buildJobExecutionCommand = async (
 
   const userInfo = await getUserInfo(job.user);
   const executionUser = userInfo ? userInfo.username : "root";
+  if (!userInfo) {
+    log.warn("Could not resolve the job user on the host, running as root", {
+      user: job.user,
+    });
+  }
   const configuredShell = process.env.EXECUTION_SHELL?.trim();
   const userShell = configuredShell ? null : await getUserShell(executionUser);
   const shell = resolveExecutionShell(userShell, configuredShell);
