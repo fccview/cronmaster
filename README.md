@@ -12,6 +12,7 @@
   - [Localization](#localization)
   - [Local Development](#local-development)
   - [Environment Variables](howto/ENV_VARIABLES.md)
+  - [System Logging](howto/LOGGING.md)
 - [Authentication](#authentication)
 - [Usage](#usage)
   - [Viewing System Information](#viewing-system-information)
@@ -257,6 +258,8 @@ The application automatically detects your operating system and displays:
 ### Job Execution Logging
 
 📖 **For complete logging documentation, see [howto/LOGS.md](howto/LOGS.md)**
+
+📖 **For Cronmaster's own system logs (`LOG_LEVEL`, `LOG_FORMAT=json`, scopes), see [howto/LOGGING.md](howto/LOGGING.md)**
 
 ### Cron Schedule Format
 

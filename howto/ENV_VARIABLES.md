@@ -108,10 +108,13 @@ See [LOGS.md](LOGS.md#automatic-cleanup) for when cleanup runs.
 
 ## Development & Debugging
 
-| Variable   | Default | Description                                         |
-| ---------- | ------- | --------------------------------------------------- |
-| `DEBUGGER` | `false` | Enable debug logging and detailed error information |
-| `HTTPS`    | `false` | Force HTTPS-only cookies and redirects              |
+| Variable                | Default | Description                                                                          |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `LOG_LEVEL`             | `info`  | System log level: `error`, `warn`, `info`, `debug`. See [LOGGING.md](LOGGING.md)     |
+| `NEXT_PUBLIC_LOG_LEVEL` | `info`  | Browser console log level (build time), server fallback when `LOG_LEVEL` is not set |
+| `LOG_FORMAT`            | `text`  | Set to `json` for structured one-line-per-entry logs                                 |
+| `DEBUGGER`              | `false` | Enable debug logging and detailed error information (same as `LOG_LEVEL=debug`)     |
+| `HTTPS`                 | `false` | Force HTTPS-only cookies and redirects                                               |
 
 ## System Variables
 
