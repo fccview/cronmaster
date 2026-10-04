@@ -1,7 +1,9 @@
 import path from "path";
-import { readdir, stat, unlink } from "fs/promises";
+import { open, readdir, stat, unlink } from "fs/promises";
+import type { Stats } from "fs";
 import { DATA_DIR } from "../_consts/file";
 import { createLogger } from "./logger";
+import { parseExitCode } from "./log-format-utils";
 
 const log = createLogger("logs");
 
@@ -43,6 +45,9 @@ export const getMaxLogAgeDays = (): number =>
 
 export const getLogsBaseDir = (): string =>
   path.join(process.cwd(), DATA_DIR, "logs");
+
+export const getJobLogDir = (logFolderName: string): string =>
+  path.join(getLogsBaseDir(), logFolderName);
 
 const isUsableDate = (date: Date | null | undefined): date is Date =>
   date instanceof Date && !isNaN(date.getTime()) && date.getTime() > 0;
@@ -102,6 +107,69 @@ export const isLogFileFromRun = (
 
   const fromName = parseLogFilenameDate(filename);
   return fromName !== null && fromName.getTime() >= threshold;
+};
+
+const RUN_LOG_TOLERANCE_MS = 5000;
+const EXIT_CODE_TAIL_BYTES = 4096;
+
+export interface RunLogFile {
+  name: string;
+  fullPath: string;
+  stats: Stats;
+}
+
+export const findRunLogFile = async (
+  logDir: string,
+  runStart: Date,
+  cachedName?: string
+): Promise<RunLogFile | null> => {
+  if (cachedName) {
+    const fullPath = path.join(logDir, cachedName);
+    try {
+      return { name: cachedName, fullPath, stats: await stat(fullPath) };
+    } catch {}
+  }
+
+  let names: string[];
+  try {
+    names = await readdir(logDir);
+  } catch {
+    return null;
+  }
+
+  const candidates = names
+    .filter((name) => name.endsWith(".log"))
+    .sort()
+    .reverse();
+
+  for (const name of candidates) {
+    const fullPath = path.join(logDir, name);
+    try {
+      const stats = await stat(fullPath);
+      if (isLogFileFromRun(name, stats, runStart, RUN_LOG_TOLERANCE_MS)) {
+        return { name, fullPath, stats };
+      }
+    } catch (error) {
+      log.warn(`Could not stat log file ${fullPath}`, error);
+    }
+  }
+
+  return null;
+};
+
+export const readLogExitCode = async (
+  fullPath: string
+): Promise<number | null> => {
+  const handle = await open(fullPath, "r");
+  try {
+    const { size } = await handle.stat();
+    const length = Math.min(size, EXIT_CODE_TAIL_BYTES);
+    const buffer = Buffer.alloc(length);
+    await handle.read(buffer, 0, length, size - length);
+    return parseExitCode(buffer.toString("utf-8"));
+  } finally {
+    await handle.close();
+  }
 };
 
 export const listLogFiles = async (logDir: string): Promise<LogFileInfo[]> => {

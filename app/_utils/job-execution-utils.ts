@@ -1,5 +1,4 @@
 import { exec, spawn } from "child_process";
-import path from "path";
 import { promisify } from "util";
 import { CronJob } from "./cronjob-utils";
 import { getUserInfo, getUserShell } from "./crontab-utils";
@@ -15,7 +14,12 @@ import {
 import { sseBroadcaster } from "./sse-broadcaster";
 import { generateLogFolderName } from "./wrapper-utils";
 import { watchForLogFile } from "./log-watcher";
-import { getLogsBaseDir, pruneLogDirectory } from "./log-files-utils";
+import {
+  findRunLogFile,
+  getJobLogDir,
+  pruneLogDirectory,
+  readLogExitCode,
+} from "./log-files-utils";
 
 const execAsync = promisify(exec);
 
@@ -236,9 +240,7 @@ const monitorRunningJob = (runId: string, pid: number): void => {
           try {
             removeRunningJob(runId);
             if (runningJob?.logFolderName) {
-              await pruneLogDirectory(
-                path.join(getLogsBaseDir(), runningJob.logFolderName)
-              );
+              await pruneLogDirectory(getJobLogDir(runningJob.logFolderName));
             }
           } catch (error) {
             log.error(`Error cleaning up job ${runId}`, error);
@@ -258,27 +260,15 @@ const monitorRunningJob = (runId: string, pid: number): void => {
         });
 
         if (runningJob) {
-          if (exitCode === 0) {
-            sseBroadcaster.broadcast({
-              type: "job-completed",
-              timestamp: new Date().toISOString(),
-              data: {
-                runId,
-                cronJobId: runningJob.cronJobId,
-                exitCode,
-              },
-            });
-          } else {
-            sseBroadcaster.broadcast({
-              type: "job-failed",
-              timestamp: new Date().toISOString(),
-              data: {
-                runId,
-                cronJobId: runningJob.cronJobId,
-                exitCode: exitCode ?? -1,
-              },
-            });
-          }
+          sseBroadcaster.broadcast({
+            type: exitCode === 0 ? "job-completed" : "job-failed",
+            timestamp: new Date().toISOString(),
+            data: {
+              runId,
+              cronJobId: runningJob.cronJobId,
+              exitCode: exitCode ?? -1,
+            },
+          });
         }
       }
     } catch (error) {
@@ -301,40 +291,21 @@ const getExitCodeFromLog = async (
   runId: string
 ): Promise<number | undefined> => {
   try {
-    const { readdir, readFile, access } = await import("fs/promises");
-    const path = await import("path");
-
     const job = getRunningJob(runId);
     if (!job || !job.logFolderName) {
       return undefined;
     }
 
-    const logDir = path.join(process.cwd(), "data", "logs", job.logFolderName);
-
-    try {
-      await access(logDir);
-    } catch {
-      return undefined;
-    }
-
-    const files = await readdir(logDir);
-
-    const sortedFiles = files.sort().reverse();
-    if (sortedFiles.length === 0) {
-      return undefined;
-    }
-
-    const latestLog = await readFile(
-      path.join(logDir, sortedFiles[0]),
-      "utf-8"
+    const logFile = await findRunLogFile(
+      getJobLogDir(job.logFolderName),
+      new Date(job.startTime),
+      job.logFileName
     );
-
-    const exitCodeMatch = latestLog.match(/Exit Code\s*:\s*(\d+)/);
-    if (exitCodeMatch) {
-      return parseInt(exitCodeMatch[1], 10);
+    if (!logFile) {
+      return undefined;
     }
 
-    return undefined;
+    return (await readLogExitCode(logFile.fullPath)) ?? undefined;
   } catch (error) {
     log.error("Error reading exit code from log", error);
     return undefined;

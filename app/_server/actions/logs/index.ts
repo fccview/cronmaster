@@ -7,6 +7,7 @@ import {
   getLogsBaseDir,
   listLogFiles,
   pruneLogDirectoryIfDue,
+  readLogExitCode,
 } from "@/app/_utils/log-files-utils";
 import { createLogger } from "@/app/_utils/logger";
 import { requireActionAuth } from "@/app/_utils/server-action-auth";
@@ -242,12 +243,7 @@ export const getJobLogStats = async (
 
 const getExitCodeForLog = async (logPath: string): Promise<number | null> => {
   try {
-    const content = await readFile(logPath, "utf-8");
-    const exitCodeMatch = content.match(/Exit Code\s*:\s*(-?\d+)/i);
-    if (exitCodeMatch) {
-      return parseInt(exitCodeMatch[1]);
-    }
-    return null;
+    return await readLogExitCode(logPath);
   } catch (error) {
     logger.error(`Error getting exit code for ${logPath}`, error);
     return null;

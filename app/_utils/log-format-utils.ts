@@ -20,6 +20,8 @@ const SECTION_PATTERN = /^(-{2,}\s*)(\[\s*[^\]]+\s*\])(\s*-*)$/;
 const FIELD_PATTERN =
   /^(Command|Timestamp|Host|User|Duration|Exit Code|Status)(\s*:\s?)(.*)$/;
 
+const EXIT_CODE_PATTERN = /^Exit Code\s*:\s*(-?\d+)\s*$/gim;
+
 const ANSI_COLORS: Record<number, string> = {
   30: "var(--surface2, var(--foreground2))",
   31: "var(--red)",
@@ -41,6 +43,14 @@ const ANSI_COLORS: Record<number, string> = {
 
 export const stripAnsi = (value: string): string =>
   value.replace(ANSI_PATTERN, "");
+
+export const parseExitCode = (content: string): number | null => {
+  let exitCode: number | null = null;
+  for (const match of stripAnsi(content).matchAll(EXIT_CODE_PATTERN)) {
+    exitCode = parseInt(match[1], 10);
+  }
+  return exitCode;
+};
 
 export const splitLogLines = (content: string): string[] => {
   if (!content) return [];
