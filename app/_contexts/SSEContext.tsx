@@ -34,7 +34,6 @@ export const SSEProvider: React.FC<{
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
-        setIsConnected(false);
       }
       return;
     }
@@ -73,6 +72,7 @@ export const SSEProvider: React.FC<{
 
     return () => {
       eventSource.close();
+      setIsConnected(false);
     };
   }, [liveUpdatesEnabled, isPageVisible]);
 

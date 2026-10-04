@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { SSEEvent, SSEEventType } from "@/app/_utils/sse-events";
 import { createLogger } from "@/app/_utils/logger";
 
@@ -39,7 +39,7 @@ export const useSSE = (options: UseSSEOptions = {}) => {
   const { enabled = true, onEvent, onError, onConnect, onDisconnect } = options;
 
   const eventSourceRef = useRef<EventSource | null>(null);
-  const isConnectedRef = useRef(false);
+  const [isConnected, setIsConnected] = useState(false);
   const onEventRef = useRef(onEvent);
   const onErrorRef = useRef(onError);
   const onConnectRef = useRef(onConnect);
@@ -61,12 +61,12 @@ export const useSSE = (options: UseSSEOptions = {}) => {
       const eventSource = new EventSource("/api/events");
 
       eventSource.onopen = () => {
-        isConnectedRef.current = true;
+        setIsConnected(true);
         onConnectRef.current?.();
       };
 
       eventSource.onerror = (error) => {
-        isConnectedRef.current = false;
+        setIsConnected(false);
         onErrorRef.current?.(error);
 
         if (eventSource.readyState === EventSource.CLOSED) {
@@ -104,7 +104,7 @@ export const useSSE = (options: UseSSEOptions = {}) => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
-      isConnectedRef.current = false;
+      setIsConnected(false);
       onDisconnectRef.current?.();
     }
   }, []);
@@ -112,8 +112,6 @@ export const useSSE = (options: UseSSEOptions = {}) => {
   useEffect(() => {
     if (enabled) {
       connect();
-    } else {
-      disconnect();
     }
 
     return () => {
@@ -122,7 +120,7 @@ export const useSSE = (options: UseSSEOptions = {}) => {
   }, [enabled, connect, disconnect]);
 
   return {
-    isConnected: isConnectedRef.current,
+    isConnected,
     connect,
     disconnect,
   };

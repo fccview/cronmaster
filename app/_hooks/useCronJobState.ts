@@ -22,6 +22,7 @@ import {
 import { buildScriptSelection } from "@/app/_components/FeatureComponents/Cronjobs/Parts/ScriptCommandPicker";
 import { findScriptForCommand } from "@/app/_utils/script-command-utils";
 import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
+import { useIsHydrated } from "@/app/_hooks/useIsHydrated";
 
 interface CronJobListProps {
     cronJobs: CronJob[];
@@ -41,6 +42,8 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const [runningJobId, setRunningJobId] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const [jobErrors, setJobErrors] = useState<Record<string, JobError[]>>({});
+    const [jobErrorsSource, setJobErrorsSource] = useState<CronJob[] | null>(null);
+    const [savedUserLoaded, setSavedUserLoaded] = useState(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [selectedError, setSelectedError] = useState<JobError | null>(null);
     const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
@@ -66,41 +69,44 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         logsEnabled: false,
     });
 
-    useEffect(() => {
+    const isHydrated = useIsHydrated();
+    if (isHydrated && !savedUserLoaded) {
+        setSavedUserLoaded(true);
         const savedUser = localStorage.getItem("selectedCronUser");
         if (savedUser) {
             setSelectedUser(savedUser);
         }
-    }, []);
+    }
 
     useEffect(() => {
+        if (!isHydrated) return;
         if (selectedUser) {
             localStorage.setItem("selectedCronUser", selectedUser);
         } else {
             localStorage.removeItem("selectedCronUser");
         }
-    }, [selectedUser]);
+    }, [selectedUser, isHydrated]);
 
     const filteredJobs = useMemo(() => {
         if (!selectedUser) return cronJobs;
         return cronJobs.filter((job) => job.user === selectedUser);
     }, [cronJobs, selectedUser]);
 
-    useEffect(() => {
+    const collectJobErrors = (jobs: CronJob[]) => {
         const errors: Record<string, JobError[]> = {};
-        filteredJobs.forEach((job) => {
+        jobs.forEach((job) => {
             errors[job.id] = getJobErrorsByJobId(job.id);
         });
-        setJobErrors(errors);
-    }, [filteredJobs]);
+        return errors;
+    };
 
+    if (isHydrated && jobErrorsSource !== filteredJobs) {
+        setJobErrorsSource(filteredJobs);
+        setJobErrors(collectJobErrors(filteredJobs));
+    }
 
     const refreshJobErrorsLocal = () => {
-        const errors: Record<string, JobError[]> = {};
-        filteredJobs.forEach((job) => {
-            errors[job.id] = getJobErrorsByJobId(job.id);
-        });
-        setJobErrors(errors);
+        setJobErrors(collectJobErrors(filteredJobs));
     };
 
     const getHelperState = () => ({
