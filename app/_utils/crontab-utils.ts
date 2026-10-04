@@ -24,12 +24,17 @@ export interface UserInfo {
   gid: number;
 }
 
-const execHostCrontab = async (command: string): Promise<string> => {
+const execHostCrontab = async (
+  command: string,
+  { quiet = false }: { quiet?: boolean } = {}
+): Promise<string> => {
   try {
     const { stdout } = await execAsync(NSENTER_HOST_CRONTAB(command?.trim()));
     return stdout;
   } catch (error: unknown) {
-    log.error("Error executing host crontab command", commandFailure(error));
+    if (!quiet) {
+      log.error("Error executing host crontab command", commandFailure(error));
+    }
     log.debug("Host crontab command failure details", error);
     throw error;
   }
@@ -78,7 +83,9 @@ export const getAllTargetUsers = async (): Promise<string[]> => {
     }
 
     try {
-      const stdout = await execHostCrontab(READ_CRONTABS_DIRECTORY);
+      const stdout = await execHostCrontab(READ_CRONTABS_DIRECTORY, {
+        quiet: true,
+      });
 
       const users = stdout
         .trim()
@@ -88,7 +95,11 @@ export const getAllTargetUsers = async (): Promise<string[]> => {
       log.debug("Detected crontab users", { users });
       return users.length > 0 ? users : ["root"];
     } catch (error) {
-      log.error("Error detecting users from crontabs directory", error);
+      log.warnOnce(
+        "crontab-users-fallback",
+        "Could not list crontab users on the host, falling back to root",
+        commandFailure(error)
+      );
       return ["root"];
     }
   } catch (error) {

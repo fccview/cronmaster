@@ -129,3 +129,18 @@ describe("printBanner", () => {
     expect(out.mock.calls[0][0]).not.toContain("\x1b[");
   });
 });
+
+describe("warnOnce", () => {
+  it("warns the first time and drops to debug after", () => {
+    vi.stubEnv("LOG_LEVEL", "debug");
+    vi.stubEnv("NO_COLOR", "1");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    const log = createLogger("crontab");
+    log.warnOnce("users", "fallback");
+    log.warnOnce("users", "fallback");
+    log.warnOnce("users", "fallback");
+    expect(warn).toHaveBeenCalledOnce();
+    expect(debug).toHaveBeenCalledTimes(2);
+  });
+});

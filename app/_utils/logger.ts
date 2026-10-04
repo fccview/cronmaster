@@ -43,6 +43,7 @@ export interface Logger {
   info: (message: string, meta?: LogMeta | unknown) => void;
   debug: (message: string, meta?: LogMeta | unknown) => void;
   infoOnce: (key: string, message: string, meta?: LogMeta | unknown) => void;
+  warnOnce: (key: string, message: string, meta?: LogMeta | unknown) => void;
   child: (scope: string) => Logger;
   enabled: (level: LogLevel) => boolean;
 }
@@ -190,17 +191,19 @@ export const createLogger = (scope: string): Logger => {
     if (enabled(level)) emit(level, scope, message, meta);
   };
 
+  const once = (level: LogLevel) => (key: string, message: string, meta?: unknown) => {
+    const onceKey = `${scope}:${key}`;
+    log(seenOnce.has(onceKey) ? "debug" : level)(message, meta);
+    seenOnce.add(onceKey);
+  };
+
   return {
     error: log("error"),
     warn: log("warn"),
     info: log("info"),
     debug: log("debug"),
-    infoOnce: (key: string, message: string, meta?: unknown) => {
-      const onceKey = `${scope}:${key}`;
-      const level: LogLevel = seenOnce.has(onceKey) ? "debug" : "info";
-      seenOnce.add(onceKey);
-      log(level)(message, meta);
-    },
+    infoOnce: once("info"),
+    warnOnce: once("warn"),
     child: (sub: string) => createLogger(`${scope}:${sub}`),
     enabled,
   };
