@@ -41,7 +41,7 @@ export const PWAInstallPrompt = (): JSX.Element | null => {
       if (choice.outcome === "accepted") {
         setDeferred(null);
       }
-    } catch (_err) { }
+    } catch { }
   }, [deferred]);
 
   if (isInstalled || !deferred) return null;

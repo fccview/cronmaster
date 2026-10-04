@@ -29,6 +29,10 @@ interface ToastProps {
   onErrorClick?: (errorDetails: Toast["errorDetails"]) => void;
 }
 
+type ToastWindow = Window & {
+  showToast?: (toast: Omit<Toast, "id">) => void;
+};
+
 const toastIcons = {
   success: CheckCircleIcon,
   error: WarningCircleIcon,
@@ -118,9 +122,9 @@ export const ToastContainer = () => {
   };
 
   useEffect(() => {
-    (window as any).showToast = addToast;
+    (window as ToastWindow).showToast = addToast;
     return () => {
-      delete (window as any).showToast;
+      delete (window as ToastWindow).showToast;
     };
   }, []);
 
@@ -157,7 +161,9 @@ export const showToast = (
   duration?: number,
   errorDetails?: Toast["errorDetails"]
 ) => {
-  if (typeof window !== "undefined" && (window as any).showToast) {
-    (window as any).showToast({ type, title, message, duration, errorDetails });
+  const toastWindow =
+    typeof window !== "undefined" ? (window as ToastWindow) : undefined;
+  if (toastWindow?.showToast) {
+    toastWindow.showToast({ type, title, message, duration, errorDetails });
   }
 };

@@ -227,7 +227,7 @@ export const MinimalCronJobItem = ({
             <div
               className="w-2 h-2 bg-status-warning ascii-border cursor-pointer"
               title={`${errors.length} error(s)`}
-              onClick={(e) => onErrorClick(errors[0])}
+              onClick={() => onErrorClick(errors[0])}
             />
           )}
         </div>

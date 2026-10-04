@@ -2,7 +2,7 @@
 
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { WarningCircleIcon, CopyIcon, XIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon, CopyIcon } from "@phosphor-icons/react";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 
 interface ErrorDetails {
@@ -44,7 +44,7 @@ Timestamp: ${error.timestamp}
     try {
       await navigator.clipboard.writeText(detailsText);
       showToast("success", "Error details copied to clipboard");
-    } catch (err) {
+    } catch {
       showToast("error", "Failed to copy error details");
     }
   };

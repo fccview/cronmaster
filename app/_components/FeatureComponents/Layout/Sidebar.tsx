@@ -11,7 +11,6 @@ import {
   HardDriveIcon,
   WifiHighIcon,
 } from "@phosphor-icons/react";
-import { useTranslations } from "next-intl";
 
 export interface SidebarProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -34,7 +33,6 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(
     },
     ref
   ) => {
-    const t = useTranslations();
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 

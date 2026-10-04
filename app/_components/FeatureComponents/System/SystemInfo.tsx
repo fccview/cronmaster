@@ -62,6 +62,7 @@ import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
 import { createLogger } from "@/app/_utils/logger";
+import { isAbortError } from "@/app/_utils/error-utils";
 
 const log = createLogger("ui:system");
 
@@ -109,8 +110,8 @@ export const SystemInfoCard = ({
         return;
       }
       setSystemInfo(freshData);
-    } catch (error: any) {
-      if (error.name !== "AbortError") {
+    } catch (error: unknown) {
+      if (!isAbortError(error)) {
         log.error("Failed to update system info", error);
       }
     } finally {

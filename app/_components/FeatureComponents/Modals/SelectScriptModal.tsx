@@ -53,7 +53,7 @@ export const SelectScriptModal = ({
     try {
       const content = await getScriptContent(script.filename);
       setPreviewContent(content);
-    } catch (error) {
+    } catch {
       setPreviewContent("Error loading script content");
     }
   };

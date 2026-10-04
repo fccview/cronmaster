@@ -12,16 +12,11 @@ import {
   ClockIcon,
   PlusIcon,
   Archive,
-  CaretDownIcon,
-  CodeIcon,
-  ChatTextIcon,
-  GearIcon,
   CircleNotchIcon,
   FunnelIcon,
 } from "@phosphor-icons/react";
 import { CronJob } from "@/app/_utils/cronjob-utils";
 import { Script } from "@/app/_utils/scripts-utils";
-import { UserFilter } from "@/app/_components/FeatureComponents/User/UserFilter";
 
 import { useCronJobState } from "@/app/_hooks/useCronJobState";
 import { CronJobItem } from "@/app/_components/FeatureComponents/Cronjobs/Parts/CronJobItem";

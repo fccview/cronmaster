@@ -1,4 +1,9 @@
-import { JobError, setJobError } from "@/app/_utils/error-utils";
+import {
+  JobError,
+  getErrorMessage,
+  getErrorStack,
+  setJobError,
+} from "@/app/_utils/error-utils";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import {
   removeCronJob,
@@ -26,7 +31,7 @@ interface HandlerProps {
   setIsEditModalOpen: (open: boolean) => void;
   setEditingJob: (job: CronJob | null) => void;
   setIsNewCronModalOpen: (open: boolean) => void;
-  setNewCronForm: (form: any) => void;
+  setNewCronForm: (form: HandlerProps["newCronForm"]) => void;
   setRunningJobId: (id: string | null) => void;
   refreshJobErrors: () => void;
   setIsLiveLogModalOpen?: (open: boolean) => void;
@@ -116,13 +121,13 @@ export const handleDelete = async (job: CronJob, props: HandlerProps) => {
         }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorId = `delete-${job.id}-${Date.now()}`;
     const jobError: JobError = {
       id: errorId,
       title: "Failed to delete cron job",
-      message: error.message || "Please try again later.",
-      details: error.stack,
+      message: getErrorMessage(error) || "Please try again later.",
+      details: getErrorStack(error),
       timestamp: new Date().toISOString(),
       jobId: job.id,
     };
@@ -168,7 +173,7 @@ export const handleClone = async (newComment: string, props: HandlerProps) => {
   }
 };
 
-export const handlePause = async (job: any) => {
+export const handlePause = async (job: CronJob) => {
   try {
     const result = await pauseCronJobAction({
       id: job.id,
@@ -182,12 +187,12 @@ export const handlePause = async (job: any) => {
     } else {
       showToast("error", "Failed to pause cron job", result.message);
     }
-  } catch (error) {
+  } catch {
     showToast("error", "Failed to pause cron job", "Please try again later.");
   }
 };
 
-export const handleToggleLogging = async (job: any) => {
+export const handleToggleLogging = async (job: CronJob) => {
   try {
     const result = await toggleCronJobLogging({
       id: job.id,
@@ -202,13 +207,13 @@ export const handleToggleLogging = async (job: any) => {
     } else {
       showToast("error", "Failed to toggle logging", result.message);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error toggling logging", error);
-    showToast("error", "Error toggling logging", error.message);
+    showToast("error", "Error toggling logging", getErrorMessage(error));
   }
 };
 
-export const handleResume = async (job: any) => {
+export const handleResume = async (job: CronJob) => {
   try {
     const result = await resumeCronJobAction({
       id: job.id,
@@ -222,7 +227,7 @@ export const handleResume = async (job: any) => {
     } else {
       showToast("error", "Failed to resume cron job", result.message);
     }
-  } catch (error) {
+  } catch {
     showToast("error", "Failed to resume cron job", "Please try again later.");
   }
 };
@@ -279,13 +284,13 @@ export const handleRun = async (id: string, props: HandlerProps, job: CronJob) =
         }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorId = `run-${id}-${Date.now()}`;
     const jobError: JobError = {
       id: errorId,
       title: "Failed to execute cron job",
-      message: error.message || "Please try again later.",
-      details: error.stack,
+      message: getErrorMessage(error) || "Please try again later.",
+      details: getErrorStack(error),
       timestamp: new Date().toISOString(),
       jobId: id,
     };
@@ -366,13 +371,13 @@ export const handleEditSubmit = async (
         }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorId = `edit-${editingJob?.id || "unknown"}-${Date.now()}`;
     const jobError: JobError = {
       id: errorId,
       title: "Failed to update cron job",
-      message: error.message || "Please try again later.",
-      details: error.stack,
+      message: getErrorMessage(error) || "Please try again later.",
+      details: getErrorStack(error),
       timestamp: new Date().toISOString(),
       jobId: editingJob?.id || "unknown",
     };
@@ -428,12 +433,12 @@ export const handleNewCronSubmit = async (
     } else {
       showToast("error", "Failed to create cron job", result.message);
     }
-  } catch (error) {
+  } catch {
     showToast("error", "Failed to create cron job", "Please try again later.");
   }
 };
 
-export const handleBackup = async (job: any) => {
+export const handleBackup = async (job: CronJob) => {
   try {
     const result = await backupCronJob(job);
     if (result.success) {
@@ -441,8 +446,8 @@ export const handleBackup = async (job: any) => {
     } else {
       showToast("error", "Failed to backup job", result.message);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error backing up job", error);
-    showToast("error", "Error backing up job", error.message);
+    showToast("error", "Error backing up job", getErrorMessage(error));
   }
 };

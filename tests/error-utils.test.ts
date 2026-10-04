@@ -1,5 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { getErrorMessage, getErrorStack } from "@/app/_utils/error-utils";
+import {
+  getErrorMessage,
+  getErrorStack,
+  isAbortError,
+} from "@/app/_utils/error-utils";
+
+describe("isAbortError", () => {
+  it("spots aborted fetches", () => {
+    expect(isAbortError(new DOMException("aborted", "AbortError"))).toBe(true);
+    expect(isAbortError({ name: "AbortError" })).toBe(true);
+  });
+
+  it("ignores everything else", () => {
+    expect(isAbortError(new Error("boom"))).toBe(false);
+    expect(isAbortError("AbortError")).toBe(false);
+    expect(isAbortError(null)).toBe(false);
+  });
+});
 
 describe("getErrorMessage", () => {
   it("reads the message of an Error", () => {

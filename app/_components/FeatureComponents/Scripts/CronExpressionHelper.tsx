@@ -201,7 +201,7 @@ export const CronExpressionHelper = ({
                 ))}
                 {filteredPatterns.length === 0 && patternSearch && (
                   <p className="text-xs text-muted-foreground text-center py-4">
-                    No patterns found for "{patternSearch}"
+                    No patterns found for &quot;{patternSearch}&quot;
                   </p>
                 )}
               </div>

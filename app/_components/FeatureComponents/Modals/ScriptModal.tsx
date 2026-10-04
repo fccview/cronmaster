@@ -6,7 +6,7 @@ import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { BashEditor } from "@/app/_components/FeatureComponents/Scripts/BashEditor";
 import { BashSnippetHelper } from "@/app/_components/FeatureComponents/Scripts/BashSnippetHelper";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
-import { FileTextIcon, CodeIcon, InfoIcon, TrashIcon } from "@phosphor-icons/react";
+import { FileTextIcon, CodeIcon, TrashIcon } from "@phosphor-icons/react";
 import { useTranslations } from "next-intl";
 
 interface ScriptModalProps {

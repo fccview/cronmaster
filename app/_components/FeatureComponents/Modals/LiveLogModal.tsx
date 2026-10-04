@@ -9,6 +9,7 @@ import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
 import { useTranslations } from "next-intl";
 import { createLogger } from "@/app/_utils/logger";
+import { isAbortError } from "@/app/_utils/error-utils";
 
 const log = createLogger("ui:logs");
 
@@ -20,7 +21,6 @@ interface LiveLogModalProps {
   jobComment?: string;
 }
 
-const MAX_LINES_FULL_RENDER = 10000;
 const TAIL_LINES = 5000;
 
 export const LiveLogModal = ({
@@ -134,8 +134,8 @@ export const LiveLogModal = ({
       if (data.exitCode !== undefined) {
         setExitCode(data.exitCode);
       }
-    } catch (error: any) {
-      if (error.name !== "AbortError") {
+    } catch (error: unknown) {
+      if (!isAbortError(error)) {
         log.error("Failed to fetch logs", error);
       }
     }
@@ -255,7 +255,7 @@ export const LiveLogModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={titleWithStatus as any}
+      title={titleWithStatus}
       size="xl"
       preventCloseOnClickOutside={status === "running"}
     >

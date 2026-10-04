@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView, keymap, type ViewUpdate } from "@codemirror/view";
 import { EditorState, Transaction } from "@codemirror/state";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { StreamLanguage } from "@codemirror/language";
-import { catppuccinMocha, catppuccinLatte } from './catppuccin-theme';
 import { useTheme } from 'next-themes';
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { TerminalIcon, CopyIcon, CheckIcon } from "@phosphor-icons/react";
@@ -153,7 +152,7 @@ export const BashEditor = ({
           { key: "Tab", run: insertFourSpaces },
           { key: "Shift-Tab", run: removeFourSpaces },
         ]),
-        EditorView.updateListener.of((update: any) => {
+        EditorView.updateListener.of((update: ViewUpdate) => {
           if (update.docChanged) {
             onChange(update.state.doc.toString());
           }

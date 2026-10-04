@@ -85,7 +85,10 @@ export const getJobErrorsByJobId = (jobId: string): JobError[] => {
   return getJobErrors().filter((error) => error.jobId === jobId);
 };
 
-const readErrorField = (error: unknown, field: "message" | "stack") => {
+const readErrorField = (
+  error: unknown,
+  field: "message" | "stack" | "name"
+) => {
   if (!error || typeof error !== "object" || !(field in error)) {
     return undefined;
   }
@@ -98,6 +101,9 @@ export const getErrorMessage = (error: unknown): string | undefined =>
 
 export const getErrorStack = (error: unknown): string | undefined =>
   readErrorField(error, "stack");
+
+export const isAbortError = (error: unknown): boolean =>
+  readErrorField(error, "name") === "AbortError";
 
 export const clearAllJobErrors = () => {
   if (typeof window === "undefined") return;

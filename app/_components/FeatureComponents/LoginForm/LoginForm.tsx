@@ -71,7 +71,7 @@ export const LoginForm = ({
       } else {
         setError(result.message || t("login.loginFailed"));
       }
-    } catch (error) {
+    } catch {
       setError(t("login.genericError"));
     } finally {
       setIsLoading(false);
