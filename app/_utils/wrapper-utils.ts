@@ -8,18 +8,7 @@ import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("wrapper");
 
-const sanitizeForFilesystem = (input: string): string => {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .substring(0, 50);
-};
-
-export const generateLogFolderName = (
-  jobId: string,
-  comment?: string
-): string => {
+export const generateLogFolderName = (jobId: string): string => {
   return jobId;
 };
 
@@ -54,8 +43,7 @@ export const ensureWrapperScriptInData = (): string => {
 export const wrapCommandWithLogger = async (
   jobId: string,
   command: string,
-  isDocker: boolean,
-  comment?: string
+  isDocker: boolean
 ): Promise<string> => {
   if (!isSafeJobId(jobId)) {
     throw new Error("Invalid cron job id");
@@ -63,7 +51,7 @@ export const wrapCommandWithLogger = async (
 
   ensureWrapperScriptInData();
 
-  const logFolderName = generateLogFolderName(jobId, comment);
+  const logFolderName = generateLogFolderName(jobId);
 
   const safeCmd = toShellArg(command);
 

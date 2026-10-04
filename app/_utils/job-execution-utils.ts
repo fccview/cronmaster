@@ -151,7 +151,7 @@ export const runJobInBackground = async (
   mode: "async";
 }> => {
   const runId = `run-${job.id}-${Date.now()}`;
-  const logFolderName = generateLogFolderName(job.id, job.comment);
+  const logFolderName = generateLogFolderName(job.id);
 
   const shellCommand = await buildJobExecutionCommand(job, docker);
 

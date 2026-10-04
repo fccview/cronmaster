@@ -1,5 +1,4 @@
 import { CronJob } from "@/app/_utils/cronjob-utils";
-import { generateShortUUID } from "@/app/_utils/uuid-utils";
 import { createHash } from "crypto";
 
 const generateStableJobId = (
@@ -288,7 +287,6 @@ export const parseJobsFromLines = (
   let currentComment = "";
   let currentLogsEnabled = false;
   let currentUuid: string | undefined;
-  let jobIndex = 0;
   let i = 0;
 
   while (i < lines.length) {
@@ -342,7 +340,6 @@ export const parseJobsFromLines = (
               logsEnabled,
             });
 
-            jobIndex++;
             i += 2;
             continue;
           }
@@ -400,7 +397,6 @@ export const parseJobsFromLines = (
         logsEnabled: currentLogsEnabled,
       });
 
-      jobIndex++;
       currentComment = "";
       currentLogsEnabled = false;
       currentUuid = undefined;

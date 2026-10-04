@@ -188,8 +188,7 @@ export const addCronJob = async (
         finalCommand = await wrapCommandWithLogger(
           jobId,
           unwrapCommand(command),
-          docker,
-          comment
+          docker
         );
       }
 
@@ -219,8 +218,7 @@ export const addCronJob = async (
         finalCommand = await wrapCommandWithLogger(
           jobId,
           unwrapCommand(command),
-          docker,
-          comment
+          docker
         );
       }
 
@@ -317,8 +315,7 @@ export const updateCronJob = async (
       finalCommand = await wrapCommandWithLogger(
         jobData.id,
         command,
-        docker,
-        comment
+        docker
       );
     } else if (!logsEnabled && isWrapped) {
       finalCommand = unwrapCommand(command);
@@ -328,8 +325,7 @@ export const updateCronJob = async (
       finalCommand = await wrapCommandWithLogger(
         jobData.id,
         unwrapped,
-        docker,
-        comment
+        docker
       );
     } else {
       finalCommand = command;

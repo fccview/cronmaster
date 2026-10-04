@@ -29,7 +29,7 @@ export const getPing = async (): Promise<number> => {
     );
     const match = stdout.match(/time=(\d+\.?\d*)/);
     return match ? Math.round(parseFloat(match[1])) : 0;
-  } catch (error) {
+  } catch {
     return 0;
   }
 };

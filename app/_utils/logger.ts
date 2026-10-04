@@ -88,7 +88,7 @@ export const resolveLogLevel = (): LogLevel => {
   return "info";
 };
 
-const useJson = (): boolean => readEnv("LOG_FORMAT")?.toLowerCase() === "json";
+const isJsonFormat = (): boolean => readEnv("LOG_FORMAT")?.toLowerCase() === "json";
 
 export const redact = (value: unknown, depth = 0): unknown => {
   if (value instanceof Error) {
@@ -108,7 +108,7 @@ const emit = (level: LogLevel, scope: string, message: string, meta?: unknown) =
   const tag = `[cr*nmaster:${scope}]`;
   const safeMeta = meta === undefined ? undefined : redact(meta);
 
-  if (useJson()) {
+  if (isJsonFormat()) {
     console[level](
       JSON.stringify({
         time: new Date().toISOString(),

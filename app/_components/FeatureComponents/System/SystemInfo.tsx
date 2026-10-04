@@ -123,7 +123,7 @@ export const SystemInfoCard = ({
   useEffect(() => {
     const unsubscribe = subscribe((event: SSEEvent) => {
       if (event.type === "system-stats" && event.data !== null) {
-        setSystemInfo(event.data);
+        setSystemInfo(event.data as SystemInfoType);
       }
     });
 

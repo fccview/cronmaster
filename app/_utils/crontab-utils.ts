@@ -28,7 +28,7 @@ const execHostCrontab = async (command: string): Promise<string> => {
   try {
     const { stdout } = await execAsync(NSENTER_HOST_CRONTAB(command?.trim()));
     return stdout;
-  } catch (error: any) {
+  } catch (error: unknown) {
     log.error("Error executing host crontab command", commandFailure(error));
     log.debug("Host crontab command failure details", error);
     throw error;
