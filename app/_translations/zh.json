@@ -304,7 +304,8 @@
         "orContinueWith": "或者继续使用",
         "loginFailed": "登录失败",
         "genericError": "发生错误，请重试。",
-        "invalidPassword": "密码错误"
+        "invalidPassword": "密码错误",
+        "tooManyAttempts": "失败次数过多，请稍后再试"
     },
     "warnings": {
         "wrapperScriptModified": "封装脚本已被修改",

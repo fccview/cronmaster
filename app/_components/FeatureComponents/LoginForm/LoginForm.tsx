@@ -72,7 +72,9 @@ export const LoginForm = ({
         setError(
           response.status === 401
             ? t("login.invalidPassword")
-            : result.message || t("login.loginFailed")
+            : response.status === 429
+              ? t("login.tooManyAttempts")
+              : result.message || t("login.loginFailed")
         );
       }
     } catch {

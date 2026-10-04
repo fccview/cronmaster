@@ -304,7 +304,8 @@
         "orContinueWith": "Або працягніце з дапамогай",
         "loginFailed": "Памылка ўваходу",
         "genericError": "Адбылася памылка. Паспрабуйце яшчэ раз.",
-        "invalidPassword": "Няправільны пароль"
+        "invalidPassword": "Няправільны пароль",
+        "tooManyAttempts": "Занадта шмат няўдалых спроб, паспрабуйце пазней"
     },
     "warnings": {
         "wrapperScriptModified": "Скрыпт-абгортка зменены",

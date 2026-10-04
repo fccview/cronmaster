@@ -304,7 +304,8 @@
         "orContinueWith": "Or continue with",
         "loginFailed": "Login failed",
         "genericError": "An error occurred. Please try again.",
-        "invalidPassword": "Invalid password"
+        "invalidPassword": "Invalid password",
+        "tooManyAttempts": "Too many failed attempts, try again later"
     },
     "warnings": {
         "wrapperScriptModified": "Wrapper Script Modified",

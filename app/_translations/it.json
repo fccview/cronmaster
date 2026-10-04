@@ -304,7 +304,8 @@
         "orContinueWith": "Oppure continua con",
         "loginFailed": "Accesso fallito",
         "genericError": "Si è verificato un errore. Riprova.",
-        "invalidPassword": "Password non valida"
+        "invalidPassword": "Password non valida",
+        "tooManyAttempts": "Troppi tentativi falliti, riprova più tardi"
     },
     "warnings": {
         "wrapperScriptModified": "Script Wrapper Modificato",

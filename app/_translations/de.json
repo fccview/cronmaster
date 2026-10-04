@@ -304,7 +304,8 @@
         "orContinueWith": "Oder fortfahren mit",
         "loginFailed": "Anmeldung fehlgeschlagen",
         "genericError": "Es ist ein Fehler aufgetreten. Bitte erneut versuchen.",
-        "invalidPassword": "Ungültiges Passwort"
+        "invalidPassword": "Ungültiges Passwort",
+        "tooManyAttempts": "Zu viele fehlgeschlagene Versuche, bitte versuchen Sie es später erneut"
     },
     "warnings": {
         "wrapperScriptModified": "Wrapper-Skript geändert",
