@@ -45,10 +45,23 @@ export const getScriptPathForCron = async (
   return `bash ${shellQuoteIfNeeded(path.join(process.cwd(), SCRIPTS_DIR, filename))}`;
 };
 
-export const normalizeLineEndings = async (content: string): Promise<string> => {
-  await requireActionAuth();
-  return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-};
+const normalizeLineEndings = (content: string): string =>
+  content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+const generateScriptId = (): string =>
+  `script_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+const buildScriptFile = (
+  id: string,
+  name: string,
+  description: string | null,
+  content: string
+): string =>
+  `# @id: ${id}
+# @title: ${toSingleLine(name)}
+# @description: ${toSingleLine(description)}
+
+` + normalizeLineEndings(content);
 
 const sanitizeScriptName = (name: string): string => {
   return name
@@ -121,19 +134,10 @@ export const createScript = async (
       return { success: false, message: "Name and content are required" };
     }
 
-    const scriptId = `script_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const scriptId = generateScriptId();
     const filename = await generateUniqueFilename(name);
 
-    const metadataHeader = `# @id: ${scriptId}
-# @title: ${toSingleLine(name)}
-# @description: ${toSingleLine(description)}
-
-`;
-
-    const normalizedContent = await normalizeLineEndings(content);
-    const fullContent = metadataHeader + normalizedContent;
+    const fullContent = buildScriptFile(scriptId, name, description, content);
 
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
@@ -181,14 +185,7 @@ export const updateScript = async (
       return { success: false, message: "Script not found" };
     }
 
-    const metadataHeader = `# @id: ${id}
-# @title: ${toSingleLine(name)}
-# @description: ${toSingleLine(description)}
-
-`;
-
-    const normalizedContent = await normalizeLineEndings(content);
-    const fullContent = metadataHeader + normalizedContent;
+    const fullContent = buildScriptFile(id, name, description, content);
 
     await saveScriptFile(existingScript.filename, fullContent);
     revalidatePath("/");
@@ -242,21 +239,17 @@ export const cloneScript = async (
       return { success: false, message: "Script not found" };
     }
 
-    const scriptId = `script_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const scriptId = generateScriptId();
     const filename = await generateUniqueFilename(newName);
 
     const originalContent = await getScriptContent(originalScript.filename);
 
-    const metadataHeader = `# @id: ${scriptId}
-# @title: ${toSingleLine(newName)}
-# @description: ${toSingleLine(originalScript.description)}
-
-`;
-
-    const normalizedContent = await normalizeLineEndings(originalContent);
-    const fullContent = metadataHeader + normalizedContent;
+    const fullContent = buildScriptFile(
+      scriptId,
+      newName,
+      originalScript.description,
+      originalContent
+    );
 
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
