@@ -12,7 +12,6 @@ vi.mock("@/app/_utils/cronjob-utils", () => ({
   getCronJobs: vi.fn(async () => [job]),
   addCronJob: vi.fn(async () => true),
   updateCronJob: vi.fn(async () => true),
-  cleanupCrontab: vi.fn(),
   readUserCrontab: vi.fn(),
   writeUserCrontab: vi.fn(),
   findJobIndex: vi.fn(),

@@ -21,7 +21,6 @@ vi.mock("@/app/_utils/cronjob-utils", () => ({
   getCronJobs: mocks.getCronJobs,
   addCronJob: mocks.addCronJob,
   updateCronJob: mocks.updateCronJob,
-  cleanupCrontab: vi.fn(),
   readUserCrontab: vi.fn(),
   writeUserCrontab: vi.fn(),
   findJobIndex: vi.fn(),

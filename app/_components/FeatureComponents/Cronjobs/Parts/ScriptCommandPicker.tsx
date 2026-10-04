@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { SelectScriptModal } from "@/app/_components/FeatureComponents/Modals/SelectScriptModal";
 import { TerminalIcon, FileTextIcon, XIcon } from "@phosphor-icons/react";
-import { getHostScriptPath } from "@/app/_server/actions/scripts";
+import { getScriptPathForCron } from "@/app/_server/actions/scripts";
 import { Script } from "@/app/_utils/scripts-utils";
 import { useTranslations } from "next-intl";
 
@@ -18,7 +18,7 @@ export const buildScriptSelection = async (
   script: Script
 ): Promise<ScriptCommandValue> => ({
   selectedScriptId: script.id,
-  command: await getHostScriptPath(script.filename),
+  command: await getScriptPathForCron(script.filename),
 });
 
 interface ScriptCommandPickerProps extends ScriptCommandValue {

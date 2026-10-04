@@ -30,7 +30,6 @@ vi.mock("@/app/_utils/session-utils", () => ({
 vi.mock("@/app/_utils/cronjob-utils", () => ({
   getCronJobs: vi.fn(async () => []),
   addCronJob: vi.fn(async () => true),
-  cleanupCrontab: vi.fn(async () => true),
   readUserCrontab: vi.fn(async () => ""),
   writeUserCrontab: vi.fn(async () => true),
   findJobIndex: vi.fn(() => -1),

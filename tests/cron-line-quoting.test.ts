@@ -25,7 +25,7 @@ import * as clientWrapper from "@/app/_utils/wrapper-utils-client";
 import { shellQuoteIfNeeded, shellUnquote } from "@/app/_utils/shell-utils";
 import { findScriptForCommand } from "@/app/_utils/script-command-utils";
 import { parseJobsFromLines } from "@/app/_utils/line-manipulation-utils";
-import { getHostScriptPath, getScriptPathForCron } from "@/app/_server/actions/scripts";
+import { getScriptPathForCron } from "@/app/_server/actions/scripts";
 
 const legacyWrap = (wrapperPath: string, jobId: string, command: string) =>
   `${wrapperPath} "${jobId}" sh -c '${command.replace(/'/g, "'\\''")}'`;
@@ -236,9 +236,6 @@ describe("script paths for cron", () => {
   it("writes plain native script paths exactly as before", async () => {
     vi.spyOn(process, "cwd").mockReturnValue("/home/fernando/cronmaster");
     expect(await getScriptPathForCron("backup.sh")).toBe(
-      "bash /home/fernando/cronmaster/scripts/backup.sh"
-    );
-    expect(await getHostScriptPath("backup.sh")).toBe(
       "bash /home/fernando/cronmaster/scripts/backup.sh"
     );
   });

@@ -45,11 +45,6 @@ export const getScriptPathForCron = async (
   return `bash ${shellQuoteIfNeeded(path.join(process.cwd(), SCRIPTS_DIR, filename))}`;
 };
 
-export const getHostScriptPath = async (filename: string): Promise<string> => {
-  await requireActionAuth();
-  return `bash ${shellQuoteIfNeeded(path.join(process.cwd(), SCRIPTS_DIR, filename))}`;
-};
-
 export const normalizeLineEndings = async (content: string): Promise<string> => {
   await requireActionAuth();
   return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
