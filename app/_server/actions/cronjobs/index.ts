@@ -34,6 +34,7 @@ import {
   isValidCronSchedule,
 } from "@/app/_utils/security-utils";
 import { getErrorMessage } from "@/app/_utils/error-utils";
+import { isLiveUpdatesEnabled } from "@/app/_utils/sse-broadcaster";
 
 const log = createLogger("job");
 
@@ -427,10 +428,7 @@ export const runCronJob = async (
     }
 
     const docker = await isDocker();
-    const liveUpdatesEnabled =
-      (typeof process.env.LIVE_UPDATES === "boolean" &&
-        process.env.LIVE_UPDATES === true) ||
-      process.env.LIVE_UPDATES !== "false";
+    const liveUpdatesEnabled = isLiveUpdatesEnabled();
 
     log.info("Running job on demand", {
       jobId: id,

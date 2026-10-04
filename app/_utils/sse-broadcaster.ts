@@ -3,6 +3,9 @@ import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("sse");
 
+export const isLiveUpdatesEnabled = (): boolean =>
+  process.env.LIVE_UPDATES !== "false";
+
 type SSEClient = {
   id: string;
   controller: ReadableStreamDefaultController;

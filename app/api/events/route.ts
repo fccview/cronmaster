@@ -1,5 +1,8 @@
 import { NextRequest } from "next/server";
-import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
+import {
+  isLiveUpdatesEnabled,
+  sseBroadcaster,
+} from "@/app/_utils/sse-broadcaster";
 import { createHeartbeatEvent } from "@/app/_utils/sse-events";
 import { startLogWatcher } from "@/app/_utils/log-watcher";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
@@ -16,9 +19,7 @@ export const GET = async (request: NextRequest) => {
   const authError = await requireAuth(request);
   if (authError) return authError;
 
-  const liveUpdatesEnabled = process.env.LIVE_UPDATES !== "false";
-
-  if (!liveUpdatesEnabled) {
+  if (!isLiveUpdatesEnabled()) {
     log.debug("SSE connection refused, live updates disabled");
     return new Response(
       JSON.stringify({ error: "Live updates are disabled" }),
