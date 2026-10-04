@@ -289,7 +289,7 @@
         "fetchingSystemInformation": "正在获取系统信息..."
     },
     "login": {
-        "welcomeTitle": "欢迎来到定时管家",
+        "welcomeTitle": "欢迎使用 Cr*nMaster",
         "signInWithPasswordOrSSO": "使用密码或SSO登录",
         "signInWithSSO": "使用SSO登录",
         "enterPasswordToContinue": "输入密码以继续",
