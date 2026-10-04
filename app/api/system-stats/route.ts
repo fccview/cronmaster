@@ -91,7 +91,7 @@ export const GET = async (request: NextRequest) => {
             ? "connected"
             : "unknown",
       },
-      systemStatus: getOverallStatus(memUsage, cpuLoad),
+      systemStatus: getOverallStatus(memUsage, cpuLoad, diskStats ?? []),
       gpu: formatGpuInfo(graphics, t),
       ...(diskStats ? { disks: formatDiskStats(diskStats) } : {}),
     };

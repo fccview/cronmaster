@@ -80,17 +80,28 @@ export const formatGpuInfo = (
   };
 };
 
+interface DiskUsageSample {
+  usage: number;
+  inodes?: { usage: number } | null;
+}
+
 export const getOverallStatus = (
   memUsage: number,
-  cpuLoad: number
+  cpuLoad: number,
+  disks: DiskUsageSample[] = []
 ): { overall: OverallStatus } => {
   const criticalThreshold = 90;
   const warningThreshold = 80;
+  const peak = Math.max(
+    memUsage,
+    cpuLoad,
+    ...disks.flatMap((disk) => [disk.usage, disk.inodes?.usage ?? 0])
+  );
 
-  if (memUsage > criticalThreshold || cpuLoad > criticalThreshold) {
+  if (peak > criticalThreshold) {
     return { overall: "critical" };
   }
-  if (memUsage > warningThreshold || cpuLoad > warningThreshold) {
+  if (peak > warningThreshold) {
     return { overall: "warning" };
   }
   return { overall: "optimal" };
