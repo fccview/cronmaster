@@ -133,24 +133,6 @@ export const readAllHostCrontabs = async (): Promise<
   }
 };
 
-export const writeHostCrontab = async (content: string): Promise<boolean> => {
-  try {
-    const user = await getTargetUser();
-    let finalContent = content;
-    if (!finalContent.endsWith("\n")) {
-      finalContent += "\n";
-    }
-
-    const base64Content = Buffer.from(finalContent).toString("base64");
-    await execHostCrontab(WRITE_HOST_CRONTAB(base64Content, user));
-    log.debug("Wrote host crontab", { user, bytes: finalContent.length });
-    return true;
-  } catch (error) {
-    log.error("Error writing host crontab", error);
-    return false;
-  }
-};
-
 export const writeHostCrontabForUser = async (
   user: string,
   content: string
@@ -171,6 +153,9 @@ export const writeHostCrontabForUser = async (
     return false;
   }
 };
+
+export const writeHostCrontab = async (content: string): Promise<boolean> =>
+  writeHostCrontabForUser(await getTargetUser(), content);
 
 export const getUserInfo = async (
   username: string

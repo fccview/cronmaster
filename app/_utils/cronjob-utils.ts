@@ -1,15 +1,13 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import {
+  getAllTargetUsers,
   readAllHostCrontabs,
   writeHostCrontabForUser,
 } from "@/app/_utils/crontab-utils";
 import {
   parseJobsFromLines,
-  deleteJobInLines,
   updateJobInLines,
-  pauseJobInLines,
-  resumeJobInLines,
   formatCommentWithMetadata,
 } from "@/app/_utils/line-manipulation-utils";
 import {
@@ -103,27 +101,23 @@ export const writeUserCrontab = async (
 };
 
 const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
-  const docker = await isDocker();
-
-  if (docker) {
+  if (await isDocker()) {
     return await readAllHostCrontabs();
-  } else {
-    const { getAllTargetUsers } = await import("@/app/_utils/crontab-utils");
-    const users = await getAllTargetUsers();
-    const results: { user: string; content: string }[] = [];
-
-    for (const user of users) {
-      try {
-        const { stdout } = await execAsync(READ_CRONTAB(user));
-        results.push({ user, content: stdout });
-      } catch (error) {
-        log.error(`Error reading crontab for user ${user}`, error);
-        results.push({ user, content: "" });
-      }
-    }
-
-    return results;
   }
+
+  const users = await getAllTargetUsers();
+  const results: { user: string; content: string }[] = [];
+
+  for (const user of users) {
+    try {
+      results.push({ user, content: await readUserCrontab(user) });
+    } catch (error) {
+      log.error(`Error reading crontab for user ${user}`, error);
+      results.push({ user, content: "" });
+    }
+  }
+
+  return results;
 };
 
 export const getCronJobs = async (
@@ -179,101 +173,33 @@ export const addCronJob = async (
     const jobId = generateShortUUID();
     log.debug("Adding job to crontab", { jobId, user, logsEnabled });
 
-    if (user) {
-      const cronContent = await readUserCrontab(user);
+    const cronContent = user
+      ? await readUserCrontab(user)
+      : await readCronFiles();
 
-      let finalCommand = command;
-      if (logsEnabled) {
-        const docker = await isDocker();
-        finalCommand = await wrapCommandWithLogger(
-          jobId,
-          unwrapCommand(command),
-          docker
-        );
-      }
+    const finalCommand = logsEnabled
+      ? await wrapCommandWithLogger(jobId, unwrapCommand(command), await isDocker())
+      : command;
 
-      const formattedComment = formatCommentWithMetadata(
-        comment,
-        logsEnabled,
-        jobId
-      );
+    const formattedComment = formatCommentWithMetadata(
+      comment,
+      logsEnabled,
+      jobId
+    );
 
-      const newEntry = `# ${formattedComment}\n${schedule} ${finalCommand}`;
+    const newEntry = `# ${formattedComment}\n${schedule} ${finalCommand}`;
 
-      let newCron;
-      if (cronContent.trim() === "") {
-        newCron = newEntry;
-      } else {
-        const existingContent = cronContent.trim();
-        newCron = await cleanCrontabContent(existingContent + "\n" + newEntry);
-      }
+    const newCron =
+      cronContent.trim() === ""
+        ? newEntry
+        : await cleanCrontabContent(cronContent.trim() + "\n" + newEntry);
 
-      return await writeUserCrontab(user, newCron);
-    } else {
-      const cronContent = await readCronFiles();
-
-      let finalCommand = command;
-      if (logsEnabled) {
-        const docker = await isDocker();
-        finalCommand = await wrapCommandWithLogger(
-          jobId,
-          unwrapCommand(command),
-          docker
-        );
-      }
-
-      const formattedComment = formatCommentWithMetadata(
-        comment,
-        logsEnabled,
-        jobId
-      );
-
-      const newEntry = `# ${formattedComment}\n${schedule} ${finalCommand}`;
-
-      let newCron;
-      if (cronContent.trim() === "") {
-        newCron = newEntry;
-      } else {
-        const existingContent = cronContent.trim();
-        newCron = await cleanCrontabContent(existingContent + "\n" + newEntry);
-      }
-
-      return await writeCronFiles(newCron);
-    }
+    return user
+      ? await writeUserCrontab(user, newCron)
+      : await writeCronFiles(newCron);
   } catch (error) {
     log.error("Error adding cron job", error);
     throw error;
-  }
-};
-
-export const deleteCronJob = async (id: string): Promise<boolean> => {
-  try {
-    const allJobs = await getCronJobs(false);
-    const targetJob = allJobs.find((j) => j.id === id);
-
-    if (!targetJob) {
-      log.warn("Job not found", { jobId: id });
-      return false;
-    }
-
-    const user = targetJob.user;
-    const cronContent = await readUserCrontab(user);
-    const lines = cronContent.split("\n");
-    const userJobs = parseJobsFromLines(lines, user);
-    const jobIndex = userJobs.findIndex((j) => j.id === id);
-
-    if (jobIndex === -1) {
-      log.warn("Job not found in parsed jobs", { jobId: id });
-      return false;
-    }
-
-    const newCronEntries = deleteJobInLines(lines, jobIndex);
-    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
-
-    return await writeUserCrontab(user, newCron);
-  } catch (error) {
-    log.error("Error deleting cron job", error);
-    return false;
   }
 };
 
@@ -306,30 +232,12 @@ export const updateCronJob = async (
       return false;
     }
 
-    const isWrapped = isCommandWrapped(command);
-
-    let finalCommand = command;
-
-    if (logsEnabled && !isWrapped) {
-      const docker = await isDocker();
-      finalCommand = await wrapCommandWithLogger(
-        jobData.id,
-        command,
-        docker
-      );
-    } else if (!logsEnabled && isWrapped) {
-      finalCommand = unwrapCommand(command);
-    } else if (logsEnabled && isWrapped) {
-      const unwrapped = unwrapCommand(command);
-      const docker = await isDocker();
-      finalCommand = await wrapCommandWithLogger(
-        jobData.id,
-        unwrapped,
-        docker
-      );
-    } else {
-      finalCommand = command;
-    }
+    const baseCommand = isCommandWrapped(command)
+      ? unwrapCommand(command)
+      : command;
+    const finalCommand = logsEnabled
+      ? await wrapCommandWithLogger(jobData.id, baseCommand, await isDocker())
+      : baseCommand;
 
     const newCronEntries = updateJobInLines(
       lines,
@@ -346,68 +254,6 @@ export const updateCronJob = async (
   } catch (error) {
     log.error("Error updating cron job", error);
     throw error;
-  }
-};
-
-export const pauseCronJob = async (id: string): Promise<boolean> => {
-  try {
-    const allJobs = await getCronJobs(false);
-    const targetJob = allJobs.find((j) => j.id === id);
-
-    if (!targetJob) {
-      log.warn("Job not found", { jobId: id });
-      return false;
-    }
-
-    const user = targetJob.user;
-    const cronContent = await readUserCrontab(user);
-    const lines = cronContent.split("\n");
-    const userJobs = parseJobsFromLines(lines, user);
-    const jobIndex = userJobs.findIndex((j) => j.id === id);
-
-    if (jobIndex === -1) {
-      log.warn("Job not found in parsed jobs", { jobId: id });
-      return false;
-    }
-
-    const newCronEntries = pauseJobInLines(lines, jobIndex, id);
-    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
-
-    return await writeUserCrontab(user, newCron);
-  } catch (error) {
-    log.error("Error pausing cron job", error);
-    return false;
-  }
-};
-
-export const resumeCronJob = async (id: string): Promise<boolean> => {
-  try {
-    const allJobs = await getCronJobs(false);
-    const targetJob = allJobs.find((j) => j.id === id);
-
-    if (!targetJob) {
-      log.warn("Job not found", { jobId: id });
-      return false;
-    }
-
-    const user = targetJob.user;
-    const cronContent = await readUserCrontab(user);
-    const lines = cronContent.split("\n");
-    const userJobs = parseJobsFromLines(lines, user);
-    const jobIndex = userJobs.findIndex((j) => j.id === id);
-
-    if (jobIndex === -1) {
-      log.warn("Job not found in parsed jobs", { jobId: id });
-      return false;
-    }
-
-    const newCronEntries = resumeJobInLines(lines, jobIndex, id);
-    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
-
-    return await writeUserCrontab(user, newCron);
-  } catch (error) {
-    log.error("Error resuming cron job", error);
-    return false;
   }
 };
 
@@ -437,4 +283,33 @@ export const findJobIndex = (
       j.user === jobData.user &&
       (j.comment || "") === (jobData.comment || "")
   );
+};
+
+export type JobLinesResult = "updated" | "not-found" | "write-failed";
+
+export const modifyJobInCrontab = async (
+  jobData: {
+    id: string;
+    schedule: string;
+    command: string;
+    comment?: string;
+    user: string;
+  },
+  transform: (lines: string[], jobIndex: number) => string[]
+): Promise<JobLinesResult> => {
+  const cronContent = await readUserCrontab(jobData.user);
+  const lines = cronContent.split("\n");
+  const jobIndex = findJobIndex(jobData, lines, jobData.user);
+
+  if (jobIndex === -1) {
+    return "not-found";
+  }
+
+  const newCron = await cleanCrontabContent(
+    transform(lines, jobIndex).join("\n")
+  );
+
+  return (await writeUserCrontab(jobData.user, newCron))
+    ? "updated"
+    : "write-failed";
 };

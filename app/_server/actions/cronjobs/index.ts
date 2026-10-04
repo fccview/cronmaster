@@ -3,9 +3,7 @@
 import {
   getCronJobs,
   addCronJob,
-  readUserCrontab,
-  writeUserCrontab,
-  findJobIndex,
+  modifyJobInCrontab,
   updateCronJob,
   type CronJob,
 } from "@/app/_utils/cronjob-utils";
@@ -24,7 +22,6 @@ import {
   resumeJobInLines,
   deleteJobInLines,
 } from "@/app/_utils/line-manipulation-utils";
-import { cleanCrontabContent } from "@/app/_utils/files-manipulation-utils";
 import { commandFailure, createLogger } from "@/app/_utils/logger";
 import { resolveJobCommand } from "@/app/_utils/script-command-utils";
 import { requireActionAuth } from "@/app/_utils/server-action-auth";
@@ -114,48 +111,73 @@ export const createCronJob = async (
   }
 };
 
-export const removeCronJob = async (
-  jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
-): Promise<{ success: boolean; message: string; details?: string }> => {
+type JobRef = {
+  id: string;
+  schedule: string;
+  command: string;
+  comment?: string;
+  user: string;
+};
+
+type ActionResult = { success: boolean; message: string; details?: string };
+
+type LineTransform = (lines: string[], index: number, id: string) => string[];
+
+const JOB_LINE_ACTIONS: Record<
+  "delete" | "pause" | "resume",
+  { past: string; ing: string; transform: LineTransform }
+> = {
+  delete: {
+    past: "deleted",
+    ing: "deleting",
+    transform: (lines, index) => deleteJobInLines(lines, index),
+  },
+  pause: { past: "paused", ing: "pausing", transform: pauseJobInLines },
+  resume: { past: "resumed", ing: "resuming", transform: resumeJobInLines },
+};
+
+const applyJobLineAction = async (
+  action: keyof typeof JOB_LINE_ACTIONS,
+  jobData: JobRef
+): Promise<ActionResult> => {
   await requireActionAuth();
   if (!isSafeJobId(jobData?.id)) {
     return { success: false, message: "Invalid cron job id" };
   }
+
+  const { past, ing, transform } = JOB_LINE_ACTIONS[action];
+  const context = { jobId: jobData.id, user: jobData.user };
+
   try {
-    const cronContent = await readUserCrontab(jobData.user);
-    const lines = cronContent.split("\n");
+    const result = await modifyJobInCrontab(jobData, (lines, index) =>
+      transform(lines, index, jobData.id)
+    );
 
-    const jobIndex = findJobIndex(jobData, lines, jobData.user);
-
-    if (jobIndex === -1) {
-      log.warn("Delete job failed, job not found in crontab", {
-        jobId: jobData.id,
-        user: jobData.user,
-      });
+    if (result === "not-found") {
+      log.warn(`Failed to ${action} job, not found in crontab`, context);
       return { success: false, message: "Cron job not found in crontab" };
     }
 
-    const newCronEntries = deleteJobInLines(lines, jobIndex);
-    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
-    const success = await writeUserCrontab(jobData.user, newCron);
-
-    if (success) {
-      revalidatePath("/");
-      log.info("Job deleted", { jobId: jobData.id, user: jobData.user });
-      return { success: true, message: "Cron job deleted successfully" };
-    } else {
-      log.warn("Failed to delete job", { jobId: jobData.id, user: jobData.user });
-      return { success: false, message: "Failed to delete cron job" };
+    if (result === "write-failed") {
+      log.warn(`Failed to ${action} job`, context);
+      return { success: false, message: `Failed to ${action} cron job` };
     }
+
+    revalidatePath("/");
+    log.info(`Job ${past}`, context);
+    return { success: true, message: `Cron job ${past} successfully` };
   } catch (error: unknown) {
-    log.error("Error deleting cron job", error);
+    log.error(`Error ${ing} cron job`, error);
     return {
       success: false,
-      message: getErrorMessage(error) || "Error deleting cron job",
+      message: getErrorMessage(error) || `Error ${ing} cron job`,
       details: debugDetails(error),
     };
   }
 };
+
+export const removeCronJob = async (jobData: JobRef): Promise<ActionResult> =>
+  applyJobLineAction("delete", jobData);
 
 export const editCronJob = async (
   formData: FormData
@@ -261,91 +283,11 @@ export const cloneCronJob = async (
   }
 };
 
-export const pauseCronJobAction = async (
-  jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
-): Promise<{ success: boolean; message: string; details?: string }> => {
-  await requireActionAuth();
-  if (!isSafeJobId(jobData?.id)) {
-    return { success: false, message: "Invalid cron job id" };
-  }
-  try {
-    const cronContent = await readUserCrontab(jobData.user);
-    const lines = cronContent.split("\n");
+export const pauseCronJobAction = async (jobData: JobRef): Promise<ActionResult> =>
+  applyJobLineAction("pause", jobData);
 
-    const jobIndex = findJobIndex(jobData, lines, jobData.user);
-
-    if (jobIndex === -1) {
-      log.warn("Pause job failed, job not found in crontab", {
-        jobId: jobData.id,
-        user: jobData.user,
-      });
-      return { success: false, message: "Cron job not found in crontab" };
-    }
-
-    const newCronEntries = pauseJobInLines(lines, jobIndex, jobData.id);
-    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
-    const success = await writeUserCrontab(jobData.user, newCron);
-
-    if (success) {
-      revalidatePath("/");
-      log.info("Job paused", { jobId: jobData.id, user: jobData.user });
-      return { success: true, message: "Cron job paused successfully" };
-    } else {
-      log.warn("Failed to pause job", { jobId: jobData.id, user: jobData.user });
-      return { success: false, message: "Failed to pause cron job" };
-    }
-  } catch (error: unknown) {
-    log.error("Error pausing cron job", error);
-    return {
-      success: false,
-      message: getErrorMessage(error) || "Error pausing cron job",
-      details: debugDetails(error),
-    };
-  }
-};
-
-export const resumeCronJobAction = async (
-  jobData: { id: string; schedule: string; command: string; comment?: string; user: string }
-): Promise<{ success: boolean; message: string; details?: string }> => {
-  await requireActionAuth();
-  if (!isSafeJobId(jobData?.id)) {
-    return { success: false, message: "Invalid cron job id" };
-  }
-  try {
-    const cronContent = await readUserCrontab(jobData.user);
-    const lines = cronContent.split("\n");
-
-    const jobIndex = findJobIndex(jobData, lines, jobData.user);
-
-    if (jobIndex === -1) {
-      log.warn("Resume job failed, job not found in crontab", {
-        jobId: jobData.id,
-        user: jobData.user,
-      });
-      return { success: false, message: "Cron job not found in crontab" };
-    }
-
-    const newCronEntries = resumeJobInLines(lines, jobIndex, jobData.id);
-    const newCron = await cleanCrontabContent(newCronEntries.join("\n"));
-    const success = await writeUserCrontab(jobData.user, newCron);
-
-    if (success) {
-      revalidatePath("/");
-      log.info("Job resumed", { jobId: jobData.id, user: jobData.user });
-      return { success: true, message: "Cron job resumed successfully" };
-    } else {
-      log.warn("Failed to resume job", { jobId: jobData.id, user: jobData.user });
-      return { success: false, message: "Failed to resume cron job" };
-    }
-  } catch (error: unknown) {
-    log.error("Error resuming cron job", error);
-    return {
-      success: false,
-      message: getErrorMessage(error) || "Error resuming cron job",
-      details: debugDetails(error),
-    };
-  }
-};
+export const resumeCronJobAction = async (jobData: JobRef): Promise<ActionResult> =>
+  applyJobLineAction("resume", jobData);
 
 export const fetchAvailableUsers = async (): Promise<string[]> => {
   await requireActionAuth();
@@ -402,16 +344,19 @@ export const toggleCronJobLogging = async (
   }
 };
 
-export const runCronJob = async (
-  id: string
-): Promise<{
+type RunJobResult = {
   success: boolean;
   message: string;
   output?: string;
   details?: string;
   runId?: string;
   mode?: "sync" | "async";
-}> => {
+};
+
+const startJob = async (
+  id: string,
+  shouldRunInBackground: (job: CronJob) => boolean
+): Promise<RunJobResult> => {
   await requireActionAuth();
   try {
     const cronJobs = await getCronJobs(false);
@@ -428,19 +373,18 @@ export const runCronJob = async (
     }
 
     const docker = await isDocker();
-    const liveUpdatesEnabled = isLiveUpdatesEnabled();
+    const background = shouldRunInBackground(job);
 
     log.info("Running job on demand", {
       jobId: id,
       user: job.user,
-      background: !!(job.logsEnabled && liveUpdatesEnabled),
+      background,
       docker,
     });
-    if (job.logsEnabled && liveUpdatesEnabled) {
-      return await runJobInBackground(job, docker);
-    }
 
-    return await runJobSynchronously(job, docker);
+    return background
+      ? await runJobInBackground(job, docker)
+      : await runJobSynchronously(job, docker);
   } catch (error: unknown) {
     log.error("Error running cron job", commandFailure(error));
     const { message, output } = describeJobExecutionError(error);
@@ -453,56 +397,13 @@ export const runCronJob = async (
   }
 };
 
+export const runCronJob = async (id: string): Promise<RunJobResult> =>
+  startJob(id, (job) => !!job.logsEnabled && isLiveUpdatesEnabled());
+
 export const executeJob = async (
   id: string,
   runInBackground: boolean = true
-): Promise<{
-  success: boolean;
-  message: string;
-  output?: string;
-  details?: string;
-  runId?: string;
-  mode?: "sync" | "async";
-}> => {
-  await requireActionAuth();
-  try {
-    const cronJobs = await getCronJobs(false);
-    const job = cronJobs.find((j) => j.id === id);
-
-    if (!job) {
-      log.warn("Execute job failed, job not found", { jobId: id });
-      return { success: false, message: "Cron job not found" };
-    }
-
-    if (job.paused) {
-      log.warn("Execute job rejected, job is paused", { jobId: id });
-      return { success: false, message: "Cannot run paused cron job" };
-    }
-
-    const docker = await isDocker();
-
-    log.info("Executing job", {
-      jobId: id,
-      user: job.user,
-      background: runInBackground,
-      docker,
-    });
-    if (runInBackground) {
-      return await runJobInBackground(job, docker);
-    }
-
-    return await runJobSynchronously(job, docker);
-  } catch (error: unknown) {
-    log.error("Error executing cron job", commandFailure(error));
-    const { message, output } = describeJobExecutionError(error);
-    return {
-      success: false,
-      message,
-      output,
-      details: debugDetails(error),
-    };
-  }
-};
+): Promise<RunJobResult> => startJob(id, () => runInBackground);
 
 export const backupCronJob = async (
   job: CronJob
@@ -578,6 +479,15 @@ export const fetchBackupFiles = async (): Promise<Array<{
   }
 };
 
+const addJobFromBackup = (job: CronJob) =>
+  addCronJob(
+    job.schedule,
+    job.command,
+    job.comment || "",
+    job.user,
+    job.logsEnabled || false
+  );
+
 export const restoreCronJob = async (
   filename: string
 ): Promise<{ success: boolean; message: string; details?: string }> => {
@@ -595,13 +505,7 @@ export const restoreCronJob = async (
     }
 
     const job = result.job;
-    const success = await addCronJob(
-      job.schedule,
-      job.command,
-      job.comment || "",
-      job.user,
-      job.logsEnabled || false
-    );
+    const success = await addJobFromBackup(job);
 
     if (success) {
       revalidatePath("/");
@@ -675,16 +579,9 @@ export const restoreAllCronJobs = async (): Promise<{
     let failedCount = 0;
 
     for (const backup of backups) {
-      const job = backup.job;
       let success = false;
       try {
-        success = await addCronJob(
-          job.schedule,
-          job.command,
-          job.comment || "",
-          job.user,
-          job.logsEnabled || false
-        );
+        success = await addJobFromBackup(backup.job);
       } catch (error) {
         log.error(`Error restoring backup ${backup.filename}`, error);
       }
