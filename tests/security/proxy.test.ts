@@ -71,3 +71,45 @@ describe("proxy", () => {
     expect(printed).not.toContain(SESSION);
   });
 });
+
+describe("static asset allowlist", () => {
+  it.each([
+    "/manifest.json",
+    "/serwist/sw.js",
+    "/serwist/sw.js.map",
+    "/webtui/base.css",
+    "/webtui/theme-catppuccin.css",
+    "/logo.png",
+    "/logo-pwa.png",
+    "/favicon.png",
+    "/favicon.ico",
+    "/heading.png",
+    "/legacy/logo-small-legacy.png",
+    "/repo-images/discord_icon.webp",
+    "/fonts/jetbrains.woff2",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/site.webmanifest",
+    "/icons/APP.SVG",
+  ])("lets %s through without a session", async (pathname) => {
+    const res = await proxy(pageRequest(pathname));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "/foo.bar",
+    "/index.php",
+    "/backup.sh",
+    "/.env",
+    "/data/sessions/sessions.json.bak",
+    "/logo.png/settings",
+    "/x.js/",
+    "/logo",
+  ])("sends %s through the session check", async (pathname) => {
+    const res = await proxy(pageRequest(pathname));
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("http://localhost:3000/login");
+  });
+});

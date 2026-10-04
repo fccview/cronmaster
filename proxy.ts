@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { buildFrameAncestors } from "@/app/_utils/security-headers";
+import { isStaticAssetPath } from "@/app/_utils/static-asset-utils";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("proxy");
@@ -23,7 +24,7 @@ export const proxy = async (request: NextRequest) => {
     pathname.startsWith("/api/oidc/") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/_next/") ||
-    pathname.includes(".")
+    isStaticAssetPath(pathname)
   ) {
     const response = NextResponse.next();
     response.headers.set("x-pathname", pathname);
