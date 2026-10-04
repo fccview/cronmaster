@@ -50,10 +50,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let locale = process.env.LOCALE || "en";
-  let messages;
-
-  messages = await loadTranslationMessages(locale);
+  const locale = process.env.LOCALE || "en";
+  const messages = await loadTranslationMessages(locale);
 
   return (
     <html lang="en" suppressHydrationWarning data-webtui-theme="catppuccin-latte">
