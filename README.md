@@ -186,7 +186,7 @@ This includes all configuration options for:
 ### Important Notes for Docker
 
 - Root user is required for cron operations and direct file access. There is no way around this, if you don't feel comfortable in running it as root feel free to run the app locally with `yarn install`, `yarn build` and `yarn start`
-- The `DOCKER=true` environment variable enables direct file access mode for crontab operations. This is REQUIRED when running the application in docker mode.
+- Docker is detected automatically, there is no `DOCKER` environment variable to set
 - The Docker socket and data volume mounts are required for proper functionality
 
 **Important Note on Root Commands**: When running commands as `root` within Cronmaster, ensure that these commands also function correctly as `root` on your host machine. If a command works as `root` on your host but fails within Cronmaster, please open an issue with detailed information.

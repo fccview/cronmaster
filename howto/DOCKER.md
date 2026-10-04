@@ -87,7 +87,7 @@ Both must be absolute host paths matching the `volumes` entries. The legacy `HOS
 - NODE_TLS_REJECT_UNAUTHORIZED=0 # For self-signed certificates
 ```
 
-See `README_SSO.md` for detailed SSO setup instructions.
+See [SSO.md](SSO.md) for detailed SSO setup instructions.
 
 #### API Key Protection
 
@@ -95,7 +95,7 @@ See `README_SSO.md` for detailed SSO setup instructions.
 - API_KEY=your-secret-api-key-here
 ```
 
-See `README_API.md` for API key usage instructions.
+See [API.md](API.md) for API key usage instructions.
 
 #### Live Updates
 

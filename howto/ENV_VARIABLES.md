@@ -125,14 +125,6 @@ See [LOGS.md](LOGS.md#automatic-cleanup) for when cleanup runs.
 | `DEBUGGER`              | `false` | Enable debug logging and detailed error information (same as `LOG_LEVEL=debug`)     |
 | `HTTPS`                 | `false` | Force HTTPS-only cookies and redirects                                               |
 
-## System Variables
-
-These are typically set automatically by the system:
-
-| Variable | Default      | Description                                 |
-| -------- | ------------ | ------------------------------------------- |
-| `USER`   | Current user | Current system user (used in job execution) |
-
 ## Docker Compose Examples
 
 ### Minimal Configuration
@@ -143,7 +135,6 @@ services:
     image: ghcr.io/fccview/cronmaster:latest
     environment:
       - NODE_ENV=production
-      - DOCKER=true
       - AUTH_PASSWORD=your_secure_password
       - HOST_CRONTAB_USER=root
 ```
@@ -156,7 +147,6 @@ services:
     image: ghcr.io/fccview/cronmaster:latest
     environment:
       - NODE_ENV=production
-      - DOCKER=true
       - AUTH_PASSWORD=your_secure_password
       - HOST_CRONTAB_USER=root
       - APP_URL=https://cron.yourdomain.com
