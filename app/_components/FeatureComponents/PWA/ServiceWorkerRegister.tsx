@@ -17,7 +17,7 @@ export const ServiceWorkerRegister = (): null => {
           scope: "/",
           updateViaCache: "none",
         });
-      } catch (_err) {}
+      } catch {}
     };
     register();
   }, []);

@@ -1,6 +1,10 @@
 import fs from "fs";
 import path from "path";
 import "server-only";
+import type { AbstractIntlMessages } from "next-intl";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("i18n");
 
 /**
  * Load translation messages for a given locale.
@@ -10,7 +14,9 @@ import "server-only";
  * This function is server-only and should only be called from server components
  * or server actions.
  */
-export const loadTranslationMessages = async (locale: string): Promise<any> => {
+export const loadTranslationMessages = async (
+  locale: string
+): Promise<AbstractIntlMessages> => {
   const customTranslationPath = path.join(
     process.cwd(),
     "data",
@@ -23,10 +29,11 @@ export const loadTranslationMessages = async (locale: string): Promise<any> => {
       const customMessages = JSON.parse(
         fs.readFileSync(customTranslationPath, "utf8")
       );
+      log.infoOnce(`custom-${locale}`, "Using custom translations", { locale });
       return customMessages;
     }
   } catch (error) {
-    console.warn(`Failed to load custom translation for ${locale}:`, error);
+    log.warn(`Failed to load custom translation for ${locale}`, error);
   }
 
   try {
@@ -34,6 +41,7 @@ export const loadTranslationMessages = async (locale: string): Promise<any> => {
       .default;
     return messages;
   } catch (error) {
+    log.warn(`No built-in translations for ${locale}, falling back to en`, error);
     const fallbackMessages = (await import("../../../_translations/en.json"))
       .default;
     return fallbackMessages;
@@ -50,10 +58,10 @@ export const getTranslations = async (
 
   return (key: string) => {
     const keys = key.split(".");
-    let value: any = messages;
+    let value: AbstractIntlMessages | string | undefined = messages;
     for (const k of keys) {
-      value = value?.[k];
+      value = typeof value === "object" ? value[k] : undefined;
     }
-    return value || key;
+    return (value as string | undefined) || key;
   };
 };

@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { EditorView, keymap } from "@codemirror/view";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { EditorView, keymap, type ViewUpdate } from "@codemirror/view";
 import { EditorState, Transaction } from "@codemirror/state";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { StreamLanguage } from "@codemirror/language";
-import { catppuccinMocha, catppuccinLatte } from './catppuccin-theme';
 import { useTheme } from 'next-themes';
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { TerminalIcon, CopyIcon, CheckIcon } from "@phosphor-icons/react";
+import { useTranslations } from "next-intl";
 
 interface BashEditorProps {
   value: string;
@@ -25,10 +25,11 @@ export const BashEditor = ({
   className = "",
   label,
 }: BashEditorProps) => {
+  const t = useTranslations();
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
-  const { theme } = useTheme();
+  const { resolvedTheme: theme } = useTheme();
 
   const insertFourSpaces = ({
     state,
@@ -98,23 +99,21 @@ export const BashEditor = ({
     return true;
   };
 
+  const getInitialDoc = useEffectEvent(() => value || placeholder);
+  const handleDocChange = useEffectEvent((doc: string) => onChange(doc));
+
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const isDark = theme === 'catppuccin-mocha';
+    const isDark = theme === 'dark';
     const bashLanguage = StreamLanguage.define(shell);
 
-    const getThemeColors = () => {
-      const root = document.documentElement;
-      const style = getComputedStyle(root);
-
-      return {
-        background: style.getPropertyValue('--base').trim() || (isDark ? '#1e1e2e' : '#eff1f5'),
-        foreground: style.getPropertyValue('--text').trim() || (isDark ? '#cdd6f4' : '#4c4f69'),
-        border: style.getPropertyValue('--box-border-color').trim() || (isDark ? '#313244' : '#9ca0b0'),
-        surface: style.getPropertyValue('--surface0').trim() || (isDark ? '#313244' : '#ccd0da'),
-      };
-    };
+    const getThemeColors = () => ({
+      background: isDark ? '#1e1e2e' : '#eff1f5',
+      foreground: isDark ? '#cdd6f4' : '#4c4f69',
+      border: isDark ? '#313244' : '#9ca0b0',
+      surface: isDark ? '#313244' : '#ccd0da',
+    });
 
     const colors = getThemeColors();
 
@@ -140,12 +139,12 @@ export const BashEditor = ({
         opacity: '1',
       },
       ".cm-scroller": {
-        fontFamily: 'JetBrains Mono, Fira CodeIcon, monospace',
+        fontFamily: 'JetBrains Mono, Fira Code, monospace',
       },
     }, { dark: isDark });
 
     const state = EditorState.create({
-      doc: value || placeholder,
+      doc: getInitialDoc(),
       extensions: [
         bashLanguage,
         customTheme,
@@ -153,16 +152,16 @@ export const BashEditor = ({
           { key: "Tab", run: insertFourSpaces },
           { key: "Shift-Tab", run: removeFourSpaces },
         ]),
-        EditorView.updateListener.of((update: any) => {
+        EditorView.updateListener.of((update: ViewUpdate) => {
           if (update.docChanged) {
-            onChange(update.state.doc.toString());
+            handleDocChange(update.state.doc.toString());
           }
         }),
         EditorView.theme({
           "&": {
             fontSize: "14px",
             fontFamily:
-              'JetBrains Mono, Fira CodeIcon, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              'JetBrains Mono, Fira Code, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
             height: "100%",
             maxHeight: "100%",
           },
@@ -175,7 +174,7 @@ export const BashEditor = ({
           },
           ".cm-scroller": {
             fontFamily:
-              'JetBrains Mono, Fira CodeIcon, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              'JetBrains Mono, Fira Code, ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
             height: "100%",
             maxHeight: "100%",
           },
@@ -232,14 +231,14 @@ export const BashEditor = ({
             variant="outline"
             size="sm"
             onClick={handleCopy}
-            className="btn-outline h-7 px-2"
+            className="h-7 px-2"
           >
             {copied ? (
               <CheckIcon className="h-3 w-3 mr-1" />
             ) : (
               <CopyIcon className="h-3 w-3 mr-1" />
             )}
-            {copied ? "Copied!" : "CopyIcon"}
+            {copied ? t("common.copied") : t("common.copy")}
           </Button>
         </div>
       )}

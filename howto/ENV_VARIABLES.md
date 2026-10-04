@@ -18,6 +18,10 @@ This document provides a comprehensive reference for all environment variables u
 | `LOCALE`        | `en`          | Application locale/language setting (supports custom translations)           |
 | `HOME`          | `/home`       | Path to home directory (optional override)                                   |
 | `AUTH_PASSWORD` | `N/A`         | Password for authentication (can be used alone or with SSO)                  |
+| `AUTH_MAX_LOGIN_ATTEMPTS` | unset | Opt-in brute force protection. After this many failed password logins from one client, further logins are refused with HTTP 429 until the lockout ends. The client is identified by the first `X-Forwarded-For` entry, then `X-Real-IP`, so only enable it behind a reverse proxy that sets those headers |
+| `AUTH_LOCKOUT_MINUTES` | `15` | Window and lockout length, in minutes, used by `AUTH_MAX_LOGIN_ATTEMPTS` |
+| `SESSION_MAX_AGE_DAYS` | `30` | How long a login (password or SSO) stays valid, in days. Decimals work (`0.5` is 12 hours) |
+| `FRAME_ANCESTORS` | unset | Opt-in clickjacking protection. Space or comma separated list of origins allowed to embed the UI in an iframe, sent as `Content-Security-Policy: frame-ancestors`. Use `self` to allow only Cr*nMaster itself, `none` to forbid framing, or add dashboard origins like `self https://dash.example.com` |
 
 ## Custom Translations
 
@@ -49,6 +53,15 @@ Translation loading priority:
 | Variable            | Default | Description                                                                     |
 | ------------------- | ------- | ------------------------------------------------------------------------------- |
 | `HOST_CRONTAB_USER` | `root`  | Comma-separated list of users whose crontabs to read (e.g., `root,user1,user2`) |
+| `HOST_DATA_DIR`     | `N/A`   | Absolute host path of the directory mounted at `/app/data`. Skips `docker inspect` when set. Needed for logging when the Docker socket is not mounted or inspection fails |
+| `HOST_SCRIPTS_DIR`  | `N/A`   | Absolute host path of the directory mounted at `/app/scripts`. Skips `docker inspect` when set. Used to build the host path of scripts scheduled from the library |
+| `HOST_PROJECT_DIR`  | `N/A`   | Legacy. Absolute host path of the folder holding `data/` and `scripts/`. Only used as a last resort when `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR` are unset and `docker inspect` finds nothing |
+| `EXECUTION_SHELL`   | unset   | Shell used for "Run now" (`su -s <shell>`). When unset, each user's login shell is used, and users whose shell is `nologin`, `false` or `true` (e.g. `www-data`) fall back to `/bin/sh` |
+| `STRICT_EXECUTION_USER` | `false` | Set to `true` to make "Run now" fail with an error when the job's user can't be found on the host. By default such jobs run as `root` (with a warning in the logs) |
+
+Host paths are resolved in this order: `HOST_DATA_DIR` / `HOST_SCRIPTS_DIR`, then `docker inspect`, then `HOST_PROJECT_DIR/data` / `HOST_PROJECT_DIR/scripts`.
+
+"Run now" in Docker switches to the job's user on the host with `su`, which normally needs a login shell. Service users without one (e.g. `/usr/sbin/nologin`) work out of the box thanks to the `/bin/sh` fallback. Set `EXECUTION_SHELL` (e.g. `/bin/bash`) if you want every manual run to use the same shell regardless of the user's login shell. Scheduled runs are started by the host's cron and are not affected by this setting.
 
 ## UI Configuration
 
@@ -57,6 +70,8 @@ Translation loading priority:
 | `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds) |
 | `LIVE_UPDATES`                      | `true`  | Enable/disable Server-Sent Events for live updates |
 | `DISABLE_SYSTEM_STATS`              | `false` | Set to `true` to completely disable system stats (stops polling and hides sidebar) |
+| `DISABLE_DISK_STATS`                | `false` | Set to `true` to hide disk space and inode usage from the sidebar |
+| `DISK_MOUNTS`                       | `/`     | Comma-separated absolute mount points to show disk space and inodes for (e.g. `/,/mnt/data`, max 8). Results are cached for 60 seconds. In Docker the host paths are read through `/proc/1/root`. Only add mounts you are fine with being checked, network or pooled filesystems may wake their disks |
 
 ## Logging Configuration
 
@@ -65,6 +80,8 @@ Translation loading priority:
 | `MAX_LOG_AGE_DAYS`             | `30`    | Days to keep job execution logs before cleanup                   |
 | `NEXT_PUBLIC_MAX_LOG_AGE_DAYS` | `30`    | Days to keep error history in browser localStorage (client-side) |
 | `MAX_LOGS_PER_JOB`             | `50`    | Maximum number of log files to keep per job                      |
+
+See [LOGS.md](LOGS.md#automatic-cleanup) for when cleanup runs.
 
 ## Authentication & Security
 
@@ -84,7 +101,9 @@ Translation loading priority:
 | `OIDC_CLIENT_ID`     | `N/A`                   | OIDC client ID from your provider                                                                           |
 | `OIDC_CLIENT_SECRET` | `N/A`                   | OIDC client secret (optional, for confidential clients)                                                     |
 | `OIDC_LOGOUT_URL`    | `N/A`                   | Custom logout URL for OIDC provider                                                                         |
-| `OIDC_GROUPS_SCOPE`  | `groups`                | Scope for requesting user groups                                                                            |
+| `OIDC_GROUPS_SCOPE`  | `groups`                | The scope requested to get a user's groups. Set it to an empty string, `no` or `false` for providers that don't support a groups scope, like Entra ID |
+| `OIDC_USER_GROUPS`   | `N/A`                   | Optional. Comma-separated OIDC groups allowed to log in, e.g. `cronmaster_users,ops`. If set, only members of these groups get in |
+| `OIDC_USER_ROLES`    | `N/A`                   | Optional. Comma-separated OIDC roles allowed to log in, e.g. `user,member`. If set, only users with one of these roles get in |
 | `OIDC_AUTO_REDIRECT` | `false`                 | Automatically redirect to OIDC provider when it's the only authentication method (no password set)          |
 | `INTERNAL_API_URL`   | `http://localhost:3000` | Internal API URL override for specific nginx configurations with SSO                                        |
 
@@ -94,20 +113,17 @@ Translation loading priority:
 | --------- | ------- | ---------------------------------------------- |
 | `API_KEY` | `N/A`   | API key for external API access authentication |
 
+`API_KEY` only protects the `/api/*` REST routes, not the web UI. To protect the UI set `AUTH_PASSWORD` or `SSO_MODE`.
+
 ## Development & Debugging
 
-| Variable   | Default | Description                                         |
-| ---------- | ------- | --------------------------------------------------- |
-| `DEBUGGER` | `false` | Enable debug logging and detailed error information |
-| `HTTPS`    | `false` | Force HTTPS-only cookies and redirects              |
-
-## System Variables
-
-These are typically set automatically by the system:
-
-| Variable | Default      | Description                                 |
-| -------- | ------------ | ------------------------------------------- |
-| `USER`   | Current user | Current system user (used in job execution) |
+| Variable                | Default | Description                                                                          |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `LOG_LEVEL`             | `info`  | System log level: `error`, `warn`, `info`, `debug`. See [LOGGING.md](LOGGING.md)     |
+| `NEXT_PUBLIC_LOG_LEVEL` | `info`  | Browser console log level (build time), server fallback when `LOG_LEVEL` is not set |
+| `LOG_FORMAT`            | `text`  | Set to `json` for structured one-line-per-entry logs                                 |
+| `DEBUGGER`              | `false` | Enable debug logging and detailed error information (same as `LOG_LEVEL=debug`)     |
+| `HTTPS`                 | `false` | Force HTTPS-only cookies and redirects                                               |
 
 ## Docker Compose Examples
 
@@ -119,7 +135,6 @@ services:
     image: ghcr.io/fccview/cronmaster:latest
     environment:
       - NODE_ENV=production
-      - DOCKER=true
       - AUTH_PASSWORD=your_secure_password
       - HOST_CRONTAB_USER=root
 ```
@@ -132,7 +147,6 @@ services:
     image: ghcr.io/fccview/cronmaster:latest
     environment:
       - NODE_ENV=production
-      - DOCKER=true
       - AUTH_PASSWORD=your_secure_password
       - HOST_CRONTAB_USER=root
       - APP_URL=https://cron.yourdomain.com

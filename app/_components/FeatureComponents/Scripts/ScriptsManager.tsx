@@ -11,6 +11,7 @@ import {
   CopyIcon,
   CheckCircleIcon,
   FilesIcon,
+  CalendarPlusIcon,
 } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 import {
@@ -26,15 +27,20 @@ import { DeleteScriptModal } from "@/app/_components/FeatureComponents/Modals/De
 import { CloneScriptModal } from "@/app/_components/FeatureComponents/Modals/CloneScriptModal";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { useTranslations } from "next-intl";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:scripts");
 
 interface ScriptsManagerProps {
   scripts: Script[];
+  onSchedule?: (script: Script) => void;
 }
 
 const DRAFT_STORAGE_KEY = "cronjob_script_draft";
 
 export const ScriptsManager = ({
   scripts: initialScripts,
+  onSchedule,
 }: ScriptsManagerProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -69,7 +75,7 @@ export const ScriptsManager = ({
         setCreateForm(parsedDraft);
       }
     } catch (error) {
-      console.error("Failed to load draft from localStorage:", error);
+      log.warn("Failed to load draft from localStorage", error);
     }
   }, []);
 
@@ -77,7 +83,7 @@ export const ScriptsManager = ({
     try {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(createForm));
     } catch (error) {
-      console.error("Failed to save draft to localStorage:", error);
+      log.warn("Failed to save draft to localStorage", error);
     }
   }, [createForm]);
 
@@ -98,11 +104,11 @@ export const ScriptsManager = ({
       const freshScripts = await fetchScripts();
       setScripts(freshScripts);
     } catch (error) {
-      console.error("Failed to refresh scripts:", error);
+      log.error("Failed to refresh scripts", error);
       showToast(
         "error",
-        "Failed to refresh scripts",
-        "Please try again later."
+        t("scripts.refreshScriptsFailed"),
+        t("common.tryAgainLater")
       );
     }
   };
@@ -114,9 +120,9 @@ export const ScriptsManager = ({
       setIsCreateModalOpen(false);
       setCreateForm(defaultFormValues);
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-      showToast("success", "Script created successfully");
+      showToast("success", t("scripts.scriptCreated"));
     } else {
-      showToast("error", "Failed to create script", result.message);
+      showToast("error", t("scripts.createScriptFailed"), result.message);
     }
     return result;
   };
@@ -127,9 +133,9 @@ export const ScriptsManager = ({
       await refreshScripts();
       setIsEditModalOpen(false);
       setSelectedScript(null);
-      showToast("success", "Script updated successfully");
+      showToast("success", t("scripts.scriptUpdated"));
     } else {
-      showToast("error", "Failed to update script", result.message);
+      showToast("error", t("scripts.updateScriptFailed"), result.message);
     }
     return result;
   };
@@ -144,9 +150,9 @@ export const ScriptsManager = ({
         await refreshScripts();
         setIsDeleteModalOpen(false);
         setSelectedScript(null);
-        showToast("success", "Script deleted successfully");
+        showToast("success", t("scripts.scriptDeleted"));
       } else {
-        showToast("error", "Failed to delete script", result.message);
+        showToast("error", t("scripts.deleteScriptFailed"), result.message);
       }
     } finally {
       setIsDeleting(false);
@@ -163,9 +169,9 @@ export const ScriptsManager = ({
         await refreshScripts();
         setIsCloneModalOpen(false);
         setSelectedScript(null);
-        showToast("success", "Script cloned successfully");
+        showToast("success", t("scripts.scriptCloned"));
       } else {
-        showToast("error", "Failed to clone script", result.message);
+        showToast("error", t("scripts.cloneScriptFailed"), result.message);
       }
     } finally {
       setIsCloning(false);
@@ -193,10 +199,10 @@ export const ScriptsManager = ({
 
       setCopiedId(script.id);
       setTimeout(() => setCopiedId(null), 2000);
-      showToast("success", "Script content copied to clipboard");
+      showToast("success", t("scripts.scriptCopied"));
     } catch (error) {
-      console.error("Failed to copy script content:", error);
-      showToast("error", "Failed to copy script content");
+      log.error("Failed to copy script content", error);
+      showToast("error", t("scripts.copyScriptFailed"));
     }
   };
 
@@ -255,10 +261,10 @@ export const ScriptsManager = ({
                   key={script.id}
                   className="glass-card p-4 ascii-border hover:bg-accent/30 transition-colors terminal-font"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-medium text-foreground truncate">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0 w-full">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
+                        <h4 className="font-medium text-foreground truncate max-w-full">
                           {script.name}
                         </h4>
                         <span className="text-xs text-muted-foreground">
@@ -270,19 +276,31 @@ export const ScriptsManager = ({
                           {script.description}
                         </p>
                       )}
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground break-all">
                         {t("scripts.file")}: {script.filename}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {onSchedule && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onSchedule(script)}
+                          className="btn-outline h-8 px-3"
+                          title={t("scripts.scheduleScript")}
+                          aria-label={t("scripts.scheduleScript")}
+                        >
+                          <CalendarPlusIcon className="h-3 w-3" />
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleCopy(script)}
                         className="btn-outline h-8 px-3"
-                        title="CopyIcon script content to clipboard"
-                        aria-label="CopyIcon script content to clipboard"
+                        title={t("scripts.copyScriptContent")}
+                        aria-label={t("scripts.copyScriptContent")}
                       >
                         {copiedId === script.id ? (
                           <CheckCircleIcon className="h-3 w-3 text-status-success" />
@@ -298,8 +316,8 @@ export const ScriptsManager = ({
                           setIsCloneModalOpen(true);
                         }}
                         className="btn-outline h-8 px-3"
-                        title="Clone script"
-                        aria-label="Clone script"
+                        title={t("scripts.cloneScript")}
+                        aria-label={t("scripts.cloneScript")}
                       >
                         <FilesIcon className="h-3 w-3" />
                       </Button>
@@ -319,8 +337,8 @@ export const ScriptsManager = ({
                           setIsEditModalOpen(true);
                         }}
                         className="btn-outline h-8 px-3"
-                        title="Edit script"
-                        aria-label="Edit script"
+                        title={t("scripts.editScript")}
+                        aria-label={t("scripts.editScript")}
                       >
                         <PencilSimpleIcon className="h-3 w-3" />
                       </Button>
@@ -332,8 +350,8 @@ export const ScriptsManager = ({
                           setIsDeleteModalOpen(true);
                         }}
                         className="h-8 px-3"
-                        title="Delete script"
-                        aria-label="Delete script"
+                        title={t("scripts.deleteScript")}
+                        aria-label={t("scripts.deleteScript")}
                       >
                         <TrashIcon className="h-3 w-3" />
                       </Button>

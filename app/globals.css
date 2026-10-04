@@ -107,8 +107,8 @@ pre::-webkit-scrollbar {
   }
 
   .tui-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: var(--primary) !important;
-    box-shadow: 0 0 8px var(--primary);
+    background-color: var(--mauve) !important;
+    box-shadow: 0 0 8px var(--mauve);
   }
 
   .tui-scrollbar::-webkit-scrollbar-track {
@@ -168,14 +168,76 @@ pre::-webkit-scrollbar {
     border-radius: 0 !important;
   }
 
-  .terminal-log {
-    background: var(--background0) !important;
-    border: 1px solid var(--box-border-color, var(--foreground2)) !important;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    padding: 1rem;
+  .log-viewer {
+    border: 1px solid var(--box-border-color, var(--foreground2));
+    background: var(--background0);
     color: var(--foreground0);
+  }
+
+  .log-viewer-header {
+    background: var(--mantle, var(--background1));
+    border-bottom: 1px solid var(--box-border-color, var(--foreground2));
+  }
+
+  .log-viewer-muted {
+    color: var(--foreground2);
+  }
+
+  .log-viewer-body {
+    padding-right: 0 !important;
+  }
+
+  .log-viewer-lines,
+  .log-viewer-plain {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .log-viewer-line {
+    display: grid;
+    grid-template-columns: calc(var(--log-gutter, 4ch) + 1.25rem) minmax(0, 1fr);
+    column-gap: 0.75rem;
+    padding-right: 1rem;
+  }
+
+  .log-viewer-line:first-child > * {
+    padding-top: 0.5rem;
+  }
+
+  .log-viewer-line:last-child > * {
+    padding-bottom: 0.5rem;
+  }
+
+  .log-viewer-line:hover {
+    background: var(--mantle, var(--background1));
+  }
+
+  .log-viewer-line-number {
+    text-align: right;
+    color: var(--foreground2);
+    user-select: none;
+    background: var(--mantle, var(--background1));
+    border-right: 1px solid var(--box-border-color, var(--foreground2));
+    padding-right: 0.5rem;
+  }
+
+  .log-viewer-line-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  .log-viewer-line-section {
+    white-space: pre;
+    overflow: hidden;
+  }
+
+  .log-viewer-plain {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   .text-status-info {
@@ -210,8 +272,17 @@ pre::-webkit-scrollbar {
     background-color: var(--red);
   }
 
+  .border-status-info {
+    border-color: var(--mauve) !important;
+  }
+
+  .border-status-error {
+    border-color: var(--red) !important;
+  }
+
   dialog {
     background: var(--background0) !important;
+    color: var(--foreground0);
     margin: auto;
     padding: 0;
     width: 90vw;
@@ -259,6 +330,16 @@ pre::-webkit-scrollbar {
     max-height: 90vh;
     max-width: 100%;
     margin: inherit;
+  }
+
+  .mobile-modal > div:last-child {
+    max-height: calc(90vh - 4.5rem);
+  }
+}
+
+@media (max-width: 639px) {
+  .tui-card {
+    box-shadow: 4px 3px 0 var(--box-border-color, var(--foreground2));
   }
 }
 

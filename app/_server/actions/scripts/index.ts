@@ -8,34 +8,60 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { SCRIPTS_DIR } from "@/app/_consts/file";
 import { loadAllScripts, Script } from "@/app/_utils/scripts-utils";
-import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
+import { MAKE_SCRIPT_EXECUTABLE } from "@/app/_consts/commands";
 import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
+import { requireActionAuth } from "@/app/_utils/server-action-auth";
+import { isSafePathSegment, toSingleLine } from "@/app/_utils/security-utils";
+import { createLogger } from "@/app/_utils/logger";
+import { shellQuoteIfNeeded } from "@/app/_utils/shell-utils";
+
+const log = createLogger("scripts");
 
 const execAsync = promisify(exec);
+
+const isSafeScriptFilename = (filename: string): boolean => {
+  if (!isSafePathSegment(filename)) {
+    log.warn("Rejected unsafe script filename", { filename });
+    return false;
+  }
+  return true;
+};
 
 export const getScriptPathForCron = async (
   filename: string
 ): Promise<string> => {
+  await requireActionAuth();
   const docker = await isDocker();
 
   if (docker) {
     const hostScriptsPath = await getHostScriptsPath();
     if (hostScriptsPath) {
-      return `bash ${path.join(hostScriptsPath, filename)}`;
+      log.debug("Using host scripts path for cron", { filename, hostScriptsPath });
+      return `bash ${shellQuoteIfNeeded(path.join(hostScriptsPath, filename))}`;
     }
-    console.warn("Could not determine host scripts path, using container path");
+    log.warn("Could not determine host scripts path, using container path");
   }
 
-  return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
+  return `bash ${shellQuoteIfNeeded(path.join(process.cwd(), SCRIPTS_DIR, filename))}`;
 };
 
-export const getHostScriptPath = async (filename: string): Promise<string> => {
-  return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
-};
+const normalizeLineEndings = (content: string): string =>
+  content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 
-export const normalizeLineEndings = async (content: string): Promise<string> => {
-  return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-};
+const generateScriptId = (): string =>
+  `script_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+const buildScriptFile = (
+  id: string,
+  name: string,
+  description: string | null,
+  content: string
+): string =>
+  `# @id: ${id}
+# @title: ${toSingleLine(name)}
+# @description: ${toSingleLine(description)}
+
+` + normalizeLineEndings(content);
 
 const sanitizeScriptName = (name: string): string => {
   return name
@@ -67,23 +93,17 @@ const ensureScriptsDirectory = async () => {
   }
 };
 
-const ensureHostScriptsDirectory = async () => {
-  const hostScriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
-  if (!existsSync(hostScriptsDir)) {
-    await mkdir(hostScriptsDir, { recursive: true });
-  }
-};
-
 const saveScriptFile = async (filename: string, content: string) => {
   await ensureScriptsDirectory();
 
   const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
   await writeFile(scriptPath, content, "utf8");
+  log.debug("Wrote script file", { filename, bytes: content.length });
 
   try {
     await execAsync(MAKE_SCRIPT_EXECUTABLE(scriptPath));
   } catch (error) {
-    console.error(`Failed to set execute permissions on ${scriptPath}:`, error);
+    log.error(`Failed to set execute permissions on ${scriptPath}`, error);
   }
 };
 
@@ -91,42 +111,38 @@ const deleteScriptFile = async (filename: string) => {
   const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
+    log.debug("Deleted script file", { filename });
   }
 };
 
 export const fetchScripts = async (): Promise<Script[]> => {
+  await requireActionAuth();
   return await loadAllScripts();
 };
 
 export const createScript = async (
   formData: FormData
 ): Promise<{ success: boolean; message: string; script?: Script }> => {
+  await requireActionAuth();
   try {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const content = formData.get("content") as string;
 
     if (!name || !content) {
+      log.warn("Create script rejected, name and content are required");
       return { success: false, message: "Name and content are required" };
     }
 
-    const scriptId = `script_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const scriptId = generateScriptId();
     const filename = await generateUniqueFilename(name);
 
-    const metadataHeader = `# @id: ${scriptId}
-# @title: ${name}
-# @description: ${description || ""}
-
-`;
-
-    const normalizedContent = await normalizeLineEndings(content);
-    const fullContent = metadataHeader + normalizedContent;
+    const fullContent = buildScriptFile(scriptId, name, description, content);
 
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
 
+    log.info("Script created", { scriptId, filename });
     const newScript: Script = {
       id: scriptId,
       name,
@@ -141,7 +157,7 @@ export const createScript = async (
       script: newScript,
     };
   } catch (error) {
-    console.error("Error creating script:", error);
+    log.error("Error creating script", error);
     return { success: false, message: "Error creating script" };
   }
 };
@@ -149,6 +165,7 @@ export const createScript = async (
 export const updateScript = async (
   formData: FormData
 ): Promise<{ success: boolean; message: string }> => {
+  await requireActionAuth();
   try {
     const id = formData.get("id") as string;
     const name = formData.get("name") as string;
@@ -156,6 +173,7 @@ export const updateScript = async (
     const content = formData.get("content") as string;
 
     if (!id || !name || !content) {
+      log.warn("Update script rejected, missing fields", { scriptId: id });
       return { success: false, message: "ID, name and content are required" };
     }
 
@@ -163,24 +181,22 @@ export const updateScript = async (
     const existingScript = scripts.find((s) => s.id === id);
 
     if (!existingScript) {
+      log.warn("Update script failed, script not found", { scriptId: id });
       return { success: false, message: "Script not found" };
     }
 
-    const metadataHeader = `# @id: ${id}
-# @title: ${name}
-# @description: ${description || ""}
-
-`;
-
-    const normalizedContent = await normalizeLineEndings(content);
-    const fullContent = metadataHeader + normalizedContent;
+    const fullContent = buildScriptFile(id, name, description, content);
 
     await saveScriptFile(existingScript.filename, fullContent);
     revalidatePath("/");
 
+    log.info("Script updated", {
+      scriptId: id,
+      filename: existingScript.filename,
+    });
     return { success: true, message: "Script updated successfully" };
   } catch (error) {
-    console.error("Error updating script:", error);
+    log.error("Error updating script", error);
     return { success: false, message: "Error updating script" };
   }
 };
@@ -188,20 +204,23 @@ export const updateScript = async (
 export const deleteScript = async (
   id: string
 ): Promise<{ success: boolean; message: string }> => {
+  await requireActionAuth();
   try {
     const scripts = await loadAllScripts();
     const script = scripts.find((s) => s.id === id);
 
     if (!script) {
+      log.warn("Delete script failed, script not found", { scriptId: id });
       return { success: false, message: "Script not found" };
     }
 
     await deleteScriptFile(script.filename);
     revalidatePath("/");
 
+    log.info("Script deleted", { scriptId: id, filename: script.filename });
     return { success: true, message: "Script deleted successfully" };
   } catch (error) {
-    console.error("Error deleting script:", error);
+    log.error("Error deleting script", error);
     return { success: false, message: "Error deleting script" };
   }
 };
@@ -210,33 +229,36 @@ export const cloneScript = async (
   id: string,
   newName: string
 ): Promise<{ success: boolean; message: string; script?: Script }> => {
+  await requireActionAuth();
   try {
     const scripts = await loadAllScripts();
     const originalScript = scripts.find((s) => s.id === id);
 
     if (!originalScript) {
+      log.warn("Clone script failed, script not found", { scriptId: id });
       return { success: false, message: "Script not found" };
     }
 
-    const scriptId = `script_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+    const scriptId = generateScriptId();
     const filename = await generateUniqueFilename(newName);
 
     const originalContent = await getScriptContent(originalScript.filename);
 
-    const metadataHeader = `# @id: ${scriptId}
-# @title: ${newName}
-# @description: ${originalScript.description}
-
-`;
-
-    const normalizedContent = await normalizeLineEndings(originalContent);
-    const fullContent = metadataHeader + normalizedContent;
+    const fullContent = buildScriptFile(
+      scriptId,
+      newName,
+      originalScript.description,
+      originalContent
+    );
 
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
 
+    log.info("Script cloned", {
+      sourceScriptId: id,
+      scriptId,
+      filename,
+    });
     const newScript: Script = {
       id: scriptId,
       name: newName,
@@ -251,13 +273,18 @@ export const cloneScript = async (
       script: newScript,
     };
   } catch (error) {
-    console.error("Error cloning script:", error);
+    log.error("Error cloning script", error);
     return { success: false, message: "Error cloning script" };
   }
 };
 
 export const getScriptContent = async (filename: string): Promise<string> => {
+  await requireActionAuth();
   try {
+    if (!isSafeScriptFilename(filename)) {
+      return "";
+    }
+
     const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
 
     if (existsSync(scriptPath)) {
@@ -281,44 +308,7 @@ export const getScriptContent = async (filename: string): Promise<string> => {
     }
     return "";
   } catch (error) {
-    console.error("Error reading script content:", error);
+    log.error("Error reading script content", error);
     return "";
-  }
-};
-
-export const executeScript = async (
-  filename: string
-): Promise<{
-  success: boolean;
-  output: string;
-  error: string;
-}> => {
-  try {
-    await ensureHostScriptsDirectory();
-    const hostScriptPath = await getHostScriptPath(filename);
-
-    if (!existsSync(hostScriptPath)) {
-      return {
-        success: false,
-        output: "",
-        error: "Script file not found",
-      };
-    }
-
-    const { stdout, stderr } = await execAsync(RUN_SCRIPT(hostScriptPath), {
-      timeout: 30000,
-    });
-
-    return {
-      success: true,
-      output: stdout,
-      error: stderr,
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      output: "",
-      error: error.message || "Unknown error",
-    };
   }
 };

@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRunningJob } from "@/app/_utils/running-jobs-utils";
-import { readFile, open } from "fs/promises";
+import { open } from "fs/promises";
 import { existsSync } from "fs";
-import path from "path";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
+import { findRunLogFile, getJobLogDir } from "@/app/_utils/log-files-utils";
+import { createLogger } from "@/app/_utils/logger";
+import { getErrorMessage } from "@/app/_utils/error-utils";
+
+const log = createLogger("logs:stream");
 
 export const dynamic = "force-dynamic";
+
+const MAX_STREAM_LINES = 50000;
+
+const readRange = async (
+  filePath: string,
+  start: number,
+  end: number
+): Promise<string> => {
+  const handle = await open(filePath, "r");
+  try {
+    const buffer = Buffer.alloc(end - start);
+    const { bytesRead } = await handle.read(buffer, 0, end - start, start);
+    return buffer.subarray(0, bytesRead).toString("utf-8");
+  } finally {
+    await handle.close();
+  }
+};
 
 export const GET = async (request: NextRequest) => {
   const authError = await requireAuth(request);
@@ -15,11 +36,11 @@ export const GET = async (request: NextRequest) => {
     const searchParams = request.nextUrl.searchParams;
     const runId = searchParams.get("runId");
     const offsetStr = searchParams.get("offset");
-    const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+    const offset = offsetStr ? Math.max(parseInt(offsetStr, 10) || 0, 0) : 0;
 
     const maxLinesStr = searchParams.get("maxLines");
     const maxLines = maxLinesStr
-      ? Math.min(Math.max(parseInt(maxLinesStr, 10), 100), 5000)
+      ? Math.min(Math.max(parseInt(maxLinesStr, 10) || 0, 100), MAX_STREAM_LINES)
       : 500;
 
     if (!runId) {
@@ -32,6 +53,7 @@ export const GET = async (request: NextRequest) => {
     const job = getRunningJob(runId);
 
     if (!job) {
+      log.debug("Log stream requested for unknown run", { runId });
       return NextResponse.json(
         { error: "Running job not found" },
         { status: 404 }
@@ -45,7 +67,7 @@ export const GET = async (request: NextRequest) => {
       );
     }
 
-    const logDir = path.join(process.cwd(), "data", "logs", job.logFolderName);
+    const logDir = getJobLogDir(job.logFolderName);
 
     if (!existsSync(logDir)) {
       return NextResponse.json(
@@ -58,77 +80,13 @@ export const GET = async (request: NextRequest) => {
       );
     }
 
-    const { readdirSync } = await import("fs");
-    const files = readdirSync(logDir);
+    const runLog = await findRunLogFile(
+      logDir,
+      new Date(job.startTime),
+      job.logFileName
+    );
 
-    if (files.length === 0) {
-      return NextResponse.json(
-        {
-          status: job.status,
-          content: "",
-          message: "Log file not yet created",
-        },
-        { status: 200 }
-      );
-    }
-
-    const sortedFiles = files.sort().reverse();
-
-    let latestLogFile: string | null = null;
-    let latestStats: any = null;
-    const jobStartTime = new Date(job.startTime);
-    const TIME_TOLERANCE_MS = 5000;
-
-    if (job.logFileName) {
-      const cachedFilePath = path.join(logDir, job.logFileName);
-      if (existsSync(cachedFilePath)) {
-        try {
-          const { stat } = await import("fs/promises");
-          latestLogFile = cachedFilePath;
-          latestStats = await stat(latestLogFile);
-        } catch (error) {
-          console.error(`Error reading cached log file ${job.logFileName}:`, error);
-        }
-      }
-    }
-
-    if (!latestLogFile) {
-      for (const file of sortedFiles) {
-        const filePath = path.join(logDir, file);
-        try {
-          const { stat } = await import("fs/promises");
-          const stats = await stat(filePath);
-          const fileCreateTime = stats.birthtime || stats.mtime;
-
-          if (fileCreateTime.getTime() >= jobStartTime.getTime() - TIME_TOLERANCE_MS) {
-            latestLogFile = filePath;
-            latestStats = stats;
-            break;
-          }
-        } catch (error) {
-          console.error(`Error checking file ${file}:`, error);
-        }
-      }
-
-      if (!latestLogFile && sortedFiles.length > 0) {
-        try {
-          const { stat } = await import("fs/promises");
-          const fallbackPath = path.join(logDir, sortedFiles[0]);
-          const fallbackStats = await stat(fallbackPath);
-          const now = new Date();
-          const fileAge = now.getTime() - (fallbackStats.birthtime || fallbackStats.mtime).getTime();
-
-          if (fileAge <= TIME_TOLERANCE_MS) {
-            latestLogFile = fallbackPath;
-            latestStats = fallbackStats;
-          }
-        } catch (error) {
-          console.error(`Error stat-ing fallback file:`, error);
-        }
-      }
-    }
-
-    if (!latestLogFile || !latestStats) {
+    if (!runLog) {
       return NextResponse.json(
         {
           status: job.status,
@@ -139,6 +97,8 @@ export const GET = async (request: NextRequest) => {
       );
     }
 
+    const latestLogFile = runLog.fullPath;
+    const latestStats = runLog.stats;
     const fileSize = latestStats.size;
 
     let displayedLines: string[] = [];
@@ -151,60 +111,31 @@ export const GET = async (request: NextRequest) => {
       const AVERAGE_LINE_LENGTH = 100;
       const ESTIMATED_BYTES = maxLines * AVERAGE_LINE_LENGTH * 2;
       const bytesToRead = Math.min(ESTIMATED_BYTES, fileSize);
+      const partial = bytesToRead < fileSize;
 
-      if (bytesToRead < fileSize) {
-        const fileHandle = await open(latestLogFile, "r");
-        const buffer = Buffer.alloc(bytesToRead);
-        await fileHandle.read(buffer, 0, bytesToRead, fileSize - bytesToRead);
-        await fileHandle.close();
+      const lines = (
+        await readRange(latestLogFile, fileSize - bytesToRead, fileSize)
+      ).split("\n");
 
-        const tailContent = buffer.toString("utf-8");
-        const lines = tailContent.split("\n");
-
-        if (lines[0] && lines[0].length > 0) {
-          lines.shift();
-        }
-
-        if (lines.length > maxLines) {
-          displayedLines = lines.slice(-maxLines);
-          truncated = true;
-        } else {
-          displayedLines = lines;
-          truncated = true;
-        }
-      } else {
-        const fullContent = await readFile(latestLogFile, "utf-8");
-        const allLines = fullContent.split("\n");
-        totalLines = allLines.length;
-
-        if (totalLines > maxLines) {
-          displayedLines = allLines.slice(-maxLines);
-          truncated = true;
-        } else {
-          displayedLines = allLines;
-        }
+      if (partial && lines[0] && lines[0].length > 0) {
+        lines.shift();
       }
 
-      if (truncated) {
-        content = `[LOG TRUNCATED - Showing last ${maxLines} lines (${(fileSize / 1024 / 1024).toFixed(2)}MB total)]\n\n` + displayedLines.join("\n");
-      } else {
-        content = displayedLines.join("\n");
-        totalLines = displayedLines.length;
+      if (!partial) {
+        totalLines = lines.length;
       }
+
+      displayedLines = lines.length > maxLines ? lines.slice(-maxLines) : lines;
+      truncated = partial || lines.length > maxLines;
+
+      content = truncated
+        ? `[LOG TRUNCATED - Showing last ${maxLines} lines (${(fileSize / 1024 / 1024).toFixed(2)}MB total)]\n\n` + displayedLines.join("\n")
+        : displayedLines.join("\n");
       newContent = content;
-    } else {
-      if (offset < fileSize) {
-        const fileHandle = await open(latestLogFile, "r");
-        const bytesToRead = fileSize - offset;
-        const buffer = Buffer.alloc(bytesToRead);
-        await fileHandle.read(buffer, 0, bytesToRead, offset);
-        await fileHandle.close();
-
-        newContent = buffer.toString("utf-8");
-        const newLines = newContent.split("\n").filter(l => l.length > 0);
-        if (newLines.length > 0) {
-          content = newContent;
-        }
+    } else if (offset < fileSize) {
+      newContent = await readRange(latestLogFile, offset, fileSize);
+      if (newContent.split("\n").some((line) => line.length > 0)) {
+        content = newContent;
       }
     }
 
@@ -213,7 +144,7 @@ export const GET = async (request: NextRequest) => {
       content,
       newContent,
       fullContent: offset === 0 ? content : undefined,
-      logFile: sortedFiles[0],
+      logFile: runLog.name,
       isComplete: job.status !== "running",
       exitCode: job.exitCode,
       fileSize,
@@ -222,10 +153,10 @@ export const GET = async (request: NextRequest) => {
       displayedLines: displayedLines.length,
       truncated,
     });
-  } catch (error: any) {
-    console.error("Error streaming log:", error);
+  } catch (error: unknown) {
+    log.error("Error streaming log", error);
     return NextResponse.json(
-      { error: error.message || "Failed to stream log" },
+      { error: getErrorMessage(error) || "Failed to stream log" },
       { status: 500 }
     );
   }

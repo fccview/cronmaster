@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useIsHydrated } from "@/app/_hooks/useIsHydrated";
 import { ArrowUpIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowClockwiseIcon, PlayIcon, PauseIcon } from "@phosphor-icons/react";
 
 interface Position {
@@ -25,12 +26,13 @@ export const SnakeGame = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [snake, setSnake] = useState<Position[]>(INITIAL_SNAKE);
-  const [direction, setDirection] = useState<Direction>(INITIAL_DIRECTION);
+  const [, setDirection] = useState<Direction>(INITIAL_DIRECTION);
   const [food, setFood] = useState<Position>({ x: 15, y: 15 });
   const [gameOver, setGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
+  const [highScoreLoaded, setHighScoreLoaded] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [colors, setColors] = useState({ snake: "#00ff00", food: "#ff0000", grid: "#333333" });
   const [cellSize, setCellSize] = useState(20);
@@ -38,12 +40,16 @@ export const SnakeGame = () => {
   const directionRef = useRef<Direction>(INITIAL_DIRECTION);
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
+  const isHydrated = useIsHydrated();
+  if (isHydrated && !highScoreLoaded) {
+    setHighScoreLoaded(true);
     const savedHighScore = localStorage.getItem("snakeHighScore");
     if (savedHighScore) {
       setHighScore(parseInt(savedHighScore));
     }
+  }
 
+  useEffect(() => {
     const updateColors = () => {
       const theme = document.documentElement.getAttribute("data-webtui-theme");
       if (theme === "catppuccin-mocha") {

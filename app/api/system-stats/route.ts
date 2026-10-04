@@ -3,15 +3,19 @@ import { getTranslations } from "@/app/_server/actions/translations";
 import * as si from "systeminformation";
 import {
   getPing,
-  formatBytes,
   formatUptime,
   findMainInterface,
   getStatus,
   getOverallStatus,
   formatGpuInfo,
 } from "@/app/_utils/system-stats-utils";
+import { getDiskStats, formatDiskStats } from "@/app/_utils/disk-stats-utils";
+import { formatBytes } from "@/app/_utils/format-utils";
 import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("api:system");
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +34,7 @@ export const GET = async (request: NextRequest) => {
       [memInfo, cpuInfo, loadInfo, uptimeInfo, networkInfo],
       latency,
       graphics,
+      diskStats,
     ] = await Promise.all([
       Promise.all([
         si.mem(),
@@ -40,6 +45,7 @@ export const GET = async (request: NextRequest) => {
       ]),
       getPing(),
       si.graphics().catch(() => null),
+      getDiskStats().catch(() => null),
     ]);
 
     const actualUsed = memInfo.active || memInfo.used;
@@ -56,22 +62,19 @@ export const GET = async (request: NextRequest) => {
 
     const systemStats = {
       uptime: formatUptime(uptimeInfo.uptime),
+      uptimeSeconds: uptimeInfo.uptime,
       memory: {
         total: formatBytes(memInfo.total),
         used: formatBytes(actualUsed),
         free: formatBytes(memInfo.available || memInfo.free),
         usage: Math.round(memUsage),
-        status: getStatus(
-          memUsage,
-          { critical: 90, high: 80, moderate: 70 },
-          t
-        ),
+        status: getStatus(memUsage, { critical: 90, high: 80, moderate: 70 }),
       },
       cpu: {
         model: `${cpuInfo.manufacturer} ${cpuInfo.brand}`,
         cores: cpuInfo.cores,
         usage: Math.round(cpuLoad),
-        status: getStatus(cpuLoad, { high: 80, moderate: 60 }, t),
+        status: getStatus(cpuLoad, { high: 80, moderate: 60 }),
       },
       network: {
         speed:
@@ -85,11 +88,12 @@ export const GET = async (request: NextRequest) => {
         uploadSpeed: Math.round(txSpeed),
         status:
           mainInterface && mainInterface.operstate === "up"
-            ? t("system.connected")
-            : t("system.unknown"),
+            ? "connected"
+            : "unknown",
       },
-      systemStatus: getOverallStatus(memUsage, cpuLoad, t),
+      systemStatus: getOverallStatus(memUsage, cpuLoad, diskStats ?? []),
       gpu: formatGpuInfo(graphics, t),
+      ...(diskStats ? { disks: formatDiskStats(diskStats) } : {}),
     };
 
     if (sseBroadcaster.hasClients()) {
@@ -102,7 +106,7 @@ export const GET = async (request: NextRequest) => {
 
     return NextResponse.json(systemStats);
   } catch (error) {
-    console.error("Error fetching system stats:", error);
+    log.error("Error fetching system stats", error);
     return NextResponse.json(
       { error: "Failed to fetch system stats" },
       { status: 500 }

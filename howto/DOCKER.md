@@ -60,6 +60,17 @@ environment:
 - MAX_LOGS_PER_JOB=50 # Maximum logs per job (default: 50)
 ```
 
+#### Host Paths
+
+Crontab entries run on the host, so the app needs the host paths of its `/app/data` and `/app/scripts` mounts. By default it asks Docker through the mounted socket. Set these when that is not possible (no socket, rootless or remote Docker, unusual mounts):
+
+```yaml
+- HOST_DATA_DIR=/home/user/cronmaster/data
+- HOST_SCRIPTS_DIR=/home/user/cronmaster/scripts
+```
+
+Both must be absolute host paths matching the `volumes` entries. The legacy `HOST_PROJECT_DIR=/home/user/cronmaster` is still honoured as a last resort and maps to `HOST_PROJECT_DIR/data` and `HOST_PROJECT_DIR/scripts`.
+
 #### SSO Authentication (OIDC)
 
 ```yaml
@@ -70,11 +81,13 @@ environment:
 # Optional SSO settings:
 - OIDC_CLIENT_SECRET=your_secret
 - OIDC_LOGOUT_URL=https://provider/logout
-- OIDC_GROUPS_SCOPE=groups
+- OIDC_GROUPS_SCOPE=groups # Scope to request for groups (set to empty string or "no" to disable for providers like Entra ID)
+- OIDC_USER_GROUPS=cronmaster_users,ops # Restrict access to users in these groups
+- OIDC_USER_ROLES=user,member # Restrict access to users with these roles
 - NODE_TLS_REJECT_UNAUTHORIZED=0 # For self-signed certificates
 ```
 
-See `README_SSO.md` for detailed SSO setup instructions.
+See [SSO.md](SSO.md) for detailed SSO setup instructions.
 
 #### API Key Protection
 
@@ -82,13 +95,32 @@ See `README_SSO.md` for detailed SSO setup instructions.
 - API_KEY=your-secret-api-key-here
 ```
 
-See `README_API.md` for API key usage instructions.
+See [API.md](API.md) for API key usage instructions.
 
 #### Live Updates
 
 ```yaml
 - LIVE_UPDATES=false # Set to false to disable Server-Sent Events
 ```
+
+#### Disk Space and Inodes
+
+```yaml
+- DISK_MOUNTS=/,/mnt/data
+```
+
+Set `DISABLE_DISK_STATS=true` to turn the disk cards off entirely.
+
+By default only the host root filesystem is shown. With `pid: "host"` and `privileged: true` Cr\*nMaster reads host mounts through `/proc/1/root/<mount>`, so no extra volumes are needed. Each listed mount gets a single `statfs` call at most once per minute, and only when system stats are actually requested (the sidebar polls them while the page is visible). `statfs` reads filesystem counters, never file contents, but on some setups (mergerfs, network shares, sleepy USB disks) it can still wake the underlying drives, so only add mounts you are happy to have checked.
+
+#### Execution Shell
+
+```yaml
+- EXECUTION_SHELL=/bin/bash # Optional, shell used by "Run now" via su -s
+- STRICT_EXECUTION_USER=true # Optional, "Run now" fails instead of running as root when the job user is missing on the host
+```
+
+"Run now" enters the host with `nsenter` and switches to the job's user with `su`. By default the user's login shell is used, and service users with no login shell (`/usr/sbin/nologin`, `/bin/false`) automatically fall back to `/bin/sh`, so jobs owned by users like `www-data` run fine. Set `EXECUTION_SHELL` to force one shell for every manual run. Scheduled runs go through the host's cron and ignore this setting.
 
 ## Volume Mounts
 
@@ -173,6 +205,7 @@ services:
       - OIDC_CLIENT_SECRET=your_secret
       - OIDC_LOGOUT_URL=https://provider/logout
       - OIDC_GROUPS_SCOPE=groups
+      - OIDC_USER_GROUPS=cronmaster_users
 
       # API Key (optional)
       - API_KEY=your-secret-api-key-here

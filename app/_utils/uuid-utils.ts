@@ -9,7 +9,3 @@ export const generateShortUUID = (): string => {
 
   return `${part1}-${part2}`;
 };
-
-export const isValidShortUUID = (uuid: string): boolean => {
-  return /^[a-z0-9]{4}-[a-z0-9]{4}$/.test(uuid);
-};

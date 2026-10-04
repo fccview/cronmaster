@@ -2,6 +2,9 @@ import { readFile, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 import crypto from "crypto";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("auth:session");
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const SESSIONS_DIR = path.join(DATA_DIR, "sessions");
@@ -39,6 +42,15 @@ interface SessionStore {
   [sessionId: string]: Session;
 }
 
+const DEFAULT_SESSION_MAX_AGE_DAYS = 30;
+
+export const getSessionMaxAgeSeconds = (): number => {
+  const days = parseFloat(process.env.SESSION_MAX_AGE_DAYS || "");
+  const effective =
+    Number.isFinite(days) && days > 0 ? days : DEFAULT_SESSION_MAX_AGE_DAYS;
+  return Math.round(effective * 24 * 60 * 60);
+};
+
 export function generateSessionId(): string {
   return crypto.randomBytes(32).toString("base64url");
 }
@@ -64,7 +76,7 @@ async function loadSessions(): Promise<SessionStore> {
     const content = await readFile(SESSIONS_FILE, "utf-8");
     return content ? JSON.parse(content) : {};
   } catch (error) {
-    console.error("Error loading sessions:", error);
+    log.error("Error loading sessions", error);
     return {};
   }
 }
@@ -82,7 +94,7 @@ export async function createSession(authType: AuthType): Promise<string> {
     const sessions = await loadSessions();
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(now.getTime() + getSessionMaxAgeSeconds() * 1000);
 
     sessions[sessionId] = {
       authType,
@@ -92,13 +104,10 @@ export async function createSession(authType: AuthType): Promise<string> {
 
     await saveSessions(sessions);
 
-    if (process.env.DEBUGGER) {
-      console.log("[Session] Created session:", {
-        sessionId: sessionId.substring(0, 10) + "...",
-        authType,
-        expiresAt: expiresAt.toISOString(),
-      });
-    }
+    log.debug("Created session", {
+      authType,
+      expiresAt: expiresAt.toISOString(),
+    });
 
     return sessionId;
   });
@@ -120,6 +129,7 @@ export async function validateSession(sessionId: string): Promise<boolean> {
     const session = sessions[sessionId];
 
     if (!session) {
+      log.debug("Unknown session presented");
       return false;
     }
 
@@ -129,6 +139,10 @@ export async function validateSession(sessionId: string): Promise<boolean> {
     if (now > expiresAt) {
       delete sessions[sessionId];
       await saveSessions(sessions);
+      log.info("Session expired", {
+        authType: session.authType,
+        expiredAt: session.expiresAt,
+      });
       return false;
     }
 
@@ -167,11 +181,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
     delete sessions[sessionId];
     await saveSessions(sessions);
 
-    if (process.env.DEBUGGER) {
-      console.log("[Session] Deleted session:", {
-        sessionId: sessionId.substring(0, 10) + "...",
-      });
-    }
+    log.debug("Deleted session");
   });
 }
 
@@ -197,9 +207,7 @@ export async function cleanExpiredSessions(): Promise<void> {
 
     if (cleaned > 0) {
       await saveSessions(sessions);
-      if (process.env.DEBUGGER) {
-        console.log(`[Session] Cleaned ${cleaned} expired sessions`);
-      }
+      log.info("Cleaned expired sessions", { count: cleaned });
     }
   });
 }

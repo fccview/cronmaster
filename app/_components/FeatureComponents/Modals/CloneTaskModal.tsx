@@ -6,6 +6,7 @@ import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { type CronJob } from "@/app/_utils/cronjob-utils";
+import { useTranslations } from "next-intl";
 
 interface CloneTaskModalProps {
   cronJob: CronJob | null;
@@ -22,6 +23,7 @@ export const CloneTaskModal = ({
   onConfirm,
   isCloning,
 }: CloneTaskModalProps) => {
+  const t = useTranslations();
   const [newComment, setNewComment] = useState("");
 
   if (!isOpen || !cronJob) return null;
@@ -34,17 +36,17 @@ export const CloneTaskModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Clone Cron Job" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("cronjobs.cloneCronJob")} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="bg-muted/50 rounded-lg p-4 mb-4">
           <h4 className="font-medium text-foreground mb-2">
             {cronJob.comment}
           </h4>
           <p className="text-sm text-muted-foreground mb-2">
-            Schedule: {cronJob.schedule}
+            {t("cronjobs.schedule")}: {cronJob.schedule}
           </p>
           <p className="text-xs text-muted-foreground">
-            Command: {cronJob.command}
+            {t("cronjobs.command")}: {cronJob.command}
           </p>
         </div>
 
@@ -53,12 +55,12 @@ export const CloneTaskModal = ({
             htmlFor="newComment"
             className="text-sm font-medium text-foreground"
           >
-            New Comment
+            {t("cronjobs.newComment")}
           </label>
           <Input
             id="newComment"
             type="text"
-            placeholder="Enter new comment..."
+            placeholder={t("cronjobs.enterNewComment")}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             disabled={isCloning}
@@ -75,7 +77,7 @@ export const CloneTaskModal = ({
             disabled={isCloning}
             className="flex-1 btn-outline"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="submit"
@@ -85,12 +87,12 @@ export const CloneTaskModal = ({
             {isCloning ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Cloning...
+                {t("common.cloning")}
               </>
             ) : (
               <>
                 <CopyIcon className="h-4 w-4 mr-2" />
-                Clone Cron Job
+                {t("cronjobs.cloneCronJob")}
               </>
             )}
           </Button>

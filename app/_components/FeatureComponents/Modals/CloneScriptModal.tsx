@@ -6,6 +6,7 @@ import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { Script } from "@/app/_utils/scripts-utils";
+import { useTranslations } from "next-intl";
 
 interface CloneScriptModalProps {
   script: Script | null;
@@ -22,6 +23,7 @@ export const CloneScriptModal = ({
   onConfirm,
   isCloning,
 }: CloneScriptModalProps) => {
+  const t = useTranslations();
   const [newName, setNewName] = useState("");
 
   if (!isOpen || !script) return null;
@@ -34,7 +36,7 @@ export const CloneScriptModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Clone Script" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("scripts.cloneScript")} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="bg-muted/50 rounded-lg p-4 mb-4">
           <h4 className="font-medium text-foreground mb-2">{script.name}</h4>
@@ -44,7 +46,7 @@ export const CloneScriptModal = ({
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            File: {script.filename}
+            {t("scripts.file")}: {script.filename}
           </p>
         </div>
 
@@ -53,12 +55,12 @@ export const CloneScriptModal = ({
             htmlFor="newName"
             className="text-sm font-medium text-foreground"
           >
-            New Script Name
+            {t("scripts.newScriptName")}
           </label>
           <Input
             id="newName"
             type="text"
-            placeholder="Enter new script name..."
+            placeholder={t("scripts.enterNewScriptName")}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             disabled={isCloning}
@@ -75,7 +77,7 @@ export const CloneScriptModal = ({
             disabled={isCloning}
             className="flex-1 btn-outline"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="submit"
@@ -85,12 +87,12 @@ export const CloneScriptModal = ({
             {isCloning ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Cloning...
+                {t("common.cloning")}
               </>
             ) : (
               <>
                 <CopyIcon className="h-4 w-4 mr-2" />
-                Clone Script
+                {t("scripts.cloneScript")}
               </>
             )}
           </Button>

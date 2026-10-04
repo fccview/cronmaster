@@ -69,9 +69,15 @@ export const LoginForm = ({
       if (result.success) {
         router.push("/");
       } else {
-        setError(result.message || t("login.loginFailed"));
+        setError(
+          response.status === 401
+            ? t("login.invalidPassword")
+            : response.status === 429
+              ? t("login.tooManyAttempts")
+              : result.message || t("login.loginFailed")
+        );
       }
-    } catch (error) {
+    } catch {
       setError(t("login.genericError"));
     } finally {
       setIsLoading(false);

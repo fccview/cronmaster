@@ -7,7 +7,7 @@ import { Button } from "./Button";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   showCloseButton?: boolean;
@@ -29,15 +29,19 @@ export const Modal = ({
 
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog) return;
+    if (!dialog || !isOpen) return;
 
-    if (isOpen) {
+    if (!dialog.open) {
       dialog.showModal();
-      document.body.style.overflow = "hidden";
-    } else {
-      dialog.close();
-      document.body.style.overflow = "unset";
     }
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      if (dialog.open) {
+        dialog.close();
+      }
+      document.body.style.overflow = "unset";
+    };
   }, [isOpen]);
 
   const sizeClasses = {
@@ -53,6 +57,15 @@ export const Modal = ({
     <dialog
       ref={dialogRef}
       className={`ascii-border terminal-font bg-background0 mobile-modal ${sizeClasses[size]} max-w-[95vw] ${className}`}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onClose={() => {
+        if (isOpen) {
+          onClose();
+        }
+      }}
       onClick={(e) => {
         if (e.target === dialogRef.current && !preventCloseOnClickOutside) {
           onClose();

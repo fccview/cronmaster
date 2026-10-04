@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { XIcon, CheckCircleIcon, WarningCircleIcon, InfoIcon, WarningIcon } from "@phosphor-icons/react";
 import { cn } from "@/app/_utils/global-utils";
 import { ErrorDetailsModal } from "@/app/_components/FeatureComponents/Modals/ErrorDetailsModal";
+import { useTranslations } from "next-intl";
 
 export interface Toast {
   id: string;
@@ -29,6 +30,10 @@ interface ToastProps {
   onErrorClick?: (errorDetails: Toast["errorDetails"]) => void;
 }
 
+type ToastWindow = Window & {
+  showToast?: (toast: Omit<Toast, "id">) => void;
+};
+
 const toastIcons = {
   success: CheckCircleIcon,
   error: WarningCircleIcon,
@@ -44,17 +49,21 @@ const toastStyles = {
 };
 
 export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
+  const t = useTranslations();
   const [isVisible, setIsVisible] = useState(false);
   const Icon = toastIcons[toast.type];
 
   useEffect(() => {
-    setIsVisible(true);
+    const frame = requestAnimationFrame(() => setIsVisible(true));
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(() => onRemove(toast.id), 300);
     }, toast.duration || 5000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
   }, [toast.id, toast.duration, onRemove]);
 
   return (
@@ -80,7 +89,7 @@ export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
           <p className="text-sm opacity-90 mt-1">{toast.message}</p>
         )}
         {toast.type === "error" && toast.errorDetails && (
-          <p className="text-xs opacity-70 mt-1">Click for details</p>
+          <p className="text-xs opacity-70 mt-1">{t("common.clickForDetails")}</p>
         )}
       </div>
       <button
@@ -118,9 +127,9 @@ export const ToastContainer = () => {
   };
 
   useEffect(() => {
-    (window as any).showToast = addToast;
+    (window as ToastWindow).showToast = addToast;
     return () => {
-      delete (window as any).showToast;
+      delete (window as ToastWindow).showToast;
     };
   }, []);
 
@@ -157,7 +166,9 @@ export const showToast = (
   duration?: number,
   errorDetails?: Toast["errorDetails"]
 ) => {
-  if (typeof window !== "undefined" && (window as any).showToast) {
-    (window as any).showToast({ type, title, message, duration, errorDetails });
+  const toastWindow =
+    typeof window !== "undefined" ? (window as ToastWindow) : undefined;
+  if (toastWindow?.showToast) {
+    toastWindow.showToast({ type, title, message, duration, errorDetails });
   }
 };

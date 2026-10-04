@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { WarningIcon, XIcon } from "@phosphor-icons/react";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("ui:system");
 
 export const WrapperScriptWarning = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,7 +30,7 @@ export const WrapperScriptWarning = () => {
         setIsVisible(data.modified);
       }
     } catch (error) {
-      console.error("Failed to check wrapper script:", error);
+      log.error("Failed to check wrapper script", error);
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +62,7 @@ export const WrapperScriptWarning = () => {
         <button
           onClick={dismissWarning}
           className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors ml-4"
-          aria-label="Dismiss warning"
+          aria-label={t("warnings.dismissWarning")}
         >
           <XIcon className="w-4 h-4" />
         </button>

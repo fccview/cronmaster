@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useState, useRef, useEffect, useEffectEvent, ReactNode } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { DotsThreeVerticalIcon } from "@phosphor-icons/react";
+import { useTranslations } from "next-intl";
 
 const DROPDOWN_HEIGHT = 200;
 
@@ -29,6 +30,7 @@ export const DropdownMenu = ({
   triggerClassName = "btn-outline h-8 px-3",
   onOpenChange,
 }: DropdownMenuProps) => {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [positionAbove, setPositionAbove] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -47,19 +49,21 @@ export const DropdownMenu = ({
     onOpenChange?.(open);
   };
 
+  const closeMenu = useEffectEvent(() => handleOpenChange(false));
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
       ) {
-        handleOpenChange(false);
+        closeMenu();
       }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        handleOpenChange(false);
+        closeMenu();
       }
     };
 
@@ -89,8 +93,8 @@ export const DropdownMenu = ({
         size="sm"
         onClick={() => handleOpenChange(!isOpen)}
         className={triggerClassName}
-        aria-label={triggerLabel || "Open menu"}
-        title={triggerLabel || "Open menu"}
+        aria-label={triggerLabel || t("common.openMenu")}
+        title={triggerLabel || t("common.openMenu")}
       >
         {triggerIcon}
         {triggerLabel && <span className="ml-2">{triggerLabel}</span>}

@@ -7,7 +7,7 @@ import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { FileTextIcon, MagnifyingGlassIcon, CheckIcon, TerminalIcon } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 import { getScriptContent } from "@/app/_server/actions/scripts";
-import { getHostScriptPath } from "@/app/_server/actions/scripts";
+import { getScriptPathForCron } from "@/app/_server/actions/scripts";
 import { useTranslations } from "next-intl";
 
 interface SelectScriptModalProps {
@@ -33,7 +33,7 @@ export const SelectScriptModal = ({
 
   useEffect(() => {
     const fetchHostScriptPath = async () => {
-      const path = await getHostScriptPath(previewScript?.filename || "");
+      const path = await getScriptPathForCron(previewScript?.filename || "");
       setHostScriptPath(path);
     };
 
@@ -53,8 +53,8 @@ export const SelectScriptModal = ({
     try {
       const content = await getScriptContent(script.filename);
       setPreviewContent(content);
-    } catch (error) {
-      setPreviewContent("Error loading script content");
+    } catch {
+      setPreviewContent(t("scripts.errorLoadingScriptContent"));
     }
   };
 

@@ -1,19 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { DropdownMenu } from "@/app/_components/GlobalComponents/UIElements/DropdownMenu";
 import {
-  TrashIcon,
-  PencilSimpleIcon,
-  FilesIcon,
   PlayIcon,
   PauseIcon,
   CodeIcon,
   InfoIcon,
-  DownloadIcon,
   CheckIcon,
-  FileXIcon,
   FileTextIcon,
   FileArrowDownIcon,
 } from "@phosphor-icons/react";
@@ -27,6 +22,7 @@ import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
 import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { copyToClipboard } from "@/app/_utils/global-utils";
+import { useJobMenuItems } from "@/app/_components/FeatureComponents/Cronjobs/Parts/useJobMenuItems";
 
 interface MinimalCronJobItemProps {
   job: CronJob;
@@ -63,78 +59,27 @@ export const MinimalCronJobItem = ({
   onBackup,
   onErrorClick,
 }: MinimalCronJobItemProps) => {
-  const [cronExplanation, setCronExplanation] =
-    useState<CronExplanation | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [commandCopied, setCommandCopied] = useState<string | null>(null);
   const locale = useLocale();
   const t = useTranslations();
   const displayCommand = unwrapCommand(job.command);
 
-  useEffect(() => {
-    if (job.schedule) {
-      const explanation = parseCronExpression(job.schedule, locale);
-      setCronExplanation(explanation);
-    } else {
-      setCronExplanation(null);
-    }
-  }, [job.schedule]);
+  const cronExplanation = useMemo<CronExplanation | null>(
+    () => (job.schedule ? parseCronExpression(job.schedule, locale) : null),
+    [job.schedule, locale]
+  );
 
-  const dropdownMenuItems = [
-    {
-      label: t("cronjobs.editCronJob"),
-      icon: <PencilSimpleIcon className="h-3 w-3" />,
-      onClick: () => onEdit(job),
-    },
-    {
-      label: job.logsEnabled
-        ? t("cronjobs.disableLogging")
-        : t("cronjobs.enableLogging"),
-      icon: job.logsEnabled ? (
-        <FileXIcon className="h-3 w-3" />
-      ) : (
-        <CodeIcon className="h-3 w-3" />
-      ),
-      onClick: () => onToggleLogging(job.id),
-    },
-    ...(job.logsEnabled
-      ? [
-        {
-          label: t("cronjobs.viewLogs"),
-          icon: <CodeIcon className="h-3 w-3" />,
-          onClick: () => onViewLogs(job),
-        },
-      ]
-      : []),
-    {
-      label: job.paused
-        ? t("cronjobs.resumeCronJob")
-        : t("cronjobs.pauseCronJob"),
-      icon: job.paused ? (
-        <PlayIcon className="h-3 w-3" />
-      ) : (
-        <PauseIcon className="h-3 w-3" />
-      ),
-      onClick: () => (job.paused ? onResume(job.id) : onPause(job.id)),
-    },
-    {
-      label: t("cronjobs.cloneCronJob"),
-      icon: <FilesIcon className="h-3 w-3" />,
-      onClick: () => onClone(job),
-    },
-    {
-      label: t("cronjobs.backupJob"),
-      icon: <DownloadIcon className="h-3 w-3" />,
-      onClick: () => onBackup(job.id),
-    },
-    {
-      label: t("cronjobs.deleteCronJob"),
-      icon: <TrashIcon className="h-3 w-3" />,
-      onClick: () => onDelete(job),
-      variant: "destructive" as const,
-      disabled: deletingId === job.id,
-    },
-  ];
+  const dropdownMenuItems = useJobMenuItems(job, deletingId, {
+    onEdit,
+    onClone,
+    onResume,
+    onPause,
+    onDelete,
+    onToggleLogging,
+    onViewLogs,
+    onBackup,
+  });
 
   return (
     <div
@@ -216,7 +161,7 @@ export const MinimalCronJobItem = ({
           {job.logsEnabled && job.logError?.hasError && (
             <div
               className="w-2 h-2 bg-status-error ascii-border cursor-pointer"
-              title="Latest execution failed - Click to view error log"
+              title={t("cronjobs.latestExecutionFailed")}
               onClick={(e) => {
                 e.stopPropagation();
                 onViewLogs(job);
@@ -226,8 +171,8 @@ export const MinimalCronJobItem = ({
           {!job.logsEnabled && errors.length > 0 && (
             <div
               className="w-2 h-2 bg-status-warning ascii-border cursor-pointer"
-              title={`${errors.length} error(s)`}
-              onClick={(e) => onErrorClick(errors[0])}
+              title={t("cronjobs.nErrors", { count: errors.length })}
+              onClick={() => onErrorClick(errors[0])}
             />
           )}
         </div>
@@ -260,8 +205,16 @@ export const MinimalCronJobItem = ({
               }
             }}
             className="btn-outline h-8 px-3 hidden md:flex"
-            title={t("cronjobs.pauseCronJob")}
-            aria-label={t("cronjobs.pauseCronJob")}
+            title={
+              job.paused
+                ? t("cronjobs.resumeCronJob")
+                : t("cronjobs.pauseCronJob")
+            }
+            aria-label={
+              job.paused
+                ? t("cronjobs.resumeCronJob")
+                : t("cronjobs.pauseCronJob")
+            }
           >
             {job.paused ? (
               <PlayIcon className="h-3 w-3" />

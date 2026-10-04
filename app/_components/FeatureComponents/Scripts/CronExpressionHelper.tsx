@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   parseCronExpression,
   cronPatterns,
@@ -18,7 +18,7 @@ import {
   CaretUpIcon,
   MagnifyingGlassIcon,
 } from "@phosphor-icons/react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface CronExpressionHelperProps {
   value: string;
@@ -36,7 +36,7 @@ export const CronExpressionHelper = ({
   showPatterns = true,
 }: CronExpressionHelperProps) => {
   const locale = useLocale();
-  const [explanation, setExplanation] = useState<CronExplanation | null>(null);
+  const t = useTranslations();
   const [showPatternsPanel, setShowPatternsPanel] = useState(false);
   const [debouncedValue, setDebouncedValue] = useState(value);
   const [patternSearch, setPatternSearch] = useState("");
@@ -49,14 +49,11 @@ export const CronExpressionHelper = ({
     return () => clearTimeout(timer);
   }, [value]);
 
-  useEffect(() => {
-    if (debouncedValue) {
-      const result = parseCronExpression(debouncedValue, locale);
-      setExplanation(result);
-    } else {
-      setExplanation(null);
-    }
-  }, [debouncedValue]);
+  const explanation = useMemo<CronExplanation | null>(
+    () =>
+      debouncedValue ? parseCronExpression(debouncedValue, locale) : null,
+    [debouncedValue, locale]
+  );
 
   const handlePatternSelect = (pattern: string) => {
     onChange(pattern);
@@ -66,13 +63,19 @@ export const CronExpressionHelper = ({
   const filteredPatterns = cronPatterns
     .map((category) => ({
       ...category,
-      patterns: category.patterns.filter(
-        (pattern) =>
-          pattern.value.toLowerCase().includes(patternSearch.toLowerCase()) ||
-          pattern.description
-            .toLowerCase()
-            .includes(patternSearch.toLowerCase())
-      ),
+      category: t(`cronPatterns.categories.${category.id}`),
+      patterns: category.patterns
+        .map((pattern) => ({
+          ...pattern,
+          description: t(`cronPatterns.${pattern.id}`),
+        }))
+        .filter(
+          (pattern) =>
+            pattern.value.toLowerCase().includes(patternSearch.toLowerCase()) ||
+            pattern.description
+              .toLowerCase()
+              .includes(patternSearch.toLowerCase())
+        ),
     }))
     .filter((category) => category.patterns.length > 0);
 
@@ -105,7 +108,7 @@ export const CronExpressionHelper = ({
                 <p className="text-xs italic text-muted-foreground">
                   {explanation.isValid
                     ? explanation.humanReadable
-                    : "Invalid Expression"}
+                    : t("cronjobs.invalidExpression")}
                 </p>
                 {explanation.error && (
                   <p className="text-xs text-status-error mt-0.5">
@@ -120,7 +123,7 @@ export const CronExpressionHelper = ({
                 <Calendar className="h-3 w-3 text-status-info mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground mb-1">
-                    Next executions:
+                    {t("cronjobs.nextExecutions")}
                   </p>
                   <div className="space-y-0.5">
                     {explanation.nextRuns.slice(0, 3).map((time, index) => (
@@ -148,7 +151,7 @@ export const CronExpressionHelper = ({
             className="w-full text-left p-3 hover:bg-background0 transition-colors"
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Quick Patterns</span>
+              <span className="text-sm font-medium">{t("cronjobs.quickPatterns")}</span>
               <div className="p-1">
                 {showPatternsPanel ? (
                   <CaretUpIcon className="h-4 w-4" />
@@ -166,7 +169,7 @@ export const CronExpressionHelper = ({
                 <Input
                   value={patternSearch}
                   onChange={(e) => setPatternSearch(e.target.value)}
-                  placeholder="Search patterns..."
+                  placeholder={t("cronjobs.searchPatterns")}
                   className="pl-9"
                 />
               </div>
@@ -201,7 +204,7 @@ export const CronExpressionHelper = ({
                 ))}
                 {filteredPatterns.length === 0 && patternSearch && (
                   <p className="text-xs text-muted-foreground text-center py-4">
-                    No patterns found for "{patternSearch}"
+                    {t("cronjobs.noPatternsFound", { query: patternSearch })}
                   </p>
                 )}
               </div>

@@ -1,8 +1,14 @@
 import { NextRequest } from "next/server";
-import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
+import {
+  isLiveUpdatesEnabled,
+  sseBroadcaster,
+} from "@/app/_utils/sse-broadcaster";
 import { createHeartbeatEvent } from "@/app/_utils/sse-events";
 import { startLogWatcher } from "@/app/_utils/log-watcher";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("sse");
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -13,9 +19,8 @@ export const GET = async (request: NextRequest) => {
   const authError = await requireAuth(request);
   if (authError) return authError;
 
-  const liveUpdatesEnabled = process.env.LIVE_UPDATES !== "false";
-
-  if (!liveUpdatesEnabled) {
+  if (!isLiveUpdatesEnabled()) {
+    log.debug("SSE connection refused, live updates disabled");
     return new Response(
       JSON.stringify({ error: "Live updates are disabled" }),
       {
@@ -26,6 +31,7 @@ export const GET = async (request: NextRequest) => {
   }
 
   if (!watcherStarted) {
+    log.info("Starting log watcher for live updates");
     startLogWatcher();
     watcherStarted = true;
   }
@@ -49,7 +55,7 @@ export const GET = async (request: NextRequest) => {
           const heartbeat = createHeartbeatEvent();
           sseBroadcaster.sendToClient(clientId, heartbeat);
         } catch (error) {
-          console.error("[SSE] Heartbeat error:", error);
+          log.debug("Heartbeat failed, closing stream", error);
           clearInterval(heartbeatInterval);
         }
       }, 30000);
@@ -57,6 +63,7 @@ export const GET = async (request: NextRequest) => {
       request.signal.addEventListener("abort", () => {
         clearInterval(heartbeatInterval);
         sseBroadcaster.removeClient(clientId);
+        log.debug("SSE connection closed", { clientId });
       });
     },
   });

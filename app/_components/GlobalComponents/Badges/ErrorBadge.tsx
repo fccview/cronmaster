@@ -2,6 +2,7 @@
 
 import { WarningCircleIcon, XIcon } from "@phosphor-icons/react";
 import { JobError, removeJobError } from "@/app/_utils/error-utils";
+import { useTranslations } from "next-intl";
 
 interface ErrorBadgeProps {
   errors: JobError[];
@@ -14,6 +15,7 @@ export const ErrorBadge = ({
   onErrorClick,
   onErrorDismiss,
 }: ErrorBadgeProps) => {
+  const t = useTranslations();
   if (errors.length === 0) return null;
 
   const handleDismissError = (errorId: string) => {
@@ -31,12 +33,12 @@ export const ErrorBadge = ({
             title={error.message}
           >
             <WarningCircleIcon className="h-3 w-3" />
-            <span className="hidden sm:inline">Error</span>
+            <span className="hidden sm:inline">{t("common.error")}</span>
           </button>
           <button
             onClick={() => handleDismissError(error.id)}
             className="p-1 text-destructive hover:bg-destructive/10 rounded transition-colors"
-            title="Dismiss error"
+            title={t("common.dismissError")}
           >
             <XIcon className="h-3 w-3" />
           </button>

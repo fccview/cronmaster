@@ -1,16 +1,14 @@
 'use client'
 
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 import { SunIcon, MoonIcon } from '@phosphor-icons/react';
+import { useIsHydrated } from '@/app/_hooks/useIsHydrated';
+import { useTranslations } from 'next-intl';
 
 export const ThemeToggle = () => {
-  const [mounted, setMounted] = useState(false);
+  const t = useTranslations();
+  const mounted = useIsHydrated();
   const { theme, setTheme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) return null;
 
@@ -20,8 +18,8 @@ export const ThemeToggle = () => {
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className="p-2 ascii-border bg-background0 hover:bg-background1 transition-colors"
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={isDark ? t('common.switchToLightMode') : t('common.switchToDarkMode')}
+      title={isDark ? t('common.switchToLightMode') : t('common.switchToDarkMode')}
     >
       {isDark ? (
         <SunIcon size={20} weight="regular" className="text-foreground" />

@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { CaretDownIcon, UserIcon } from "@phosphor-icons/react";
 import { fetchAvailableUsers } from "@/app/_server/actions/cronjobs";
+import { createLogger } from "@/app/_utils/logger";
+import { useTranslations } from "next-intl";
+
+const log = createLogger("ui:users");
 
 interface UserSwitcherProps {
   selectedUser: string;
@@ -16,6 +20,7 @@ export const UserSwitcher = ({
   onUserChange,
   className = "",
 }: UserSwitcherProps) => {
+  const t = useTranslations();
   const [users, setUsers] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +34,7 @@ export const UserSwitcher = ({
           onUserChange(availableUsers[0]);
         }
       } catch (error) {
-        console.error("Error loading users:", error);
+        log.error("Error loading users", error);
       } finally {
         setIsLoading(false);
       }
@@ -44,7 +49,7 @@ export const UserSwitcher = ({
         className={`flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md ${className}`}
       >
         <UserIcon className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Loading users...</span>
+        <span className="text-sm text-muted-foreground">{t("common.loadingUsers")}</span>
       </div>
     );
   }
@@ -63,7 +68,7 @@ export const UserSwitcher = ({
       >
         <div className="flex items-center gap-2">
           <UserIcon className="h-4 w-4" />
-          <span className="text-sm">{selectedUser || "Select user"}</span>
+          <span className="text-sm">{selectedUser || t("common.selectUser")}</span>
         </div>
         <CaretDownIcon className="h-4 w-4" />
       </Button>

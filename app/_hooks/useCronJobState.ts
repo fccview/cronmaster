@@ -19,6 +19,11 @@ import {
     handleToggleLogging,
     handleBackup,
 } from "@/app/_components/FeatureComponents/Cronjobs/helpers";
+import { buildScriptSelection } from "@/app/_components/FeatureComponents/Cronjobs/Parts/ScriptCommandPicker";
+import { findScriptForCommand } from "@/app/_utils/script-command-utils";
+import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
+import { useIsHydrated } from "@/app/_hooks/useIsHydrated";
+import { useTranslations } from "next-intl";
 
 interface CronJobListProps {
     cronJobs: CronJob[];
@@ -26,6 +31,7 @@ interface CronJobListProps {
 }
 
 export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
+    const t = useTranslations();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editingJob, setEditingJob] = useState<CronJob | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -38,6 +44,8 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const [runningJobId, setRunningJobId] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const [jobErrors, setJobErrors] = useState<Record<string, JobError[]>>({});
+    const [jobErrorsSource, setJobErrorsSource] = useState<CronJob[] | null>(null);
+    const [savedUserLoaded, setSavedUserLoaded] = useState(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [selectedError, setSelectedError] = useState<JobError | null>(null);
     const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
@@ -51,6 +59,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         schedule: "",
         command: "",
         comment: "",
+        selectedScriptId: null as string | null,
         logsEnabled: false,
     });
     const [newCronForm, setNewCronForm] = useState({
@@ -62,44 +71,48 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         logsEnabled: false,
     });
 
-    useEffect(() => {
+    const isHydrated = useIsHydrated();
+    if (isHydrated && !savedUserLoaded) {
+        setSavedUserLoaded(true);
         const savedUser = localStorage.getItem("selectedCronUser");
         if (savedUser) {
             setSelectedUser(savedUser);
         }
-    }, []);
+    }
 
     useEffect(() => {
+        if (!isHydrated) return;
         if (selectedUser) {
             localStorage.setItem("selectedCronUser", selectedUser);
         } else {
             localStorage.removeItem("selectedCronUser");
         }
-    }, [selectedUser]);
+    }, [selectedUser, isHydrated]);
 
     const filteredJobs = useMemo(() => {
         if (!selectedUser) return cronJobs;
         return cronJobs.filter((job) => job.user === selectedUser);
     }, [cronJobs, selectedUser]);
 
-    useEffect(() => {
+    const collectJobErrors = (jobs: CronJob[]) => {
         const errors: Record<string, JobError[]> = {};
-        filteredJobs.forEach((job) => {
+        jobs.forEach((job) => {
             errors[job.id] = getJobErrorsByJobId(job.id);
         });
-        setJobErrors(errors);
-    }, [filteredJobs]);
+        return errors;
+    };
 
+    if (isHydrated && jobErrorsSource !== filteredJobs) {
+        setJobErrorsSource(filteredJobs);
+        setJobErrors(collectJobErrors(filteredJobs));
+    }
 
     const refreshJobErrorsLocal = () => {
-        const errors: Record<string, JobError[]> = {};
-        filteredJobs.forEach((job) => {
-            errors[job.id] = getJobErrorsByJobId(job.id);
-        });
-        setJobErrors(errors);
+        setJobErrors(collectJobErrors(filteredJobs));
     };
 
     const getHelperState = () => ({
+        t,
         setDeletingId,
         setIsDeleteModalOpen,
         setJobToDelete,
@@ -140,14 +153,14 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const handlePauseLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handlePause(job);
+            await handlePause(job, t);
         }
     };
 
     const handleResumeLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handleResume(job);
+            await handleResume(job, t);
         }
     };
 
@@ -160,7 +173,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const handleToggleLoggingLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handleToggleLogging(job);
+            await handleToggleLogging(job, t);
         }
     };
 
@@ -180,14 +193,22 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const handleEdit = (job: CronJob) => {
+        const script = findScriptForCommand(job.command, scripts);
         setEditingJob(job);
         setEditForm({
             schedule: job.schedule,
-            command: job.command,
+            command: script ? unwrapCommand(job.command) : job.command,
             comment: job.comment || "",
+            selectedScriptId: script?.id ?? null,
             logsEnabled: job.logsEnabled || false,
         });
         setIsEditModalOpen(true);
+    };
+
+    const openNewCronWithScript = async (script: Script) => {
+        const selection = await buildScriptSelection(script);
+        setNewCronForm((prev) => ({ ...prev, ...selection }));
+        setIsNewCronModalOpen(true);
     };
 
     const handleEditSubmitLocal = async (e: React.FormEvent) => {
@@ -201,7 +222,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     const handleBackupLocal = async (id: string) => {
         const job = cronJobs.find(j => j.id === id);
         if (job) {
-            await handleBackup(job);
+            await handleBackup(job, t);
         }
     };
 
@@ -251,6 +272,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         confirmDelete,
         confirmClone,
         handleEdit,
+        openNewCronWithScript,
         handleEditSubmitLocal,
         handleNewCronSubmitLocal,
         handleBackupLocal,
