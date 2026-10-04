@@ -5,6 +5,9 @@ import { promisify } from "util";
 import { readHostCrontab, writeHostCrontab } from "@/app/_utils/crontab-utils";
 import { isDocker } from "@/app/_server/actions/global";
 import { READ_CRON_FILE, WRITE_CRON_FILE } from "@/app/_consts/commands";
+import { commandFailure, createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("crontab");
 
 const execAsync = promisify(exec);
 
@@ -34,9 +37,10 @@ export const readCronFiles = async (): Promise<string> => {
     if (!docker) {
         try {
             const { stdout } = await execAsync(READ_CRON_FILE());
+            log.debug("Read crontab file", { bytes: stdout.length });
             return stdout;
         } catch (error) {
-            console.error("Error reading crontab:", error);
+            log.error("Error reading crontab", error);
             return "";
         }
     }
@@ -50,9 +54,10 @@ export const writeCronFiles = async (content: string): Promise<boolean> => {
     if (!docker) {
         try {
             await execAsync(WRITE_CRON_FILE(content));
+            log.debug("Wrote crontab file", { bytes: content.length });
             return true;
         } catch (error) {
-            console.error("Error writing crontab:", error);
+            log.error("Error writing crontab", commandFailure(error));
             return false;
         }
     }

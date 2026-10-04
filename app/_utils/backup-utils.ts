@@ -1,6 +1,9 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { getCronJobs, type CronJob } from "@/app/_utils/cronjob-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("backup");
 
 const BACKUP_DIR = path.join(process.cwd(), "data", "backup");
 
@@ -8,7 +11,7 @@ const ensureBackupDirectoryExists = async (): Promise<void> => {
   try {
     await fs.mkdir(BACKUP_DIR, { recursive: true });
   } catch (error) {
-    console.error("Error creating backup directory:", error);
+    log.error("Error creating backup directory", error);
     throw error;
   }
 };
@@ -36,10 +39,11 @@ export const backupJobToFile = async (job: CronJob): Promise<boolean> => {
     const filepath = path.join(BACKUP_DIR, filename);
 
     await fs.writeFile(filepath, JSON.stringify(jobData, null, 2), "utf8");
+    log.debug("Wrote backup file", { jobId: job.id, filename });
 
     return true;
   } catch (error) {
-    console.error(`Error backing up job ${job.id}:`, error);
+    log.error(`Error backing up job ${job.id}`, error);
     return false;
   }
 };
@@ -52,6 +56,7 @@ export const backupAllJobsToFiles = async (): Promise<{
     await ensureBackupDirectoryExists();
 
     const cronJobs = await getCronJobs(false);
+    log.debug("Backing up all jobs", { total: cronJobs.length });
 
     let successCount = 0;
 
@@ -67,7 +72,7 @@ export const backupAllJobsToFiles = async (): Promise<{
       count: successCount,
     };
   } catch (error) {
-    console.error("Error backing up all jobs:", error);
+    log.error("Error backing up all jobs", error);
     return {
       success: false,
       count: 0,
@@ -82,7 +87,7 @@ export const listBackupFiles = async (): Promise<string[]> => {
     const files = await fs.readdir(BACKUP_DIR);
     return files.filter((file) => file.endsWith(".job"));
   } catch (error) {
-    console.error("Error listing backup files:", error);
+    log.error("Error listing backup files", error);
     return [];
   }
 };
@@ -105,7 +110,7 @@ export const readBackupFile = async (
       logsEnabled: jobData.logsEnabled,
     };
   } catch (error) {
-    console.error(`Error reading backup file ${filename}:`, error);
+    log.error(`Error reading backup file ${filename}`, error);
     return null;
   }
 };
@@ -122,6 +127,7 @@ export const getAllBackupFiles = async (): Promise<
 
     const files = await fs.readdir(BACKUP_DIR);
     const jobFiles = files.filter((file) => file.endsWith(".job"));
+    log.debug("Found backup files", { count: jobFiles.length });
 
     const backups = await Promise.all(
       jobFiles.map(async (filename) => {
@@ -144,7 +150,7 @@ export const getAllBackupFiles = async (): Promise<
             backedUpAt: jobData.backedUpAt,
           };
         } catch (error) {
-          console.error(`Error reading backup file ${filename}:`, error);
+          log.error(`Error reading backup file ${filename}`, error);
           return null;
         }
       })
@@ -156,7 +162,7 @@ export const getAllBackupFiles = async (): Promise<
       backedUpAt: string;
     }>;
   } catch (error) {
-    console.error("Error getting all backup files:", error);
+    log.error("Error getting all backup files", error);
     return [];
   }
 };
@@ -167,12 +173,13 @@ export const restoreJobFromBackup = async (
   try {
     const job = await readBackupFile(filename);
     if (!job) {
+      log.warn("Backup file could not be read", { filename });
       return { success: false };
     }
 
     return { success: true, job };
   } catch (error) {
-    console.error(`Error restoring job from backup ${filename}:`, error);
+    log.error(`Error restoring job from backup ${filename}`, error);
     return { success: false };
   }
 };
@@ -181,9 +188,10 @@ export const deleteBackupFile = async (filename: string): Promise<boolean> => {
   try {
     const filepath = path.join(BACKUP_DIR, filename);
     await fs.unlink(filepath);
+    log.debug("Deleted backup file", { filename });
     return true;
   } catch (error) {
-    console.error(`Error deleting backup file ${filename}:`, error);
+    log.error(`Error deleting backup file ${filename}`, error);
     return false;
   }
 };

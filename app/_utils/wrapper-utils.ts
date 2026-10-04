@@ -3,6 +3,9 @@ import path from "path";
 import { DATA_DIR } from "../_consts/file";
 import { getHostDataPath } from "../_server/actions/global";
 import { toShellArg, fromShellArg } from "./wrapper-utils-client";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("wrapper");
 
 const sanitizeForFilesystem = (input: string): string => {
   return input
@@ -35,8 +38,11 @@ export const ensureWrapperScriptInData = (): string => {
   if (!existsSync(dataScriptPath)) {
     try {
       copyFileSync(sourceScriptPath, dataScriptPath);
+      log.info("Installed wrapper script into data directory", {
+        path: dataScriptPath,
+      });
     } catch (error) {
-      console.error("Failed to copy wrapper script to data directory:", error);
+      log.error("Failed to copy wrapper script to data directory", error);
       return sourceScriptPath;
     }
   }
@@ -60,8 +66,13 @@ export const wrapCommandWithLogger = async (
     const hostDataPath = await getHostDataPath();
     if (hostDataPath) {
       const hostWrapperPath = path.join(hostDataPath, "cron-log-wrapper.sh");
+      log.debug("Wrapping command with host logger", {
+        jobId,
+        wrapperPath: hostWrapperPath,
+      });
       return `${hostWrapperPath} "${logFolderName}" ${safeCmd}`;
     }
+    log.error("Cannot wrap command, host data path unknown", { jobId });
     throw new Error(
       "Cannot determine the host data path for logging. Set HOST_DATA_DIR to the host directory mounted at /app/data, or check the Docker socket and /app/data mount."
     );
@@ -72,6 +83,10 @@ export const wrapCommandWithLogger = async (
     DATA_DIR,
     "cron-log-wrapper.sh"
   );
+  log.debug("Wrapping command with local logger", {
+    jobId,
+    wrapperPath: localWrapperPath,
+  });
   return `${localWrapperPath} "${logFolderName}" ${safeCmd}`;
 };
 

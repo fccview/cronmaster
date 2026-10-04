@@ -25,6 +25,9 @@ import {
   isCommandWrapped,
 } from "@/app/_utils/wrapper-utils";
 import { generateShortUUID } from "@/app/_utils/uuid-utils";
+import { commandFailure, createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("crontab");
 
 const execAsync = promisify(exec);
 
@@ -52,9 +55,15 @@ export const readUserCrontab = async (user: string): Promise<string> => {
   if (docker) {
     const userCrontabs = await readAllHostCrontabs();
     const targetUserCrontab = userCrontabs.find((uc) => uc.user === user);
+    log.debug("Read user crontab", {
+      user,
+      docker,
+      bytes: targetUserCrontab?.content.length || 0,
+    });
     return targetUserCrontab?.content || "";
   } else {
     const { stdout } = await execAsync(READ_CRONTAB(user));
+    log.debug("Read user crontab", { user, docker, bytes: stdout.length });
     return stdout;
   }
 };
@@ -66,13 +75,15 @@ export const writeUserCrontab = async (
   const docker = await isDocker();
 
   if (docker) {
+    log.debug("Writing user crontab", { user, docker, bytes: content.length });
     return await writeHostCrontabForUser(user, content);
   } else {
     try {
       await execAsync(WRITE_CRONTAB(content, user));
+      log.debug("Wrote user crontab", { user, docker, bytes: content.length });
       return true;
     } catch (error) {
-      console.error(`Error writing crontab for user ${user}:`, error);
+      log.error(`Error writing crontab for user ${user}`, commandFailure(error));
       return false;
     }
   }
@@ -93,7 +104,7 @@ const getAllUsers = async (): Promise<{ user: string; content: string }[]> => {
         const { stdout } = await execAsync(READ_CRONTAB(user));
         results.push({ user, content: stdout });
       } catch (error) {
-        console.error(`Error reading crontab for user ${user}:`, error);
+        log.error(`Error reading crontab for user ${user}`, error);
         results.push({ user, content: "" });
       }
     }
@@ -129,9 +140,13 @@ export const getCronJobs = async (
       }));
     }
 
+    log.debug("Loaded cron jobs", {
+      count: allJobs.length,
+      users: userCrontabs.length,
+    });
     return allJobs;
   } catch (error) {
-    console.error("Error getting cron jobs:", error);
+    log.error("Error getting cron jobs", error);
     return [];
   }
 };
@@ -145,6 +160,7 @@ export const addCronJob = async (
 ): Promise<boolean> => {
   try {
     const jobId = generateShortUUID();
+    log.debug("Adding job to crontab", { jobId, user, logsEnabled });
 
     if (user) {
       const cronContent = await readUserCrontab(user);
@@ -210,7 +226,7 @@ export const addCronJob = async (
       return await writeCronFiles(newCron);
     }
   } catch (error) {
-    console.error("Error adding cron job:", error);
+    log.error("Error adding cron job", error);
     throw error;
   }
 };
@@ -221,7 +237,7 @@ export const deleteCronJob = async (id: string): Promise<boolean> => {
     const targetJob = allJobs.find((j) => j.id === id);
 
     if (!targetJob) {
-      console.error(`Job with id ${id} not found`);
+      log.warn("Job not found", { jobId: id });
       return false;
     }
 
@@ -232,7 +248,7 @@ export const deleteCronJob = async (id: string): Promise<boolean> => {
     const jobIndex = userJobs.findIndex((j) => j.id === id);
 
     if (jobIndex === -1) {
-      console.error(`Job with id ${id} not found in parsed jobs`);
+      log.warn("Job not found in parsed jobs", { jobId: id });
       return false;
     }
 
@@ -241,7 +257,7 @@ export const deleteCronJob = async (id: string): Promise<boolean> => {
 
     return await writeUserCrontab(user, newCron);
   } catch (error) {
-    console.error("Error deleting cron job:", error);
+    log.error("Error deleting cron job", error);
     return false;
   }
 };
@@ -267,7 +283,7 @@ export const updateCronJob = async (
     const jobIndex = findJobIndex(jobData, lines, user);
 
     if (jobIndex === -1) {
-      console.error(`Job not found in crontab`);
+      log.warn("Job not found in crontab", { jobId: jobData.id, user });
       return false;
     }
 
@@ -311,7 +327,7 @@ export const updateCronJob = async (
 
     return await writeUserCrontab(user, newCron);
   } catch (error) {
-    console.error("Error updating cron job:", error);
+    log.error("Error updating cron job", error);
     throw error;
   }
 };
@@ -322,7 +338,7 @@ export const pauseCronJob = async (id: string): Promise<boolean> => {
     const targetJob = allJobs.find((j) => j.id === id);
 
     if (!targetJob) {
-      console.error(`Job with id ${id} not found`);
+      log.warn("Job not found", { jobId: id });
       return false;
     }
 
@@ -333,7 +349,7 @@ export const pauseCronJob = async (id: string): Promise<boolean> => {
     const jobIndex = userJobs.findIndex((j) => j.id === id);
 
     if (jobIndex === -1) {
-      console.error(`Job with id ${id} not found in parsed jobs`);
+      log.warn("Job not found in parsed jobs", { jobId: id });
       return false;
     }
 
@@ -342,7 +358,7 @@ export const pauseCronJob = async (id: string): Promise<boolean> => {
 
     return await writeUserCrontab(user, newCron);
   } catch (error) {
-    console.error("Error pausing cron job:", error);
+    log.error("Error pausing cron job", error);
     return false;
   }
 };
@@ -353,7 +369,7 @@ export const resumeCronJob = async (id: string): Promise<boolean> => {
     const targetJob = allJobs.find((j) => j.id === id);
 
     if (!targetJob) {
-      console.error(`Job with id ${id} not found`);
+      log.warn("Job not found", { jobId: id });
       return false;
     }
 
@@ -364,7 +380,7 @@ export const resumeCronJob = async (id: string): Promise<boolean> => {
     const jobIndex = userJobs.findIndex((j) => j.id === id);
 
     if (jobIndex === -1) {
-      console.error(`Job with id ${id} not found in parsed jobs`);
+      log.warn("Job not found in parsed jobs", { jobId: id });
       return false;
     }
 
@@ -373,7 +389,7 @@ export const resumeCronJob = async (id: string): Promise<boolean> => {
 
     return await writeUserCrontab(user, newCron);
   } catch (error) {
-    console.error("Error resuming cron job:", error);
+    log.error("Error resuming cron job", error);
     return false;
   }
 };
@@ -386,12 +402,13 @@ export const cleanupCrontab = async (): Promise<boolean> => {
       if (!content.trim()) continue;
 
       const cleanedContent = await cleanCrontabContent(content);
+      log.debug("Cleaned crontab", { user });
       await writeUserCrontab(user, cleanedContent);
     }
 
     return true;
   } catch (error) {
-    console.error("Error cleaning crontab:", error);
+    log.error("Error cleaning crontab", error);
     return false;
   }
 };

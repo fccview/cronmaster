@@ -4,6 +4,9 @@ import path from "path";
 import { sseBroadcaster } from "./sse-broadcaster";
 import { getRunningJob } from "./running-jobs-utils";
 import { isLogFileFromRun } from "./log-files-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("logs:watcher");
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const LOGS_DIR = path.join(DATA_DIR, "logs");
@@ -38,6 +41,10 @@ const processLogFile = (logFilePath: string) => {
       return;
     }
 
+    log.debug("Detected job completion in log", {
+      jobFolder: jobFolderName,
+      exitCode,
+    });
     const runningJob = getRunningJob(`run-${jobFolderName}`);
 
     if (exitCode === 0) {
@@ -62,7 +69,7 @@ const processLogFile = (logFilePath: string) => {
       });
     }
   } catch (error) {
-    console.error("[LogWatcher] Error processing log file:", error);
+    log.error("Error processing log file", error);
   }
 };
 
@@ -72,9 +79,13 @@ export const startLogWatcher = () => {
   }
 
   if (!existsSync(LOGS_DIR)) {
+    log.debug("Logs directory missing, log watcher not started", {
+      dir: LOGS_DIR,
+    });
     return;
   }
 
+  log.info("Log watcher started", { dir: LOGS_DIR });
   watcher = watch(LOGS_DIR, { recursive: true }, (eventType, filename) => {
     if (!filename || !filename.endsWith(".log")) {
       return;
@@ -92,6 +103,7 @@ export const startLogWatcher = () => {
 
 export const stopLogWatcher = () => {
   if (watcher) {
+    log.info("Log watcher stopped");
     watcher.close();
     watcher = null;
   }
@@ -111,7 +123,7 @@ export const watchForLogFile = (
     attempts++;
 
     if (attempts > maxAttempts) {
-      console.warn(`[LogWatcher] Timeout waiting for log file for ${runId}`);
+      log.warn(`Timeout waiting for log file for ${runId}`);
       clearInterval(checkInterval);
       return;
     }
@@ -139,10 +151,11 @@ export const watchForLogFile = (
 
       if (matchingFile) {
         clearInterval(checkInterval);
+        log.debug("Found log file for run", { runId, file: matchingFile });
         callback(matchingFile);
       }
     } catch (error) {
-      console.error(`[LogWatcher] Error watching for log file ${runId}:`, error);
+      log.error(`Error watching for log file ${runId}`, error);
     }
   }, 500);
 

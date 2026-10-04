@@ -1,5 +1,8 @@
 import { exec } from "child_process";
 import { promisify } from "util";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("job:exec");
 
 const execAsync = promisify(exec);
 
@@ -15,9 +18,10 @@ export const isProcessRunning = async (pid: number): Promise<boolean> => {
 export const killProcess = async (pid: number, signal: string = "SIGTERM"): Promise<boolean> => {
   try {
     await execAsync(`kill -${signal} ${pid} 2>/dev/null`);
+    log.info("Sent signal to process", { pid, signal });
     return true;
   } catch (error) {
-    console.error(`Failed to kill process ${pid}:`, error);
+    log.error(`Failed to kill process ${pid}`, error);
     return false;
   }
 };

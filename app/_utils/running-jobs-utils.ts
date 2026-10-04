@@ -1,6 +1,9 @@
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import path from "path";
 import { DATA_DIR } from "../_consts/file";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("job:running");
 
 export interface RunningJob {
   id: string;
@@ -24,7 +27,7 @@ export const getAllRunningJobs = (): RunningJob[] => {
     const data = readFileSync(RUNNING_JOBS_FILE, "utf-8");
     return JSON.parse(data);
   } catch (error) {
-    console.error("Error reading running jobs:", error);
+    log.error("Error reading running jobs", error);
     return [];
   }
 };
@@ -38,9 +41,14 @@ export const saveRunningJob = (job: RunningJob): void => {
   try {
     const jobs = getAllRunningJobs();
     jobs.push(job);
+    log.debug("Tracking running job", {
+      runId: job.id,
+      jobId: job.cronJobId,
+      pid: job.pid,
+    });
     writeFileSync(RUNNING_JOBS_FILE, JSON.stringify(jobs, null, 2), "utf-8");
   } catch (error) {
-    console.error("Error saving running job:", error);
+    log.error("Error saving running job", error);
     throw error;
   }
 };
@@ -57,7 +65,7 @@ export const updateRunningJob = (runId: string, updates: Partial<RunningJob>): v
     jobs[index] = { ...jobs[index], ...updates };
     writeFileSync(RUNNING_JOBS_FILE, JSON.stringify(jobs, null, 2), "utf-8");
   } catch (error) {
-    console.error("Error updating running job:", error);
+    log.error("Error updating running job", error);
     throw error;
   }
 };
@@ -66,9 +74,10 @@ export const removeRunningJob = (runId: string): void => {
   try {
     const jobs = getAllRunningJobs();
     const filtered = jobs.filter((job) => job.id !== runId);
+    log.debug("Removed running job", { runId });
     writeFileSync(RUNNING_JOBS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
   } catch (error) {
-    console.error("Error removing running job:", error);
+    log.error("Error removing running job", error);
     throw error;
   }
 };
@@ -87,8 +96,11 @@ export const cleanupOldRunningJobs = (): void => {
     });
 
     writeFileSync(RUNNING_JOBS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
+    log.debug("Pruned old running jobs", {
+      removed: jobs.length - filtered.length,
+    });
   } catch (error) {
-    console.error("Error cleaning up old running jobs:", error);
+    log.error("Error cleaning up old running jobs", error);
   }
 };
 

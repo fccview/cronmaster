@@ -63,7 +63,7 @@ export const describeJobExecutionError = (
   };
 };
 
-const log = createLogger("job-execution");
+const log = createLogger("job:exec");
 
 export const buildJobExecutionCommand = async (
   job: CronJob,
@@ -105,9 +105,25 @@ export const runJobSynchronously = async (
 }> => {
   const command = await buildJobExecutionCommand(job, docker);
 
+  const startedAt = Date.now();
+  log.info("Job started", {
+    jobId: job.id,
+    user: job.user,
+    mode: "sync",
+    docker,
+  });
+  log.debug("Job command", { jobId: job.id, command: job.command });
+
   const { stdout, stderr } = await execAsync(command, {
     timeout: JOB_TIMEOUT_MS,
     cwd: process.env.HOME || "/home",
+  });
+
+  log.info("Job finished", {
+    jobId: job.id,
+    mode: "sync",
+    exitCode: 0,
+    durationMs: Date.now() - startedAt,
   });
 
   const output = stdout || stderr || "Command executed successfully";
@@ -141,6 +157,16 @@ export const runJobInBackground = async (
 
   child.unref();
 
+  log.info("Job started", {
+    jobId: job.id,
+    runId,
+    pid: child.pid,
+    user: job.user,
+    mode: "async",
+    docker,
+  });
+  log.debug("Job command", { jobId: job.id, runId, command: job.command });
+
   const jobStartTime = new Date();
 
   saveRunningJob({
@@ -155,9 +181,9 @@ export const runJobInBackground = async (
   watchForLogFile(runId, logFolderName, jobStartTime, (logFileName) => {
     try {
       updateRunningJob(runId, { logFileName });
-      console.log(`[RunningJob] Cached logFileName for ${runId}: ${logFileName}`);
+      log.debug(`Cached logFileName for ${runId}: ${logFileName}`);
     } catch (error) {
-      console.error(`[RunningJob] Failed to cache logFileName for ${runId}:`, error);
+      log.error(`Failed to cache logFileName for ${runId}`, error);
     }
   });
 
@@ -205,11 +231,21 @@ const monitorRunningJob = (runId: string, pid: number): void => {
               );
             }
           } catch (error) {
-            console.error(`Error cleaning up job ${runId}:`, error);
+            log.error(`Error cleaning up job ${runId}`, error);
           }
         }, 5000);
 
         const runningJob = getRunningJob(runId);
+
+        log[exitCode === 0 ? "info" : "warn"]("Job finished", {
+          jobId: runningJob?.cronJobId,
+          runId,
+          mode: "async",
+          exitCode: exitCode ?? null,
+          durationMs: runningJob
+            ? Date.now() - new Date(runningJob.startTime).getTime()
+            : undefined,
+        });
 
         if (runningJob) {
           if (exitCode === 0) {
@@ -236,7 +272,7 @@ const monitorRunningJob = (runId: string, pid: number): void => {
         }
       }
     } catch (error) {
-      console.error(`[Monitor] Error checking job ${runId}:`, error);
+      log.error(`Error checking job ${runId}`, error);
       clearInterval(checkInterval);
     }
   }, 2000);
@@ -290,7 +326,7 @@ const getExitCodeFromLog = async (
 
     return undefined;
   } catch (error) {
-    console.error("Error reading exit code from log:", error);
+    log.error("Error reading exit code from log", error);
     return undefined;
   }
 };

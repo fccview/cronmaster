@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSession, getSessionCookieName } from "./session-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("auth:api");
 
 export function validateApiKey(request: NextRequest): boolean {
   const apiKey = process.env.API_KEY;
@@ -64,13 +67,17 @@ export async function requireAuth(
     }
   }
 
-  if (process.env.DEBUGGER) {
-    console.log("[API Auth] Unauthorized request:", {
-      path: request.nextUrl.pathname,
-      hasSession: hasValidSession,
-      apiKeyConfigured: !!process.env.API_KEY,
-      hasAuthHeader: !!request.headers.get("authorization"),
-    });
+  const unauthorizedMeta = {
+    path: request.nextUrl.pathname,
+    method: request.method,
+    loggedIn: hasValidSession,
+    keyConfigured: !!process.env.API_KEY,
+    hasAuthHeader: !!request.headers.get("authorization"),
+  };
+  if (unauthorizedMeta.hasAuthHeader) {
+    log.warn("Rejected API request with invalid bearer key", unauthorizedMeta);
+  } else {
+    log.debug("Unauthorized API request", unauthorizedMeta);
   }
 
   return NextResponse.json(

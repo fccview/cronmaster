@@ -1,6 +1,9 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { isDocker } from "../_server/actions/global";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("snippets");
 
 export interface BashSnippet {
   id: string;
@@ -111,8 +114,14 @@ const scanSnippetDirectory = async (
         }
       }
     }
+
+    log.debug("Scanned snippet directory", {
+      dirPath,
+      source,
+      count: snippets.length,
+    });
   } catch (error) {
-    console.warn(`Warning: Could not scan directory ${dirPath}:`, error);
+    log.warn(`Could not scan directory ${dirPath}`, error);
   }
 
   return snippets;
