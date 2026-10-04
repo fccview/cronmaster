@@ -22,6 +22,11 @@ export const LogoutButton = () => {
       });
 
       if (response.ok) {
+        const data = await response.json().catch(() => null);
+        if (typeof data?.redirectTo === "string") {
+          window.location.href = data.redirectTo;
+          return;
+        }
         router.push("/login");
         router.refresh();
       }
