@@ -2,6 +2,39 @@ export const LOG_LEVELS = ["error", "warn", "info", "debug"] as const;
 
 export type LogLevel = (typeof LOG_LEVELS)[number];
 
+export const LOG_SCOPES = [
+  "api:cronjobs",
+  "api:scripts",
+  "api:system",
+  "auth",
+  "auth:api",
+  "auth:oidc",
+  "auth:session",
+  "backup",
+  "crontab",
+  "i18n",
+  "job",
+  "job:exec",
+  "job:running",
+  "logs",
+  "logs:stream",
+  "logs:watcher",
+  "proxy",
+  "scripts",
+  "snippets",
+  "sse",
+  "system",
+  "ui",
+  "ui:auth",
+  "ui:jobs",
+  "ui:logs",
+  "ui:scripts",
+  "ui:sse",
+  "ui:system",
+  "ui:users",
+  "wrapper",
+] as const;
+
 export type LogMeta = Record<string, unknown>;
 
 export interface Logger {
@@ -9,6 +42,7 @@ export interface Logger {
   warn: (message: string, meta?: LogMeta | unknown) => void;
   info: (message: string, meta?: LogMeta | unknown) => void;
   debug: (message: string, meta?: LogMeta | unknown) => void;
+  infoOnce: (key: string, message: string, meta?: LogMeta | unknown) => void;
   child: (scope: string) => Logger;
   enabled: (level: LogLevel) => boolean;
 }
@@ -24,6 +58,8 @@ const SENSITIVE_KEY = /pass(word)?|secret|token|cookie|authorization|api[-_]?key
 
 const REDACTED = "[redacted]";
 
+const seenOnce = new Set<string>();
+
 const isLogLevel = (value: unknown): value is LogLevel =>
   typeof value === "string" && (LOG_LEVELS as readonly string[]).includes(value);
 
@@ -35,8 +71,16 @@ const readEnv = (key: string): string | undefined => {
   }
 };
 
+const readPublicLogLevel = (): string | undefined => {
+  try {
+    return process.env.NEXT_PUBLIC_LOG_LEVEL;
+  } catch {
+    return undefined;
+  }
+};
+
 export const resolveLogLevel = (): LogLevel => {
-  const configured = (readEnv("LOG_LEVEL") || readEnv("NEXT_PUBLIC_LOG_LEVEL"))
+  const configured = (readEnv("LOG_LEVEL") || readPublicLogLevel())
     ?.trim()
     .toLowerCase();
   if (isLogLevel(configured)) return configured;
@@ -98,7 +142,22 @@ export const createLogger = (scope: string): Logger => {
     warn: log("warn"),
     info: log("info"),
     debug: log("debug"),
+    infoOnce: (key: string, message: string, meta?: unknown) => {
+      const onceKey = `${scope}:${key}`;
+      const level: LogLevel = seenOnce.has(onceKey) ? "debug" : "info";
+      seenOnce.add(onceKey);
+      log(level)(message, meta);
+    },
     child: (sub: string) => createLogger(`${scope}:${sub}`),
     enabled,
+  };
+};
+
+export const commandFailure = (error: unknown): LogMeta => {
+  const failure = (error ?? {}) as { code?: unknown; signal?: unknown; stderr?: unknown };
+  return {
+    code: failure.code,
+    signal: failure.signal,
+    stderr: typeof failure.stderr === "string" ? failure.stderr.trim() : undefined,
   };
 };

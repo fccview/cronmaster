@@ -59,4 +59,24 @@ describe("logger", () => {
     const serialised = redact(new Error("boom")) as { message: string };
     expect(serialised.message).toBe("boom");
   });
+
+  it("logs infoOnce at info the first time and debug afterwards", () => {
+    vi.stubEnv("LOG_LEVEL", "debug");
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const debug = vi.spyOn(console, "debug").mockImplementation(() => {});
+    const log = createLogger("system");
+    const key = `docker-${Math.random()}`;
+    log.infoOnce(key, "Docker detected");
+    log.infoOnce(key, "Docker detected");
+    expect(info).toHaveBeenCalledOnce();
+    expect(debug).toHaveBeenCalledOnce();
+    expect(info.mock.calls[0][0]).toContain("[cr*nmaster:system]");
+  });
+
+  it("reads NEXT_PUBLIC_LOG_LEVEL when LOG_LEVEL is unset", () => {
+    vi.stubEnv("LOG_LEVEL", "");
+    vi.stubEnv("DEBUGGER", "");
+    vi.stubEnv("NEXT_PUBLIC_LOG_LEVEL", "error");
+    expect(resolveLogLevel()).toBe("error");
+  });
 });
