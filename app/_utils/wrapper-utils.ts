@@ -3,6 +3,7 @@ import path from "path";
 import { DATA_DIR } from "../_consts/file";
 import { getHostDataPath } from "../_server/actions/global";
 import { toShellArg } from "./wrapper-utils-client";
+import { shellQuoteIfNeeded } from "./shell-utils";
 import { isSafeJobId } from "./security-utils";
 import { createLogger } from "@/app/_utils/logger";
 
@@ -69,7 +70,7 @@ export const wrapCommandWithLogger = async (
         jobId,
         wrapperPath: hostWrapperPath,
       });
-      return `${hostWrapperPath} "${logFolderName}" ${safeCmd}`;
+      return `${shellQuoteIfNeeded(hostWrapperPath)} "${logFolderName}" ${safeCmd}`;
     }
     log.error("Cannot wrap command, host data path unknown", { jobId });
     throw new Error(
@@ -86,5 +87,5 @@ export const wrapCommandWithLogger = async (
     jobId,
     wrapperPath: localWrapperPath,
   });
-  return `${localWrapperPath} "${logFolderName}" ${safeCmd}`;
+  return `${shellQuoteIfNeeded(localWrapperPath)} "${logFolderName}" ${safeCmd}`;
 };

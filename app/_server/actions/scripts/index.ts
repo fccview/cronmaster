@@ -13,6 +13,7 @@ import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
 import { requireActionAuth } from "@/app/_utils/server-action-auth";
 import { isSafePathSegment, toSingleLine } from "@/app/_utils/security-utils";
 import { createLogger } from "@/app/_utils/logger";
+import { shellQuoteIfNeeded } from "@/app/_utils/shell-utils";
 import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const log = createLogger("scripts");
@@ -37,17 +38,17 @@ export const getScriptPathForCron = async (
     const hostScriptsPath = await getHostScriptsPath();
     if (hostScriptsPath) {
       log.debug("Using host scripts path for cron", { filename, hostScriptsPath });
-      return `bash ${path.join(hostScriptsPath, filename)}`;
+      return `bash ${shellQuoteIfNeeded(path.join(hostScriptsPath, filename))}`;
     }
     log.warn("Could not determine host scripts path, using container path");
   }
 
-  return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
+  return `bash ${shellQuoteIfNeeded(path.join(process.cwd(), SCRIPTS_DIR, filename))}`;
 };
 
 export const getHostScriptPath = async (filename: string): Promise<string> => {
   await requireActionAuth();
-  return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
+  return `bash ${shellQuoteIfNeeded(path.join(process.cwd(), SCRIPTS_DIR, filename))}`;
 };
 
 export const normalizeLineEndings = async (content: string): Promise<string> => {

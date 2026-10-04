@@ -5,6 +5,17 @@ export const DEFAULT_FALLBACK_SHELL = "/bin/sh";
 export const shellQuote = (value: string): string =>
   `'${value.replace(/'/g, "'\\''")}'`;
 
+const SHELL_SAFE_WORD = /^[A-Za-z0-9_@%+=:,./-]+$/;
+
+export const shellQuoteIfNeeded = (value: string): string =>
+  SHELL_SAFE_WORD.test(value) ? value : shellQuote(value);
+
+export const shellUnquote = (value: string): string => {
+  const match = value.match(/^'((?:[^']|'\\'')*)'$/);
+  if (match) return match[1].replace(/'\\''/g, "'");
+  return value.replace(/^(["'])(.*)\1$/, "$2");
+};
+
 export const isSafeUsername = (username: string): boolean =>
   /^[^-\s:/][^\s:/]*$/.test(username);
 

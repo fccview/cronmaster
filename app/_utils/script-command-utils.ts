@@ -1,5 +1,6 @@
 import type { Script } from "@/app/_utils/scripts-utils";
 import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
+import { shellUnquote } from "@/app/_utils/shell-utils";
 
 type ScriptRef = Pick<Script, "id" | "filename">;
 
@@ -14,7 +15,7 @@ export const findScriptForCommand = <T extends ScriptRef>(
   const match = unwrapCommand(command.trim()).match(/^bash\s+(.+)$/);
   if (!match) return undefined;
 
-  const scriptPath = match[1].trim().replace(/^(["'])(.*)\1$/, "$2");
+  const scriptPath = shellUnquote(match[1].trim());
 
   return scripts.find((script) => scriptPath.endsWith(`/${script.filename}`));
 };
