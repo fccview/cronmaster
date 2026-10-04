@@ -5,10 +5,15 @@ import path from "path";
 import { existsSync } from "fs";
 import {
   getLogsBaseDir,
+  getMaxLogAgeDays,
+  getMaxLogsPerJob,
   listLogFiles,
   pruneLogDirectory,
   pruneLogDirectoryIfDue,
 } from "@/app/_utils/log-files-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const logger = createLogger("logs");
 
 export interface LogEntry {
   filename: string;
@@ -49,7 +54,7 @@ const getJobLogPath = async (jobId: string): Promise<string | null> => {
 
     return path.join(basePath, jobId);
   } catch (error) {
-    console.error("Error finding log path:", error);
+    logger.error("Error finding log path", error);
     return path.join(basePath, jobId);
   }
 };
@@ -98,7 +103,7 @@ export const getJobLogs = async (
 
     return entries;
   } catch (error) {
-    console.error(`Error reading logs for job ${jobId}:`, error);
+    logger.error(`Error reading logs for job ${jobId}`, error);
     return [];
   }
 };
@@ -118,7 +123,7 @@ export const getLogContent = async (
     const content = await readFile(logPath, "utf-8");
     return content;
   } catch (error) {
-    console.error(`Error reading log file ${filename}:`, error);
+    logger.error(`Error reading log file ${filename}`, error);
     return "Error reading log file";
   }
 };
@@ -139,13 +144,14 @@ export const deleteLogFile = async (
     const logPath = path.join(logDir, filename);
 
     await unlink(logPath);
+    logger.debug("Deleted log file", { jobId, filename });
 
     return {
       success: true,
       message: "Log file deleted successfully",
     };
   } catch (error: any) {
-    console.error(`Error deleting log file ${filename}:`, error);
+    logger.error(`Error deleting log file ${filename}`, error);
     return {
       success: false,
       message: error.message || "Error deleting log file",
@@ -167,13 +173,15 @@ export const deleteAllJobLogs = async (
       }
     }
 
+    logger.info("Deleted all logs for job", { jobId, deletedCount });
+
     return {
       success: true,
       message: `Deleted ${deletedCount} log files`,
       deletedCount,
     };
   } catch (error: any) {
-    console.error(`Error deleting all logs for job ${jobId}:`, error);
+    logger.error(`Error deleting all logs for job ${jobId}`, error);
     return {
       success: false,
       message: error.message || "Error deleting log files",
@@ -190,13 +198,22 @@ export const cleanupJobLogs = async (
     const deletedCount =
       logDir && existsSync(logDir) ? await pruneLogDirectory(logDir) : 0;
 
+    if (deletedCount > 0) {
+      logger.info("Cleaned up old logs", {
+        jobId,
+        deletedCount,
+        maxLogsPerJob: getMaxLogsPerJob(),
+        maxLogAgeDays: getMaxLogAgeDays(),
+      });
+    }
+
     return {
       success: true,
       message: `Cleaned up ${deletedCount} log files`,
       deletedCount,
     };
   } catch (error: any) {
-    console.error(`Error cleaning up logs for job ${jobId}:`, error);
+    logger.error(`Error cleaning up logs for job ${jobId}`, error);
     return {
       success: false,
       message: error.message || "Error cleaning up log files",
@@ -220,7 +237,7 @@ export const getJobLogStats = async (
       totalSizeMB: Math.round(totalSizeMB * 100) / 100,
     };
   } catch (error) {
-    console.error(`Error getting log stats for job ${jobId}:`, error);
+    logger.error(`Error getting log stats for job ${jobId}`, error);
     return {
       count: 0,
       totalSize: 0,
@@ -238,7 +255,7 @@ const getExitCodeForLog = async (logPath: string): Promise<number | null> => {
     }
     return null;
   } catch (error) {
-    console.error(`Error getting exit code for ${logPath}:`, error);
+    logger.error(`Error getting exit code for ${logPath}`, error);
     return null;
   }
 };
@@ -290,7 +307,7 @@ export const getJobLogError = async (jobId: string): Promise<JobLogError> => {
       exitCode: failedExitCode,
     };
   } catch (error) {
-    console.error(`Error checking log errors for job ${jobId}:`, error);
+    logger.error(`Error checking log errors for job ${jobId}`, error);
     return { hasError: false };
   }
 };

@@ -26,10 +26,10 @@ import {
   deleteJobInLines,
 } from "@/app/_utils/line-manipulation-utils";
 import { cleanCrontabContent } from "@/app/_utils/files-manipulation-utils";
-import { createLogger } from "@/app/_utils/logger";
+import { commandFailure, createLogger } from "@/app/_utils/logger";
 import { resolveJobCommand } from "@/app/_utils/script-command-utils";
 
-const log = createLogger("cronjobs");
+const log = createLogger("job");
 
 const resolveCommandFromForm = async (formData: FormData) => {
   const { fetchScripts } = await import("@/app/_server/actions/scripts");
@@ -45,7 +45,7 @@ export const fetchCronJobs = async (): Promise<CronJob[]> => {
   try {
     return await getCronJobs();
   } catch (error) {
-    console.error("Error fetching cron jobs:", error);
+    log.error("Error fetching cron jobs", error);
     return [];
   }
 };
@@ -60,11 +60,13 @@ export const createCronJob = async (
     const logsEnabled = formData.get("logsEnabled") === "true";
 
     if (!schedule) {
+      log.warn("Create job rejected, schedule missing", { user });
       return { success: false, message: "Schedule is required" };
     }
 
     const resolved = await resolveCommandFromForm(formData);
     if (!resolved.success) {
+      log.warn("Create job rejected", { reason: resolved.message, user });
       return resolved;
     }
 
@@ -77,12 +79,20 @@ export const createCronJob = async (
     );
     if (success) {
       revalidatePath("/");
+      log.info("Job created", {
+        user,
+        schedule,
+        scriptId: formData.get("selectedScriptId") || undefined,
+        logsEnabled,
+      });
+      log.debug("Created job command", { user, command: resolved.command });
       return { success: true, message: "Cron job created successfully" };
     } else {
+      log.warn("Failed to create job", { user, schedule });
       return { success: false, message: "Failed to create cron job" };
     }
   } catch (error: any) {
-    console.error("Error creating cron job:", error);
+    log.error("Error creating cron job", error);
     return {
       success: false,
       message: error.message || "Error creating cron job",
@@ -101,6 +111,10 @@ export const removeCronJob = async (
     const jobIndex = findJobIndex(jobData, lines, jobData.user);
 
     if (jobIndex === -1) {
+      log.warn("Delete job failed, job not found in crontab", {
+        jobId: jobData.id,
+        user: jobData.user,
+      });
       return { success: false, message: "Cron job not found in crontab" };
     }
 
@@ -110,12 +124,14 @@ export const removeCronJob = async (
 
     if (success) {
       revalidatePath("/");
+      log.info("Job deleted", { jobId: jobData.id, user: jobData.user });
       return { success: true, message: "Cron job deleted successfully" };
     } else {
+      log.warn("Failed to delete job", { jobId: jobData.id, user: jobData.user });
       return { success: false, message: "Failed to delete cron job" };
     }
   } catch (error: any) {
-    console.error("Error deleting cron job:", error);
+    log.error("Error deleting cron job", error);
     return {
       success: false,
       message: error.message || "Error deleting cron job",
@@ -134,11 +150,13 @@ export const editCronJob = async (
     const logsEnabled = formData.get("logsEnabled") === "true";
 
     if (!id || !schedule) {
+      log.warn("Update job rejected, missing required fields", { jobId: id });
       return { success: false, message: "Missing required fields" };
     }
 
     const resolved = await resolveCommandFromForm(formData);
     if (!resolved.success) {
+      log.warn("Update job rejected", { jobId: id, reason: resolved.message });
       return resolved;
     }
 
@@ -146,6 +164,7 @@ export const editCronJob = async (
     const job = cronJobs.find((j) => j.id === id);
 
     if (!job) {
+      log.warn("Update job failed, job not found", { jobId: id });
       return { success: false, message: "Cron job not found" };
     }
 
@@ -158,12 +177,20 @@ export const editCronJob = async (
     );
     if (success) {
       revalidatePath("/");
+      log.info("Job updated", {
+        jobId: id,
+        user: job.user,
+        schedule,
+        logsEnabled,
+      });
+      log.debug("Updated job command", { jobId: id, command: resolved.command });
       return { success: true, message: "Cron job updated successfully" };
     } else {
+      log.warn("Failed to update job", { jobId: id, user: job.user });
       return { success: false, message: "Failed to update cron job" };
     }
   } catch (error: any) {
-    console.error("Error updating cron job:", error);
+    log.error("Error updating cron job", error);
     return {
       success: false,
       message: error.message || "Error updating cron job",
@@ -181,6 +208,7 @@ export const cloneCronJob = async (
     const originalJob = cronJobs.find((job) => job.id === id);
 
     if (!originalJob) {
+      log.warn("Clone job failed, job not found", { jobId: id });
       return { success: false, message: "Cron job not found" };
     }
 
@@ -194,12 +222,14 @@ export const cloneCronJob = async (
 
     if (success) {
       revalidatePath("/");
+      log.info("Job cloned", { sourceJobId: id, user: originalJob.user });
       return { success: true, message: "Cron job cloned successfully" };
     } else {
+      log.warn("Failed to clone job", { sourceJobId: id, user: originalJob.user });
       return { success: false, message: "Failed to clone cron job" };
     }
   } catch (error: any) {
-    console.error("Error cloning cron job:", error);
+    log.error("Error cloning cron job", error);
     return {
       success: false,
       message: error.message || "Error cloning cron job",
@@ -218,6 +248,10 @@ export const pauseCronJobAction = async (
     const jobIndex = findJobIndex(jobData, lines, jobData.user);
 
     if (jobIndex === -1) {
+      log.warn("Pause job failed, job not found in crontab", {
+        jobId: jobData.id,
+        user: jobData.user,
+      });
       return { success: false, message: "Cron job not found in crontab" };
     }
 
@@ -227,12 +261,14 @@ export const pauseCronJobAction = async (
 
     if (success) {
       revalidatePath("/");
+      log.info("Job paused", { jobId: jobData.id, user: jobData.user });
       return { success: true, message: "Cron job paused successfully" };
     } else {
+      log.warn("Failed to pause job", { jobId: jobData.id, user: jobData.user });
       return { success: false, message: "Failed to pause cron job" };
     }
   } catch (error: any) {
-    console.error("Error pausing cron job:", error);
+    log.error("Error pausing cron job", error);
     return {
       success: false,
       message: error.message || "Error pausing cron job",
@@ -251,6 +287,10 @@ export const resumeCronJobAction = async (
     const jobIndex = findJobIndex(jobData, lines, jobData.user);
 
     if (jobIndex === -1) {
+      log.warn("Resume job failed, job not found in crontab", {
+        jobId: jobData.id,
+        user: jobData.user,
+      });
       return { success: false, message: "Cron job not found in crontab" };
     }
 
@@ -260,12 +300,14 @@ export const resumeCronJobAction = async (
 
     if (success) {
       revalidatePath("/");
+      log.info("Job resumed", { jobId: jobData.id, user: jobData.user });
       return { success: true, message: "Cron job resumed successfully" };
     } else {
+      log.warn("Failed to resume job", { jobId: jobData.id, user: jobData.user });
       return { success: false, message: "Failed to resume cron job" };
     }
   } catch (error: any) {
-    console.error("Error resuming cron job:", error);
+    log.error("Error resuming cron job", error);
     return {
       success: false,
       message: error.message || "Error resuming cron job",
@@ -278,7 +320,7 @@ export const fetchAvailableUsers = async (): Promise<string[]> => {
   try {
     return await getAllTargetUsers();
   } catch (error) {
-    console.error("Error fetching available users:", error);
+    log.error("Error fetching available users", error);
     return [];
   }
 };
@@ -292,12 +334,14 @@ export const cleanupCrontabAction = async (): Promise<{
     const success = await cleanupCrontab();
     if (success) {
       revalidatePath("/");
+      log.info("Crontab cleaned");
       return { success: true, message: "Crontab cleaned successfully" };
     } else {
+      log.warn("Failed to clean crontab");
       return { success: false, message: "Failed to clean crontab" };
     }
   } catch (error: any) {
-    console.error("Error cleaning crontab:", error);
+    log.error("Error cleaning crontab", error);
     return {
       success: false,
       message: error.message || "Error cleaning crontab",
@@ -311,6 +355,11 @@ export const toggleCronJobLogging = async (
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const newLogsEnabled = !jobData.logsEnabled;
+    log.info("Toggling job logging", {
+      jobId: jobData.id,
+      user: jobData.user,
+      logsEnabled: newLogsEnabled,
+    });
 
     const success = await updateCronJob(
       jobData,
@@ -329,10 +378,11 @@ export const toggleCronJobLogging = async (
           : "Logging disabled successfully",
       };
     } else {
+      log.warn("Failed to toggle job logging", { jobId: jobData.id });
       return { success: false, message: "Failed to toggle logging" };
     }
   } catch (error: any) {
-    console.error("Error toggling logging:", error);
+    log.error("Error toggling logging", error);
     return {
       success: false,
       message: error.message || "Error toggling logging",
@@ -356,10 +406,12 @@ export const runCronJob = async (
     const job = cronJobs.find((j) => j.id === id);
 
     if (!job) {
+      log.warn("Run job failed, job not found", { jobId: id });
       return { success: false, message: "Cron job not found" };
     }
 
     if (job.paused) {
+      log.warn("Run job rejected, job is paused", { jobId: id });
       return { success: false, message: "Cannot run paused cron job" };
     }
 
@@ -369,13 +421,19 @@ export const runCronJob = async (
         process.env.LIVE_UPDATES === true) ||
       process.env.LIVE_UPDATES !== "false";
 
+    log.info("Running job on demand", {
+      jobId: id,
+      user: job.user,
+      background: !!(job.logsEnabled && liveUpdatesEnabled),
+      docker,
+    });
     if (job.logsEnabled && liveUpdatesEnabled) {
       return await runJobInBackground(job, docker);
     }
 
     return await runJobSynchronously(job, docker);
   } catch (error: any) {
-    console.error("Error running cron job:", error);
+    log.error("Error running cron job", commandFailure(error));
     const { message, output } = describeJobExecutionError(error);
     return {
       success: false,
@@ -402,22 +460,30 @@ export const executeJob = async (
     const job = cronJobs.find((j) => j.id === id);
 
     if (!job) {
+      log.warn("Execute job failed, job not found", { jobId: id });
       return { success: false, message: "Cron job not found" };
     }
 
     if (job.paused) {
+      log.warn("Execute job rejected, job is paused", { jobId: id });
       return { success: false, message: "Cannot run paused cron job" };
     }
 
     const docker = await isDocker();
 
+    log.info("Executing job", {
+      jobId: id,
+      user: job.user,
+      background: runInBackground,
+      docker,
+    });
     if (runInBackground) {
       return await runJobInBackground(job, docker);
     }
 
     return await runJobSynchronously(job, docker);
   } catch (error: any) {
-    console.error("Error executing cron job:", error);
+    log.error("Error executing cron job", commandFailure(error));
     const { message, output } = describeJobExecutionError(error);
     return {
       success: false,
@@ -437,12 +503,14 @@ export const backupCronJob = async (
     } = await import("@/app/_utils/backup-utils");
     const success = await backupJobToFile(job);
     if (success) {
+      log.info("Job backed up", { jobId: job.id, user: job.user });
       return { success: true, message: "Cron job backed up successfully" };
     } else {
+      log.warn("Failed to back up job", { jobId: job.id, user: job.user });
       return { success: false, message: "Failed to backup cron job" };
     }
   } catch (error: any) {
-    console.error("Error backing up cron job:", error);
+    log.error("Error backing up cron job", error);
     return {
       success: false,
       message: error.message || "Error backing up cron job",
@@ -462,15 +530,17 @@ export const backupAllCronJobs = async (): Promise<{
     } = await import("@/app/_utils/backup-utils");
     const result = await backupAllJobsToFiles();
     if (result.success) {
+      log.info("All jobs backed up", { count: result.count });
       return {
         success: true,
         message: `Backed up ${result.count} cron job(s) successfully`,
       };
     } else {
+      log.warn("Failed to back up all jobs");
       return { success: false, message: "Failed to backup cron jobs" };
     }
   } catch (error: any) {
-    console.error("Error backing up all cron jobs:", error);
+    log.error("Error backing up all cron jobs", error);
     return {
       success: false,
       message: error.message || "Error backing up all cron jobs",
@@ -490,7 +560,7 @@ export const fetchBackupFiles = async (): Promise<Array<{
     } = await import("@/app/_utils/backup-utils");
     return await getAllBackupFiles();
   } catch (error) {
-    console.error("Error fetching backup files:", error);
+    log.error("Error fetching backup files", error);
     return [];
   }
 };
@@ -506,6 +576,7 @@ export const restoreCronJob = async (
     const result = await restoreJobFromBackup(filename);
 
     if (!result.success || !result.job) {
+      log.warn("Restore failed, could not read backup", { filename });
       return { success: false, message: "Failed to read backup file" };
     }
 
@@ -520,12 +591,18 @@ export const restoreCronJob = async (
 
     if (success) {
       revalidatePath("/");
+      log.info("Job restored from backup", {
+        filename,
+        jobId: job.id,
+        user: job.user,
+      });
       return { success: true, message: "Cron job restored successfully" };
     } else {
+      log.warn("Failed to restore job from backup", { filename, user: job.user });
       return { success: false, message: "Failed to restore cron job" };
     }
   } catch (error: any) {
-    console.error("Error restoring cron job:", error);
+    log.error("Error restoring cron job", error);
     return {
       success: false,
       message: error.message || "Error restoring cron job",
@@ -545,12 +622,14 @@ export const deleteBackup = async (
     const success = await deleteBackupFile(filename);
 
     if (success) {
+      log.info("Backup deleted", { filename });
       return { success: true, message: "Backup deleted successfully" };
     } else {
+      log.warn("Failed to delete backup", { filename });
       return { success: false, message: "Failed to delete backup" };
     }
   } catch (error: any) {
-    console.error("Error deleting backup:", error);
+    log.error("Error deleting backup", error);
     return {
       success: false,
       message: error.message || "Error deleting backup",
@@ -572,6 +651,7 @@ export const restoreAllCronJobs = async (): Promise<{
     const backups = await getAllBackupFiles();
 
     if (backups.length === 0) {
+      log.info("Restore all skipped, no backups found");
       return { success: false, message: "No backup files found" };
     }
 
@@ -602,6 +682,10 @@ export const restoreAllCronJobs = async (): Promise<{
 
     revalidatePath("/");
 
+    log.info("Restored all jobs from backups", {
+      restored: successCount,
+      failed: failedCount,
+    });
     if (failedCount === 0) {
       return {
         success: true,
@@ -614,7 +698,7 @@ export const restoreAllCronJobs = async (): Promise<{
       };
     }
   } catch (error: any) {
-    console.error("Error restoring all cron jobs:", error);
+    log.error("Error restoring all cron jobs", error);
     return {
       success: false,
       message: error.message || "Error restoring all cron jobs",

@@ -5,21 +5,27 @@ import { execSync } from "child_process";
 import path from "path";
 import { createLogger } from "@/app/_utils/logger";
 
-const log = createLogger("host");
+const log = createLogger("system");
 
 export const isDocker = async (): Promise<boolean> => {
   try {
     if (existsSync("/.dockerenv")) {
+      log.infoOnce("docker", "Docker detected", { source: "/.dockerenv" });
       return true;
     }
 
     if (existsSync("/proc/1/cgroup")) {
       const cgroupContent = readFileSync("/proc/1/cgroup", "utf8");
+      log.infoOnce("docker", "Docker detection via cgroup", {
+        docker: cgroupContent.includes("/docker/"),
+      });
       return cgroupContent.includes("/docker/");
     }
 
+    log.infoOnce("docker", "Docker not detected, running on host");
     return false;
   } catch (error) {
+    log.debug("Docker detection failed", error);
     return false;
   }
 };
@@ -32,9 +38,10 @@ export const getContainerIdentifier = async (): Promise<string | null> => {
     }
 
     const containerId = execSync("hostname").toString().trim();
+    log.debug("Container identifier", { containerId });
     return containerId;
   } catch (error) {
-    console.error("Failed to get container identifier:", error);
+    log.error("Failed to get container identifier", error);
     return null;
   }
 };
@@ -84,22 +91,26 @@ const resolveHostPath = async (
     return null;
   }
 
-  const override = readHostPathEnv(overrideEnv);
-  if (override) {
-    return override;
-  }
+  const resolved = async (): Promise<[string | null, string]> => {
+    const override = readHostPathEnv(overrideEnv);
+    if (override) return [override, overrideEnv];
 
-  const inspected = await inspectMountSource(destination);
-  if (inspected) {
-    return inspected;
-  }
+    const inspected = await inspectMountSource(destination);
+    if (inspected) return [inspected, "docker inspect"];
 
-  const projectDir = readHostPathEnv("HOST_PROJECT_DIR");
-  if (projectDir) {
-    return path.posix.join(projectDir, projectSubdir);
-  }
+    const projectDir = readHostPathEnv("HOST_PROJECT_DIR");
+    if (projectDir) return [path.posix.join(projectDir, projectSubdir), "HOST_PROJECT_DIR"];
 
-  return null;
+    return [null, "none"];
+  };
+
+  const [hostPath, source] = await resolved();
+  log.infoOnce(`host-path:${destination}`, "Resolved host path", {
+    destination,
+    hostPath,
+    source,
+  });
+  return hostPath;
 };
 
 export const getHostDataPath = async (): Promise<string | null> => {

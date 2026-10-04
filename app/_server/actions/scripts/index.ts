@@ -10,6 +10,9 @@ import { SCRIPTS_DIR } from "@/app/_consts/file";
 import { loadAllScripts, Script } from "@/app/_utils/scripts-utils";
 import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
 import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("scripts");
 
 const execAsync = promisify(exec);
 
@@ -21,9 +24,10 @@ export const getScriptPathForCron = async (
   if (docker) {
     const hostScriptsPath = await getHostScriptsPath();
     if (hostScriptsPath) {
+      log.debug("Using host scripts path for cron", { filename, hostScriptsPath });
       return `bash ${path.join(hostScriptsPath, filename)}`;
     }
-    console.warn("Could not determine host scripts path, using container path");
+    log.warn("Could not determine host scripts path, using container path");
   }
 
   return `bash ${path.join(process.cwd(), SCRIPTS_DIR, filename)}`;
@@ -79,11 +83,12 @@ const saveScriptFile = async (filename: string, content: string) => {
 
   const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
   await writeFile(scriptPath, content, "utf8");
+  log.debug("Wrote script file", { filename, bytes: content.length });
 
   try {
     await execAsync(MAKE_SCRIPT_EXECUTABLE(scriptPath));
   } catch (error) {
-    console.error(`Failed to set execute permissions on ${scriptPath}:`, error);
+    log.error(`Failed to set execute permissions on ${scriptPath}`, error);
   }
 };
 
@@ -91,6 +96,7 @@ const deleteScriptFile = async (filename: string) => {
   const scriptPath = path.join(process.cwd(), SCRIPTS_DIR, filename);
   if (existsSync(scriptPath)) {
     await unlink(scriptPath);
+    log.debug("Deleted script file", { filename });
   }
 };
 
@@ -107,6 +113,7 @@ export const createScript = async (
     const content = formData.get("content") as string;
 
     if (!name || !content) {
+      log.warn("Create script rejected, name and content are required");
       return { success: false, message: "Name and content are required" };
     }
 
@@ -127,6 +134,7 @@ export const createScript = async (
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
 
+    log.info("Script created", { scriptId, filename });
     const newScript: Script = {
       id: scriptId,
       name,
@@ -141,7 +149,7 @@ export const createScript = async (
       script: newScript,
     };
   } catch (error) {
-    console.error("Error creating script:", error);
+    log.error("Error creating script", error);
     return { success: false, message: "Error creating script" };
   }
 };
@@ -156,6 +164,7 @@ export const updateScript = async (
     const content = formData.get("content") as string;
 
     if (!id || !name || !content) {
+      log.warn("Update script rejected, missing fields", { scriptId: id });
       return { success: false, message: "ID, name and content are required" };
     }
 
@@ -163,6 +172,7 @@ export const updateScript = async (
     const existingScript = scripts.find((s) => s.id === id);
 
     if (!existingScript) {
+      log.warn("Update script failed, script not found", { scriptId: id });
       return { success: false, message: "Script not found" };
     }
 
@@ -178,9 +188,13 @@ export const updateScript = async (
     await saveScriptFile(existingScript.filename, fullContent);
     revalidatePath("/");
 
+    log.info("Script updated", {
+      scriptId: id,
+      filename: existingScript.filename,
+    });
     return { success: true, message: "Script updated successfully" };
   } catch (error) {
-    console.error("Error updating script:", error);
+    log.error("Error updating script", error);
     return { success: false, message: "Error updating script" };
   }
 };
@@ -193,15 +207,17 @@ export const deleteScript = async (
     const script = scripts.find((s) => s.id === id);
 
     if (!script) {
+      log.warn("Delete script failed, script not found", { scriptId: id });
       return { success: false, message: "Script not found" };
     }
 
     await deleteScriptFile(script.filename);
     revalidatePath("/");
 
+    log.info("Script deleted", { scriptId: id, filename: script.filename });
     return { success: true, message: "Script deleted successfully" };
   } catch (error) {
-    console.error("Error deleting script:", error);
+    log.error("Error deleting script", error);
     return { success: false, message: "Error deleting script" };
   }
 };
@@ -215,6 +231,7 @@ export const cloneScript = async (
     const originalScript = scripts.find((s) => s.id === id);
 
     if (!originalScript) {
+      log.warn("Clone script failed, script not found", { scriptId: id });
       return { success: false, message: "Script not found" };
     }
 
@@ -237,6 +254,11 @@ export const cloneScript = async (
     await saveScriptFile(filename, fullContent);
     revalidatePath("/");
 
+    log.info("Script cloned", {
+      sourceScriptId: id,
+      scriptId,
+      filename,
+    });
     const newScript: Script = {
       id: scriptId,
       name: newName,
@@ -251,7 +273,7 @@ export const cloneScript = async (
       script: newScript,
     };
   } catch (error) {
-    console.error("Error cloning script:", error);
+    log.error("Error cloning script", error);
     return { success: false, message: "Error cloning script" };
   }
 };
@@ -281,7 +303,7 @@ export const getScriptContent = async (filename: string): Promise<string> => {
     }
     return "";
   } catch (error) {
-    console.error("Error reading script content:", error);
+    log.error("Error reading script content", error);
     return "";
   }
 };
