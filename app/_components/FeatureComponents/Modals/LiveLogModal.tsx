@@ -4,9 +4,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { CircleNotchIcon, CheckCircleIcon, XCircleIcon, WarningIcon, ArrowsInIcon, ArrowsOutIcon } from "@phosphor-icons/react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
+import { LogViewer } from "@/app/_components/GlobalComponents/UIElements/LogViewer";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
+import { splitLogLines } from "@/app/_utils/log-format-utils";
 import { useTranslations } from "next-intl";
 import { createLogger } from "@/app/_utils/logger";
 import { isAbortError } from "@/app/_utils/error-utils";
@@ -38,7 +40,6 @@ export const LiveLogModal = ({
   const [exitCode, setExitCode] = useState<number | null>(null);
   const [tailMode, setTailMode] = useState<boolean>(false);
   const [showSizeWarning, setShowSizeWarning] = useState<boolean>(false);
-  const logEndRef = useRef<HTMLDivElement>(null);
   const { subscribe } = useSSEContext();
   const isPageVisible = usePageVisibility();
   const lastOffsetRef = useRef<number>(0);
@@ -205,12 +206,6 @@ export const LiveLogModal = ({
     return unsubscribe;
   }, [isOpen, runId, subscribe, tailMode]);
 
-  useEffect(() => {
-    if (logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: "instant" });
-    }
-  }, [logContent]);
-
   const changeMaxLines = (nextMaxLines: number) => {
     if (nextMaxLines !== maxLines && isOpen && runId && !isJobComplete) {
       lastOffsetRef.current = 0;
@@ -234,6 +229,12 @@ export const LiveLogModal = ({
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  const visibleLineCount = splitLogLines(logContent).length;
+  const startLine =
+    truncated && !showFullLog && totalLines > visibleLineCount
+      ? totalLines - visibleLineCount + 1
+      : 1;
 
   const titleWithStatus = (
     <div className="flex items-center gap-3">
@@ -279,7 +280,7 @@ export const LiveLogModal = ({
                   id="maxLines"
                   value={maxLines}
                   onChange={(e) => changeMaxLines(parseInt(e.target.value, 10))}
-                  className="bg-background0 border border-border rounded px-2 py-1 text-sm"
+                  className="bg-background0 ascii-border px-2 py-1 text-sm"
                 >
                   <option value="100">{t("cronjobs.nLines", { count: "100" })}</option>
                   <option value="500">{t("cronjobs.nLines", { count: "500" })}</option>
@@ -359,18 +360,15 @@ export const LiveLogModal = ({
           </div>
         )}
 
-        <div className="bg-background0 p-4 max-h-[60vh] overflow-auto terminal-font ascii-border">
-          <pre className="text-xs text-status-success whitespace-pre-wrap break-words">
-            {logContent || t("cronjobs.waitingForJobToStart")}
-            <div ref={logEndRef} />
-          </pre>
-        </div>
-
-        <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <span>
-            {t("cronjobs.runIdJobId", { runId, jobId })}
-          </span>
-        </div>
+        <LogViewer
+          className="h-[55vh] min-h-[240px]"
+          content={logContent}
+          follow
+          startLine={startLine}
+          title={t("cronjobs.runIdJobId", { runId, jobId })}
+          meta={fileSize > 0 ? formatFileSize(fileSize) : undefined}
+          placeholder={t("cronjobs.waitingForJobToStart")}
+        />
       </div>
     </Modal>
   );

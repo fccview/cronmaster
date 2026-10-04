@@ -3,7 +3,8 @@
 import { useState, useEffect, useEffectEvent } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
-import { FileTextIcon, TrashIcon, EyeIcon, XIcon, ArrowsClockwiseIcon, WarningCircleIcon, CheckCircleIcon, DownloadIcon } from "@phosphor-icons/react";
+import { FileTextIcon, TrashIcon, XIcon, ArrowsClockwiseIcon, WarningCircleIcon, CheckCircleIcon, DownloadIcon } from "@phosphor-icons/react";
+import { LogViewer } from "@/app/_components/GlobalComponents/UIElements/LogViewer";
 import { useTranslations } from "next-intl";
 import { zipSync, strToU8 } from "fflate";
 import {
@@ -164,6 +165,8 @@ export const LogsModal = ({
     }
   };
 
+  const selectedLogEntry = logs.find((log) => log.filename === selectedLog);
+
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
@@ -187,13 +190,13 @@ export const LogsModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t("cronjobs.viewLogs")} size="xl">
-      <div className="flex flex-col h-[600px]">
+      <div className="flex flex-col sm:h-[calc(70vh-2rem)] sm:min-h-[420px]">
         <div className="block sm:flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="min-w-0 mb-4 sm:mb-0">
             <h3 className="font-semibold text-lg truncate">{jobComment || jobId}</h3>
             {stats && (
               <p className="text-sm text-muted-foreground">
-                {stats.count} {t("cronjobs.logs")} • {stats.totalSizeMB} MB
+                {stats.count} {t("cronjobs.logs")} • {formatFileSize(stats.totalSize)}
               </p>
             )}
           </div>
@@ -201,7 +204,6 @@ export const LogsModal = ({
             <Button
               onClick={handleDownloadLogs}
               disabled={logs.length === 0 || isDownloading}
-              className="btn-primary glow-primary"
               size="sm"
             >
               {isDownloading ? (
@@ -214,7 +216,6 @@ export const LogsModal = ({
             <Button
               onClick={loadLogs}
               disabled={isLoadingLogs}
-              className="btn-primary glow-primary"
               size="sm"
             >
               <ArrowsClockwiseIcon
@@ -236,10 +237,10 @@ export const LogsModal = ({
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col sm:flex-row gap-4 overflow-hidden">
-          <div className="sm:w-1/3 flex flex-col sm:border-r border-b sm:border-b-0 border-border sm:pr-4 pb-4 sm:pb-0 overflow-hidden max-h-[40%] sm:max-h-none">
+        <div className="flex-1 flex flex-col sm:flex-row gap-4 sm:overflow-hidden">
+          <div className="sm:w-1/3 flex flex-col sm:border-r border-b sm:border-b-0 border-border sm:pr-4 pb-4 sm:pb-0 overflow-hidden max-h-[30vh] sm:max-h-none">
             <h4 className="font-semibold mb-2">{t("cronjobs.logFiles")}</h4>
-            <div className="flex-1 overflow-y-auto space-y-2">
+            <div className="flex-1 overflow-y-auto tui-scrollbar space-y-2">
               {isLoadingLogs ? (
                 <div className="text-center py-8 text-muted-foreground">
                   {t("common.loading")}...
@@ -253,10 +254,10 @@ export const LogsModal = ({
                   <div
                     key={log.filename}
                     className={`p-3 ascii-border cursor-pointer transition-colors terminal-font ${selectedLog === log.filename
-                      ? "border-primary bg-background2"
+                      ? "border-status-info bg-background2"
                       : log.hasError
-                        ? "border-red-600 hover:border-red-600"
-                        : "ascii-border hover:border-primary"
+                        ? "border-status-error hover:bg-background1"
+                        : "hover:bg-background1"
                       }`}
                     onClick={() => handleViewLog(log.filename)}
                   >
@@ -280,9 +281,9 @@ export const LogsModal = ({
                           </p>
                           {log.exitCode !== undefined && (
                             <span
-                              className={`text-xs px-1.5 py-0.5 ${log.hasError
-                                ? "bg-background2 text-status-error"
-                                : "bg-background2 text-status-success"
+                              className={`text-xs px-1.5 py-0.5 ascii-border ${log.hasError
+                                ? "text-status-error"
+                                : "text-status-success"
                                 }`}
                             >
                               Exit: {log.exitCode}
@@ -309,29 +310,26 @@ export const LogsModal = ({
 
           <div className="flex-1 flex flex-col overflow-hidden">
             <h4 className="font-semibold mb-2">{t("cronjobs.logContent")}</h4>
-            <div className="flex-1 overflow-hidden">
-              {isLoadingContent ? (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  {t("common.loading")}...
-                </div>
-              ) : selectedLog ? (
-                <pre className="h-full overflow-auto bg-background0 tui-scrollbar p-4 ascii-border text-xs font-mono whitespace-pre-wrap terminal-font">
-                  {logContent}
-                </pre>
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <EyeIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>{t("cronjobs.selectLogToView")}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <LogViewer
+              className="h-[55vh] sm:h-auto sm:flex-1"
+              content={isLoadingContent ? "" : logContent}
+              title={selectedLog ?? t("cronjobs.logContent")}
+              meta={
+                selectedLogEntry && !isLoadingContent
+                  ? formatFileSize(selectedLogEntry.size)
+                  : undefined
+              }
+              placeholder={
+                isLoadingContent
+                  ? `${t("common.loading")}...`
+                  : t("cronjobs.selectLogToView")
+              }
+            />
           </div>
         </div>
 
         <div className="mt-4 pt-4 border-t border-border flex justify-end">
-          <Button onClick={onClose} className="btn-primary glow-primary">
+          <Button onClick={onClose}>
             <XIcon className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">{t("common.close")}</span>
           </Button>

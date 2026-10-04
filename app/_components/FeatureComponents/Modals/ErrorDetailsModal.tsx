@@ -4,6 +4,7 @@ import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { WarningCircleIcon, CopyIcon } from "@phosphor-icons/react";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
+import { LogViewer } from "@/app/_components/GlobalComponents/UIElements/LogViewer";
 
 interface ErrorDetails {
   title: string;
@@ -52,11 +53,11 @@ Timestamp: ${error.timestamp}
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Error Details" size="xl">
       <div className="space-y-4">
-        <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
+        <div className="ascii-border border-status-error bg-background1 p-4">
           <div className="flex items-start gap-3">
-            <WarningCircleIcon className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+            <WarningCircleIcon className="h-5 w-5 text-status-error mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-medium text-destructive mb-1">
+              <h3 className="font-medium text-status-error mb-1">
                 {error.title}
               </h3>
               <p className="text-sm text-muted-foreground">{error.message}</p>
@@ -66,11 +67,11 @@ Timestamp: ${error.timestamp}
 
         {error.details && (
           <div>
-            <h4 className="text-sm font-medium text-foreground mb-2">
+            <h4 className="text-sm font-medium mb-2">
               Details
             </h4>
-            <div className="bg-muted/30 p-3 rounded border border-border">
-              <pre className="text-sm font-mono text-foreground whitespace-pre-wrap break-words">
+            <div className="bg-background1 p-3 ascii-border">
+              <pre className="text-sm whitespace-pre-wrap break-words">
                 {error.details}
               </pre>
             </div>
@@ -79,11 +80,11 @@ Timestamp: ${error.timestamp}
 
         {error.command && (
           <div>
-            <h4 className="text-sm font-medium text-foreground mb-2">
+            <h4 className="text-sm font-medium mb-2">
               Command
             </h4>
-            <div className="bg-muted/30 p-3 rounded border border-border">
-              <code className="text-sm font-mono text-foreground break-all">
+            <div className="bg-background1 p-3 ascii-border">
+              <code className="text-sm break-all">
                 {error.command}
               </code>
             </div>
@@ -91,27 +92,19 @@ Timestamp: ${error.timestamp}
         )}
 
         {error.output && (
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-2">Output</h4>
-            <div className="bg-muted/30 p-3 rounded border border-border max-h-32 overflow-y-auto tui-scrollbar">
-              <pre className="text-sm font-mono text-foreground whitespace-pre-wrap">
-                {error.output}
-              </pre>
-            </div>
-          </div>
+          <LogViewer
+            className="max-h-64"
+            title="Output"
+            content={error.output}
+          />
         )}
 
         {error.stderr && (
-          <div>
-            <h4 className="text-sm font-medium text-foreground mb-2">
-              Error Output
-            </h4>
-            <div className="bg-destructive/5 p-3 rounded border border-destructive/20 max-h-32 overflow-y-auto tui-scrollbar">
-              <pre className="text-sm font-mono text-destructive whitespace-pre-wrap">
-                {error.stderr}
-              </pre>
-            </div>
-          </div>
+          <LogViewer
+            className="max-h-64 border-status-error"
+            title={<span className="text-status-error">Error Output</span>}
+            content={error.stderr}
+          />
         )}
 
         <div className="text-xs text-muted-foreground">
@@ -119,15 +112,11 @@ Timestamp: ${error.timestamp}
         </div>
 
         <div className="flex justify-end gap-2 pt-3 border-t border-border">
-          <Button
-            variant="outline"
-            onClick={handleCopyDetails}
-            className="btn-outline"
-          >
+          <Button variant="outline" onClick={handleCopyDetails}>
             <CopyIcon className="h-4 w-4 mr-2" />
-            CopyIcon Details
+            Copy Details
           </Button>
-          <Button onClick={onClose} className="btn-primary">
+          <Button onClick={onClose}>
             Close
           </Button>
         </div>

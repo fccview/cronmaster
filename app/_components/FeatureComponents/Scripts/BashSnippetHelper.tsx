@@ -34,7 +34,7 @@ const categoryIcons = {
   Conditionals: CodeIcon,
   "System Operations": GearIcon,
   "Database Operations": Database,
-  "UserIcon Examples": FolderOpen,
+  "User Examples": FolderOpen,
   "Custom Scripts": CodeIcon,
 };
 
