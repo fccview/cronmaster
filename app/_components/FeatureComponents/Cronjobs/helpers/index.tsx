@@ -72,16 +72,53 @@ export const handleErrorClick = (
   setErrorModalOpen(true);
 };
 
-export const refreshJobErrors = (
-  filteredJobs: CronJob[],
-  getJobErrorsByJobId: (jobId: string) => JobError[],
-  setJobErrors: (errors: Record<string, JobError[]>) => void
+const jobRef = (job: CronJob) => ({
+  id: job.id,
+  schedule: job.schedule,
+  command: job.command,
+  comment: job.comment,
+  user: job.user,
+});
+
+interface JobFailure {
+  message: string;
+  toastMessage?: string;
+  output?: string;
+  details?: string;
+}
+
+const failureFromError = (error: unknown, t: Translate): JobFailure => ({
+  message: getErrorMessage(error) || t("common.tryAgainLater"),
+  toastMessage: t("common.tryAgainLater"),
+  details: getErrorStack(error),
+});
+
+const reportJobFailure = (
+  { refreshJobErrors }: Pick<HandlerProps, "refreshJobErrors">,
+  kind: string,
+  jobId: string,
+  title: string,
+  { message, toastMessage, output, details }: JobFailure
 ) => {
-  const errors: Record<string, JobError[]> = {};
-  filteredJobs.forEach((job) => {
-    errors[job.id] = getJobErrorsByJobId(job.id);
+  const jobError: JobError = {
+    id: `${kind}-${jobId}-${Date.now()}`,
+    title,
+    message,
+    output,
+    details,
+    timestamp: new Date().toISOString(),
+    jobId,
+  };
+  setJobError(jobError);
+  refreshJobErrors();
+  showToast("error", title, toastMessage ?? message, undefined, {
+    title,
+    message,
+    output,
+    details,
+    timestamp: jobError.timestamp,
+    jobId,
   });
-  setJobErrors(errors);
 };
 
 export const handleDelete = async (job: CronJob, props: HandlerProps) => {
@@ -90,67 +127,25 @@ export const handleDelete = async (job: CronJob, props: HandlerProps) => {
     setDeletingId,
     setIsDeleteModalOpen,
     setJobToDelete,
-    refreshJobErrors,
   } = props;
 
   setDeletingId(job.id);
   try {
-    const result = await removeCronJob({
-      id: job.id,
-      schedule: job.schedule,
-      command: job.command,
-      comment: job.comment,
-      user: job.user,
-    });
+    const result = await removeCronJob(jobRef(job));
     if (result.success) {
       showToast("success", t("cronjobs.jobDeleted"));
     } else {
-      const errorId = `delete-${job.id}-${Date.now()}`;
-      const jobError: JobError = {
-        id: errorId,
-        title: t("cronjobs.deleteJobFailed"),
+      reportJobFailure(props, "delete", job.id, t("cronjobs.deleteJobFailed"), {
         message: result.message,
-        timestamp: new Date().toISOString(),
-        jobId: job.id,
-      };
-      setJobError(jobError);
-      refreshJobErrors();
-      showToast(
-        "error",
-        t("cronjobs.deleteJobFailed"),
-        result.message,
-        undefined,
-        {
-          title: jobError.title,
-          message: jobError.message,
-          timestamp: jobError.timestamp,
-          jobId: jobError.jobId,
-        }
-      );
+      });
     }
   } catch (error: unknown) {
-    const errorId = `delete-${job.id}-${Date.now()}`;
-    const jobError: JobError = {
-      id: errorId,
-      title: t("cronjobs.deleteJobFailed"),
-      message: getErrorMessage(error) || t("common.tryAgainLater"),
-      details: getErrorStack(error),
-      timestamp: new Date().toISOString(),
-      jobId: job.id,
-    };
-    setJobError(jobError);
-    showToast(
-      "error",
+    reportJobFailure(
+      props,
+      "delete",
+      job.id,
       t("cronjobs.deleteJobFailed"),
-      t("common.tryAgainLater"),
-      undefined,
-      {
-        title: jobError.title,
-        message: jobError.message,
-        details: jobError.details,
-        timestamp: jobError.timestamp,
-        jobId: jobError.jobId,
-      }
+      failureFromError(error, t)
     );
   } finally {
     setDeletingId(null);
@@ -182,13 +177,7 @@ export const handleClone = async (newComment: string, props: HandlerProps) => {
 
 export const handlePause = async (job: CronJob, t: Translate) => {
   try {
-    const result = await pauseCronJobAction({
-      id: job.id,
-      schedule: job.schedule,
-      command: job.command,
-      comment: job.comment,
-      user: job.user,
-    });
+    const result = await pauseCronJobAction(jobRef(job));
     if (result.success) {
       showToast("success", t("cronjobs.jobPaused"));
     } else {
@@ -202,11 +191,7 @@ export const handlePause = async (job: CronJob, t: Translate) => {
 export const handleToggleLogging = async (job: CronJob, t: Translate) => {
   try {
     const result = await toggleCronJobLogging({
-      id: job.id,
-      schedule: job.schedule,
-      command: job.command,
-      comment: job.comment,
-      user: job.user,
+      ...jobRef(job),
       logsEnabled: job.logsEnabled,
     });
     if (result.success) {
@@ -225,13 +210,7 @@ export const handleToggleLogging = async (job: CronJob, t: Translate) => {
 
 export const handleResume = async (job: CronJob, t: Translate) => {
   try {
-    const result = await resumeCronJobAction({
-      id: job.id,
-      schedule: job.schedule,
-      command: job.command,
-      comment: job.comment,
-      user: job.user,
-    });
+    const result = await resumeCronJobAction(jobRef(job));
     if (result.success) {
       showToast("success", t("cronjobs.jobResumed"));
     } else {
@@ -246,7 +225,6 @@ export const handleRun = async (id: string, props: HandlerProps, job: CronJob) =
   const {
     t,
     setRunningJobId,
-    refreshJobErrors,
     setIsLiveLogModalOpen,
     setLiveLogRunId,
     setLiveLogJobId,
@@ -270,55 +248,18 @@ export const handleRun = async (id: string, props: HandlerProps, job: CronJob) =
         showToast("success", t("cronjobs.runCronJobSuccess"));
       }
     } else {
-      const errorId = `run-${id}-${Date.now()}`;
-      const jobError: JobError = {
-        id: errorId,
-        title: t("cronjobs.runCronJobFailed"),
+      reportJobFailure(props, "run", id, t("cronjobs.runCronJobFailed"), {
         message: result.message,
         output: result.output,
-        timestamp: new Date().toISOString(),
-        jobId: id,
-      };
-      setJobError(jobError);
-      refreshJobErrors();
-      showToast(
-        "error",
-        t("cronjobs.runCronJobFailed"),
-        result.message,
-        undefined,
-        {
-          title: jobError.title,
-          message: jobError.message,
-          output: jobError.output,
-          timestamp: jobError.timestamp,
-          jobId: jobError.jobId,
-        }
-      );
+      });
     }
   } catch (error: unknown) {
-    const errorId = `run-${id}-${Date.now()}`;
-    const jobError: JobError = {
-      id: errorId,
-      title: t("cronjobs.runCronJobFailed"),
-      message: getErrorMessage(error) || t("common.tryAgainLater"),
-      details: getErrorStack(error),
-      timestamp: new Date().toISOString(),
-      jobId: id,
-    };
-    setJobError(jobError);
-    refreshJobErrors();
-    showToast(
-      "error",
+    reportJobFailure(
+      props,
+      "run",
+      id,
       t("cronjobs.runCronJobFailed"),
-      t("common.tryAgainLater"),
-      undefined,
-      {
-        title: jobError.title,
-        message: jobError.message,
-        details: jobError.details,
-        timestamp: jobError.timestamp,
-        jobId: jobError.jobId,
-      }
+      failureFromError(error, t)
     );
   } finally {
     setRunningJobId(null);
@@ -335,7 +276,6 @@ export const handleEditSubmit = async (
     editForm,
     setIsEditModalOpen,
     setEditingJob,
-    refreshJobErrors,
   } = props;
 
   e.preventDefault();
@@ -358,55 +298,18 @@ export const handleEditSubmit = async (
       setEditingJob(null);
       showToast("success", t("cronjobs.jobUpdated"));
     } else {
-      const errorId = `edit-${editingJob.id}-${Date.now()}`;
-      const jobError: JobError = {
-        id: errorId,
-        title: t("cronjobs.updateJobFailed"),
+      reportJobFailure(props, "edit", editingJob.id, t("cronjobs.updateJobFailed"), {
         message: result.message,
         details: result.details,
-        timestamp: new Date().toISOString(),
-        jobId: editingJob.id,
-      };
-      setJobError(jobError);
-      refreshJobErrors();
-      showToast(
-        "error",
-        t("cronjobs.updateJobFailed"),
-        result.message,
-        undefined,
-        {
-          title: jobError.title,
-          message: jobError.message,
-          details: jobError.details,
-          timestamp: jobError.timestamp,
-          jobId: jobError.jobId,
-        }
-      );
+      });
     }
   } catch (error: unknown) {
-    const errorId = `edit-${editingJob?.id || "unknown"}-${Date.now()}`;
-    const jobError: JobError = {
-      id: errorId,
-      title: t("cronjobs.updateJobFailed"),
-      message: getErrorMessage(error) || t("common.tryAgainLater"),
-      details: getErrorStack(error),
-      timestamp: new Date().toISOString(),
-      jobId: editingJob?.id || "unknown",
-    };
-    setJobError(jobError);
-    refreshJobErrors();
-    showToast(
-      "error",
+    reportJobFailure(
+      props,
+      "edit",
+      editingJob.id,
       t("cronjobs.updateJobFailed"),
-      t("common.tryAgainLater"),
-      undefined,
-      {
-        title: jobError.title,
-        message: jobError.message,
-        details: jobError.details,
-        timestamp: jobError.timestamp,
-        jobId: jobError.jobId,
-      }
+      failureFromError(error, t)
     );
   }
 };
