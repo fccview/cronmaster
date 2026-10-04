@@ -267,7 +267,10 @@
         "gpuVram": "{memory} di VRAM",
         "networkDetail": "{latency} ms di latenza • {speed}",
         "performanceSummary": "Riepilogo Prestazioni",
-        "usage": "Utilizzo"
+        "usage": "Utilizzo",
+        "uptimeDaysHours": "{days, plural, one {# giorno} other {# giorni}}, {hours, plural, one {# ora} other {# ore}}",
+        "uptimeHoursMinutes": "{hours, plural, one {# ora} other {# ore}}, {minutes, plural, one {# minuto} other {# minuti}}",
+        "uptimeMinutes": "{minutes, plural, one {# minuto} other {# minuti}}"
     },
     "system": {
         "optimal": "Ottimale",

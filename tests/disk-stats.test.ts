@@ -244,7 +244,6 @@ describe("formatting", () => {
   });
 
   it("formats disk stats with statuses", () => {
-    const t = (key: string) => key;
     const [disk] = formatDiskStats(
       [
         {
@@ -255,8 +254,7 @@ describe("formatting", () => {
           usage: 95,
           inodes: { total: 2_000, used: 100, free: 1_900, usage: 5 },
         },
-      ],
-      t
+      ]
     );
     expect(disk).toEqual({
       mount: "/",
@@ -264,13 +262,13 @@ describe("formatting", () => {
       used: "95.0 GB",
       free: "5.0 GB",
       usage: 95,
-      status: "system.critical",
+      status: "critical",
       inodes: {
         total: "2.0K",
         used: "100",
         free: "1.9K",
         usage: 5,
-        status: "system.optimal",
+        status: "optimal",
       },
     });
   });

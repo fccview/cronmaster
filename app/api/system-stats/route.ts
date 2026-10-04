@@ -62,22 +62,19 @@ export const GET = async (request: NextRequest) => {
 
     const systemStats = {
       uptime: formatUptime(uptimeInfo.uptime),
+      uptimeSeconds: uptimeInfo.uptime,
       memory: {
         total: formatBytes(memInfo.total),
         used: formatBytes(actualUsed),
         free: formatBytes(memInfo.available || memInfo.free),
         usage: Math.round(memUsage),
-        status: getStatus(
-          memUsage,
-          { critical: 90, high: 80, moderate: 70 },
-          t
-        ),
+        status: getStatus(memUsage, { critical: 90, high: 80, moderate: 70 }),
       },
       cpu: {
         model: `${cpuInfo.manufacturer} ${cpuInfo.brand}`,
         cores: cpuInfo.cores,
         usage: Math.round(cpuLoad),
-        status: getStatus(cpuLoad, { high: 80, moderate: 60 }, t),
+        status: getStatus(cpuLoad, { high: 80, moderate: 60 }),
       },
       network: {
         speed:
@@ -91,12 +88,12 @@ export const GET = async (request: NextRequest) => {
         uploadSpeed: Math.round(txSpeed),
         status:
           mainInterface && mainInterface.operstate === "up"
-            ? t("system.connected")
-            : t("system.unknown"),
+            ? "connected"
+            : "unknown",
       },
-      systemStatus: getOverallStatus(memUsage, cpuLoad, t),
+      systemStatus: getOverallStatus(memUsage, cpuLoad),
       gpu: formatGpuInfo(graphics, t),
-      ...(diskStats ? { disks: formatDiskStats(diskStats, t) } : {}),
+      ...(diskStats ? { disks: formatDiskStats(diskStats) } : {}),
     };
 
     if (sseBroadcaster.hasClients()) {

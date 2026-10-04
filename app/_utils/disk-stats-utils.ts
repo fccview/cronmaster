@@ -235,24 +235,21 @@ export const formatCount = (value: number): string => {
 
 const DISK_THRESHOLDS = { critical: 90, high: 80, moderate: 70 };
 
-export const formatDiskStats = (
-  stats: RawDiskStat[],
-  t: (key: string) => string
-) =>
+export const formatDiskStats = (stats: RawDiskStat[]) =>
   stats.map((stat) => ({
     mount: stat.mount,
     total: formatBytes(stat.totalBytes),
     used: formatBytes(stat.usedBytes),
     free: formatBytes(stat.freeBytes),
     usage: stat.usage,
-    status: getStatus(stat.usage, DISK_THRESHOLDS, t),
+    status: getStatus(stat.usage, DISK_THRESHOLDS),
     inodes: stat.inodes
       ? {
         total: formatCount(stat.inodes.total),
         used: formatCount(stat.inodes.used),
         free: formatCount(stat.inodes.free),
         usage: stat.inodes.usage,
-        status: getStatus(stat.inodes.usage, DISK_THRESHOLDS, t),
+        status: getStatus(stat.inodes.usage, DISK_THRESHOLDS),
       }
       : null,
   }));

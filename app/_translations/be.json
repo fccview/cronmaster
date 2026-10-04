@@ -267,7 +267,10 @@
         "gpuVram": "{memory} VRAM",
         "networkDetail": "затрымка {latency} мс • {speed}",
         "performanceSummary": "Зводка прадукцыйнасці",
-        "usage": "Выкарыстанне"
+        "usage": "Выкарыстанне",
+        "uptimeDaysHours": "{days, plural, one {# дзень} few {# дні} many {# дзён} other {# дня}}, {hours, plural, one {# гадзіна} few {# гадзіны} many {# гадзін} other {# гадзіны}}",
+        "uptimeHoursMinutes": "{hours, plural, one {# гадзіна} few {# гадзіны} many {# гадзін} other {# гадзіны}}, {minutes, plural, one {# хвіліна} few {# хвіліны} many {# хвілін} other {# хвіліны}}",
+        "uptimeMinutes": "{minutes, plural, one {# хвіліна} few {# хвіліны} many {# хвілін} other {# хвіліны}}"
     },
     "system": {
         "optimal": "Аптымальны",

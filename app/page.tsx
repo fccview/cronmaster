@@ -41,21 +41,20 @@ export default async function Home() {
       used: "0 B",
       free: "0 B",
       usage: 0,
-      status: t("common.loading"),
+      status: "loading",
     },
     cpu: {
       model: `${t("common.loading")}...`,
       cores: 0,
       usage: 0,
-      status: t("common.loading"),
+      status: "loading",
     },
     gpu: {
       model: `${t("common.loading")}...`,
-      status: t("common.loading"),
+      status: "loading",
     },
     systemStatus: {
-      overall: t("common.loading"),
-      details: t("system.fetchingSystemInformation"),
+      overall: "loading",
     },
   };
 

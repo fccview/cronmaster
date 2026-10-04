@@ -1,6 +1,11 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import * as si from "systeminformation";
+import type {
+  AvailabilityStatus,
+  OverallStatus,
+  ResourceStatus,
+} from "@/app/_utils/status-utils";
 
 const execAsync = promisify(exec);
 
@@ -36,15 +41,12 @@ export const getPing = async (): Promise<number> => {
 
 export const getStatus = (
   value: number,
-  thresholds: { critical?: number; high?: number; moderate?: number },
-  t: (key: string) => string
-): string => {
-  if (thresholds.critical && value > thresholds.critical)
-    return t("system.critical");
-  if (thresholds.high && value > thresholds.high) return t("system.high");
-  if (thresholds.moderate && value > thresholds.moderate)
-    return t("system.moderate");
-  return t("system.optimal");
+  thresholds: { critical?: number; high?: number; moderate?: number }
+): ResourceStatus => {
+  if (thresholds.critical && value > thresholds.critical) return "critical";
+  if (thresholds.high && value > thresholds.high) return "high";
+  if (thresholds.moderate && value > thresholds.moderate) return "moderate";
+  return "optimal";
 };
 
 export const findMainInterface = (
@@ -63,43 +65,33 @@ export const findMainInterface = (
 export const formatGpuInfo = (
   graphics: si.Systeminformation.GraphicsData | null,
   t: (key: string) => string
-) => {
+): { model: string; memory?: string; status: AvailabilityStatus } => {
   if (graphics && graphics.controllers && graphics.controllers.length > 0) {
     const gpu = graphics.controllers[0];
     return {
       model: gpu.model || t("system.unknownGPU"),
       memory: gpu.vram ? `${gpu.vram} MB` : undefined,
-      status: t("system.available"),
+      status: "available",
     };
   }
   return {
     model: t(graphics ? "system.noGPUDetected" : "system.gpuDetectionFailed"),
-    status: t("system.unknown"),
+    status: "unknown",
   };
 };
 
 export const getOverallStatus = (
   memUsage: number,
-  cpuLoad: number,
-  t: (key: string) => string
-) => {
+  cpuLoad: number
+): { overall: OverallStatus } => {
   const criticalThreshold = 90;
   const warningThreshold = 80;
 
   if (memUsage > criticalThreshold || cpuLoad > criticalThreshold) {
-    return {
-      overall: t("system.critical"),
-      details: t("system.highResourceUsageDetectedImmediateAttentionRequired"),
-    };
+    return { overall: "critical" };
   }
   if (memUsage > warningThreshold || cpuLoad > warningThreshold) {
-    return {
-      overall: t("system.warning"),
-      details: t("system.moderateResourceUsageMonitoringRecommended"),
-    };
+    return { overall: "warning" };
   }
-  return {
-    overall: t("system.optimal"),
-    details: t("system.allSystemsRunningNormally"),
-  };
+  return { overall: "optimal" };
 };

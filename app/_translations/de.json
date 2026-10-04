@@ -267,7 +267,10 @@
         "gpuVram": "{memory} VRAM",
         "networkDetail": "{latency} ms Latenz • {speed}",
         "performanceSummary": "Leistungsübersicht",
-        "usage": "Auslastung"
+        "usage": "Auslastung",
+        "uptimeDaysHours": "{days, plural, one {# Tag} other {# Tage}}, {hours, plural, one {# Stunde} other {# Stunden}}",
+        "uptimeHoursMinutes": "{hours, plural, one {# Stunde} other {# Stunden}}, {minutes, plural, one {# Minute} other {# Minuten}}",
+        "uptimeMinutes": "{minutes, plural, one {# Minute} other {# Minuten}}"
     },
     "system": {
         "optimal": "Optimal",

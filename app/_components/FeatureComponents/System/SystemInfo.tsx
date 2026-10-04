@@ -11,6 +11,7 @@ interface SystemInfoType {
   platform: string;
   ip?: string;
   uptime: string;
+  uptimeSeconds?: number;
   memory: {
     total: string;
     used: string;
@@ -53,7 +54,6 @@ interface SystemInfoType {
   }[];
   systemStatus: {
     overall: string;
-    details: string;
   };
 }
 import { useState, useEffect, useEffectEvent, useRef } from "react";
@@ -63,6 +63,7 @@ import { SSEEvent } from "@/app/_utils/sse-events";
 import { usePageVisibility } from "@/app/_hooks/usePageVisibility";
 import { createLogger } from "@/app/_utils/logger";
 import { isAbortError } from "@/app/_utils/error-utils";
+import { overallDetailsKey, statusLabelKey } from "@/app/_utils/status-utils";
 
 const log = createLogger("ui:system");
 
@@ -176,6 +177,15 @@ export const SystemInfoCard = ({
     };
   }, [isPageVisible, isDisabled]);
 
+  const formatUptime = (seconds: number) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (days > 0) return t("sidebar.uptimeDaysHours", { days, hours });
+    if (hours > 0) return t("sidebar.uptimeHoursMinutes", { hours, minutes });
+    return t("sidebar.uptimeMinutes", { minutes });
+  };
+
   const quickStats = {
     cpu: systemInfo.cpu.usage,
     memory: systemInfo.memory.usage,
@@ -188,7 +198,10 @@ export const SystemInfoCard = ({
     {
       icon: ClockIcon,
       label: t("sidebar.uptime"),
-      value: systemInfo.uptime,
+      value:
+        systemInfo.uptimeSeconds === undefined
+          ? systemInfo.uptime
+          : formatUptime(systemInfo.uptimeSeconds),
     },
   ];
 
@@ -217,7 +230,7 @@ export const SystemInfoCard = ({
       value: systemInfo.gpu.model,
       detail: systemInfo.gpu.memory
         ? t("sidebar.gpuVram", { memory: systemInfo.gpu.memory })
-        : systemInfo.gpu.status,
+        : t(statusLabelKey(systemInfo.gpu.status)),
       status: systemInfo.gpu.status,
     },
     ...(systemInfo.network
@@ -294,7 +307,7 @@ export const SystemInfoCard = ({
     <Sidebar defaultCollapsed={false} quickStats={quickStats}>
       <SystemStatus
         status={systemInfo.systemStatus.overall}
-        details={systemInfo.systemStatus.details}
+        details={t(overallDetailsKey(systemInfo.systemStatus.overall))}
         timestamp={currentTime}
         isUpdating={isUpdating}
       />

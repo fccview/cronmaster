@@ -267,7 +267,10 @@
         "gpuVram": "{memory} 显存",
         "networkDetail": "延迟 {latency}ms • {speed}",
         "performanceSummary": "性能概览",
-        "usage": "使用率"
+        "usage": "使用率",
+        "uptimeDaysHours": "{days, plural, other {# 天}} {hours, plural, other {# 小时}}",
+        "uptimeHoursMinutes": "{hours, plural, other {# 小时}} {minutes, plural, other {# 分钟}}",
+        "uptimeMinutes": "{minutes, plural, other {# 分钟}}"
     },
     "system": {
         "optimal": "非常好",
