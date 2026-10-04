@@ -157,6 +157,31 @@ const emit = (level: LogLevel, scope: string, message: string, meta?: unknown) =
   }
 };
 
+const BANNER = [
+  "                   ,--.",
+  " ,-----.        .-,|  |,-.         ,--.   ,--.                ,--.",
+  "'  .--./,--.--. _\\ '  ' /_ ,--,--, |   `.'   | ,--,--. ,---.,-'  '-. ,---. ,--.--.",
+  "|  |    |  .--'(__      __)|      \\|  |'.'|  |' ,-.  |(  .-''-.  .-'| .-. :|  .--'",
+  "'  '--'\\|  |     / .  . \\  |  ||  ||  |   |  |\\ '-'  |.-'  `) |  |  \\   --.|  |",
+  " `-----'`--'    `-'|  |`-' `--''--'`--'   `--' `--`--'`----'  `--'   `----'`--'",
+  "                   `--'",
+];
+
+const BANNER_ASTERISK_START = 15;
+
+const BANNER_ASTERISK_END = 27;
+
+export const printBanner = (): void => {
+  if (isJsonFormat()) return;
+  const red = isColorEnabled() ? LEVEL_COLOR.error : "";
+  const reset = isColorEnabled() ? ANSI_RESET : "";
+  const banner = BANNER.map(
+    (line) =>
+      `${line.slice(0, BANNER_ASTERISK_START)}${red}${line.slice(BANNER_ASTERISK_START, BANNER_ASTERISK_END)}${reset}${line.slice(BANNER_ASTERISK_END)}`
+  ).join("\n");
+  console.log(`\n${banner}\n`);
+};
+
 export const createLogger = (scope: string): Logger => {
   const enabled = (level: LogLevel) =>
     LEVEL_WEIGHT[level] <= LEVEL_WEIGHT[resolveLogLevel()];

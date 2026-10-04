@@ -1,11 +1,13 @@
 export const register = async () => {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
-  const { createLogger, resolveLogLevel } = await import(
+  const { createLogger, printBanner, resolveLogLevel } = await import(
     "@/app/_utils/logger"
   );
   const { isDocker } = await import("@/app/_server/actions/global");
   const log = createLogger("system");
+
+  printBanner();
 
   log.info("Cr*nMaster starting", {
     nodeEnv: process.env.NODE_ENV,

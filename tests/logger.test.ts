@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createLogger, formatLine, redact, resolveLogLevel } from "@/app/_utils/logger";
+import { createLogger, formatLine, printBanner, redact, resolveLogLevel } from "@/app/_utils/logger";
 
 describe("logger", () => {
   it("defaults to info", () => {
@@ -103,5 +103,29 @@ describe("formatLine colours", () => {
     expect(formatLine("error", "job", "boom", time)).toBe(
       "2026-10-04T12:00:00.000Z ERROR [cr*nmaster:job] boom"
     );
+  });
+});
+
+describe("printBanner", () => {
+  it("paints only the asterisk red", () => {
+    vi.stubEnv("NO_COLOR", "");
+    vi.stubEnv("LOG_FORMAT", "");
+    const out = vi.spyOn(console, "log").mockImplementation(() => {});
+    printBanner();
+    const lines = (out.mock.calls[0][0] as string).split("\n");
+    expect(lines[4]).toBe(
+      "|  |    |  .--'\x1b[31m(__      __)\x1b[0m|      \\|  |'.'|  |' ,-.  |(  .-''-.  .-'| .-. :|  .--'"
+    );
+  });
+
+  it("stays quiet in json mode and plain with NO_COLOR", () => {
+    vi.stubEnv("LOG_FORMAT", "json");
+    const out = vi.spyOn(console, "log").mockImplementation(() => {});
+    printBanner();
+    expect(out).not.toHaveBeenCalled();
+    vi.stubEnv("LOG_FORMAT", "");
+    vi.stubEnv("NO_COLOR", "1");
+    printBanner();
+    expect(out.mock.calls[0][0]).not.toContain("\x1b[");
   });
 });
