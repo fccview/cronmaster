@@ -77,6 +77,10 @@ Logs are automatically cleaned up to prevent disk space issues:
 - Mount the `./data` directory to persist logs on the host
 - The wrapper script location: `./data/cron-log-wrapper.sh`. This will be generated automatically the first time you enable logging.
 
+Enabling logging in Docker requires the host path for the directory mounted at `/app/data`.
+If Docker inspection cannot find that path, the job save fails and leaves the crontab untouched.
+Check Docker socket access and the `/app/data` bind mount, then retry.
+
 ## Non-Docker Considerations
 
 - Logs are stored at `./data/logs/` relative to the project directory

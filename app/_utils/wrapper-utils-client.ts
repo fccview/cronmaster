@@ -4,13 +4,13 @@ export const toShellArg = (cmd: string): string =>
   SH_C_PREFIX.test(cmd) ? cmd : `sh -c '${cmd.replace(/'/g, "'\\''")}'`;
 
 export const fromShellArg = (cmd: string): string => {
-  const match = cmd.match(/^sh -c '(.*)'$/);
+  const match = cmd.match(/^sh -c '([\s\S]*)'$/);
   if (!match) return cmd;
   return match[1].replace(/'\\''/g, "'");
 };
 
 export const unwrapCommand = (command: string): string => {
-  const wrapperPattern = /^(.+\/cron-log-wrapper\.sh)\s+"([^"]+)"\s+(.+)$/;
+  const wrapperPattern = /^(.+\/cron-log-wrapper\.sh)\s+"([^"]+)"\s+([\s\S]+)$/;
 
   const match = command.match(wrapperPattern);
 
