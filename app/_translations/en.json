@@ -133,7 +133,8 @@
         "draft": "Draft",
         "clearDraft": "Clear Draft",
         "close": "Close",
-        "draftCleared": "Draft cleared"
+        "draftCleared": "Draft cleared",
+        "scheduleScript": "Schedule this script"
     },
     "sidebar": {
         "systemOverview": "System Overview",

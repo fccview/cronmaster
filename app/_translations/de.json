@@ -133,7 +133,8 @@
         "draft": "Entwurf",
         "clearDraft": "Entwurf löschen",
         "close": "Schließen",
-        "draftCleared": "Entwurf gelöscht"
+        "draftCleared": "Entwurf gelöscht",
+        "scheduleScript": "Dieses Skript planen"
     },
     "sidebar": {
         "systemOverview": "Systemübersicht",

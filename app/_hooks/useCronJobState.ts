@@ -19,6 +19,9 @@ import {
     handleToggleLogging,
     handleBackup,
 } from "@/app/_components/FeatureComponents/Cronjobs/helpers";
+import { buildScriptSelection } from "@/app/_components/FeatureComponents/Cronjobs/Parts/ScriptCommandPicker";
+import { findScriptForCommand } from "@/app/_utils/script-command-utils";
+import { unwrapCommand } from "@/app/_utils/wrapper-utils-client";
 
 interface CronJobListProps {
     cronJobs: CronJob[];
@@ -51,6 +54,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         schedule: "",
         command: "",
         comment: "",
+        selectedScriptId: null as string | null,
         logsEnabled: false,
     });
     const [newCronForm, setNewCronForm] = useState({
@@ -180,14 +184,22 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
     };
 
     const handleEdit = (job: CronJob) => {
+        const script = findScriptForCommand(job.command, scripts);
         setEditingJob(job);
         setEditForm({
             schedule: job.schedule,
-            command: job.command,
+            command: script ? unwrapCommand(job.command) : job.command,
             comment: job.comment || "",
+            selectedScriptId: script?.id ?? null,
             logsEnabled: job.logsEnabled || false,
         });
         setIsEditModalOpen(true);
+    };
+
+    const openNewCronWithScript = async (script: Script) => {
+        const selection = await buildScriptSelection(script);
+        setNewCronForm((prev) => ({ ...prev, ...selection }));
+        setIsNewCronModalOpen(true);
     };
 
     const handleEditSubmitLocal = async (e: React.FormEvent) => {
@@ -251,6 +263,7 @@ export const useCronJobState = ({ cronJobs, scripts }: CronJobListProps) => {
         confirmDelete,
         confirmClone,
         handleEdit,
+        openNewCronWithScript,
         handleEditSubmitLocal,
         handleNewCronSubmitLocal,
         handleBackupLocal,

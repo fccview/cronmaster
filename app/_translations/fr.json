@@ -133,7 +133,8 @@
         "draft": "Brouillon",
         "clearDraft": "Effacer le brouillon",
         "close": "Fermer",
-        "draftCleared": "Brouillon effacé"
+        "draftCleared": "Brouillon effacé",
+        "scheduleScript": "Planifier ce script"
     },
     "sidebar": {
         "systemOverview": "Vue d'ensemble système",

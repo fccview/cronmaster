@@ -11,6 +11,7 @@ import {
   CopyIcon,
   CheckCircleIcon,
   FilesIcon,
+  CalendarPlusIcon,
 } from "@phosphor-icons/react";
 import { Script } from "@/app/_utils/scripts-utils";
 import {
@@ -29,12 +30,14 @@ import { useTranslations } from "next-intl";
 
 interface ScriptsManagerProps {
   scripts: Script[];
+  onSchedule?: (script: Script) => void;
 }
 
 const DRAFT_STORAGE_KEY = "cronjob_script_draft";
 
 export const ScriptsManager = ({
   scripts: initialScripts,
+  onSchedule,
 }: ScriptsManagerProps) => {
   const [scripts, setScripts] = useState<Script[]>(initialScripts);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -276,6 +279,18 @@ export const ScriptsManager = ({
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {onSchedule && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onSchedule(script)}
+                          className="btn-outline h-8 px-3"
+                          title={t("scripts.scheduleScript")}
+                          aria-label={t("scripts.scheduleScript")}
+                        >
+                          <CalendarPlusIcon className="h-3 w-3" />
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

@@ -1,31 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { Input } from "@/app/_components/GlobalComponents/FormElements/Input";
 import { Switch } from "@/app/_components/GlobalComponents/UIElements/Switch";
 import { CronExpressionHelper } from "@/app/_components/FeatureComponents/Scripts/CronExpressionHelper";
-import { SelectScriptModal } from "@/app/_components/FeatureComponents/Modals/SelectScriptModal";
+import { ScriptCommandPicker } from "@/app/_components/FeatureComponents/Cronjobs/Parts/ScriptCommandPicker";
 import { UserSwitcher } from "@/app/_components/FeatureComponents/User/UserSwitcher";
-import {
-  PlusIcon,
-  TerminalIcon,
-  FileTextIcon,
-  XIcon,
-  FileArrowDownIcon,
-} from "@phosphor-icons/react";
-import { getScriptContent } from "@/app/_server/actions/scripts";
-import { getHostScriptPath } from "@/app/_server/actions/scripts";
+import { PlusIcon, FileArrowDownIcon } from "@phosphor-icons/react";
+import { Script } from "@/app/_utils/scripts-utils";
 import { useTranslations } from "next-intl";
-
-interface Script {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  filename: string;
-}
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -51,41 +35,7 @@ export const CreateTaskModal = ({
   form,
   onFormChange,
 }: CreateTaskModalProps) => {
-  const [isSelectScriptModalOpen, setIsSelectScriptModalOpen] = useState(false);
-  const selectedScript = scripts.find((s) => s.id === form.selectedScriptId);
   const t = useTranslations();
-
-  useEffect(() => {
-    const loadScriptContent = async () => {
-      if (selectedScript) {
-        await getScriptContent(selectedScript.filename);
-      }
-    };
-
-    loadScriptContent();
-  }, [selectedScript]);
-
-  const handleScriptSelect = async (script: Script) => {
-    const scriptPath = await getHostScriptPath(script.filename);
-    onFormChange({
-      selectedScriptId: script.id,
-      command: scriptPath,
-    });
-  };
-
-  const handleCustomCommand = () => {
-    onFormChange({
-      selectedScriptId: null,
-      command: "",
-    });
-  };
-
-  const handleClearScript = () => {
-    onFormChange({
-      selectedScriptId: null,
-      command: "",
-    });
-  };
 
   return (
     <>
@@ -118,129 +68,12 @@ export const CreateTaskModal = ({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              {t("cronjobs.taskType")}
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleCustomCommand}
-                className={`p-4 rounded-lg transition-all ${
-                  !form.selectedScriptId
-                    ? "border-border border-2"
-                    : "border-border border"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <TerminalIcon className="h-5 w-5" />
-                  <div className="text-left">
-                    <div className="font-medium">
-                      {t("cronjobs.customCommand")}
-                    </div>
-                    <div className="text-xs opacity-70">
-                      {t("cronjobs.singleCommand")}
-                    </div>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsSelectScriptModalOpen(true)}
-                className={`p-4 rounded-lg transition-all ${
-                  form.selectedScriptId
-                    ? "border-border border-2"
-                    : "border-border border"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <FileTextIcon className="h-5 w-5" />
-                  <div className="text-left">
-                    <div className="font-medium">
-                      {t("scripts.savedScript")}
-                    </div>
-                    <div className="text-xs opacity-70">
-                      {t("scripts.selectFromLibrary")}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {form.selectedScriptId && selectedScript && (
-            <div className="border border-primary/20 bg-primary/5 rounded-lg p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <FileTextIcon className="h-4 w-4 text-primary" />
-                    <h4 className="font-medium text-foreground">
-                      {selectedScript.name}
-                    </h4>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {selectedScript.description}
-                  </p>
-                  <div className="bg-muted/30 p-2 rounded border border-border">
-                    <code className="text-xs font-mono text-foreground break-all">
-                      {form.command}
-                    </code>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsSelectScriptModalOpen(true)}
-                    className="h-8 px-2 text-xs"
-                  >
-                    {t("common.change")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearScript}
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                  >
-                    <XIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!form.selectedScriptId && !selectedScript && (
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                {t("cronjobs.command")}
-              </label>
-              <div className="relative">
-                <textarea
-                  value={form.command}
-                  onChange={(e) => onFormChange({ command: e.target.value })}
-                  placeholder={
-                    form.selectedScriptId
-                      ? "/app/scripts/script_name.sh"
-                      : "/usr/bin/command"
-                  }
-                  className="w-full h-24 p-2 border border-border rounded bg-background0 text-foreground font-mono text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary/20"
-                  required
-                  readOnly={!!form.selectedScriptId}
-                />
-                <div className="absolute right-3 top-2">
-                  <TerminalIcon className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-              {form.selectedScriptId && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t("scripts.scriptPathReadOnly")}
-                </p>
-              )}
-            </div>
-          )}
+          <ScriptCommandPicker
+            scripts={scripts}
+            command={form.command}
+            selectedScriptId={form.selectedScriptId}
+            onChange={onFormChange}
+          />
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
@@ -297,14 +130,6 @@ export const CreateTaskModal = ({
           </div>
         </form>
       </Modal>
-
-      <SelectScriptModal
-        isOpen={isSelectScriptModalOpen}
-        onClose={() => setIsSelectScriptModalOpen(false)}
-        scripts={scripts}
-        onScriptSelect={handleScriptSelect}
-        selectedScriptId={form.selectedScriptId}
-      />
     </>
   );
 };

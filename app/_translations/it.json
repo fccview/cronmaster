@@ -129,7 +129,8 @@
         "draft": "Bozza",
         "clearDraft": "Cancella Bozza",
         "close": "Chiudi",
-        "draftCleared": "Bozza cancellata"
+        "draftCleared": "Bozza cancellata",
+        "scheduleScript": "Pianifica questo script"
     },
     "sidebar": {
         "systemOverview": "Panoramica del Sistema",

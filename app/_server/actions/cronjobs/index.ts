@@ -24,6 +24,17 @@ import {
   deleteJobInLines,
 } from "@/app/_utils/line-manipulation-utils";
 import { cleanCrontabContent } from "@/app/_utils/files-manipulation-utils";
+import { resolveJobCommand } from "@/app/_utils/script-command-utils";
+
+const resolveCommandFromForm = async (formData: FormData) => {
+  const { fetchScripts } = await import("@/app/_server/actions/scripts");
+  return resolveJobCommand({
+    command: formData.get("command") as string | null,
+    selectedScriptId: formData.get("selectedScriptId") as string | null,
+    scripts: fetchScripts,
+    getScriptPath: getScriptPathForCron,
+  });
+};
 
 export const fetchCronJobs = async (): Promise<CronJob[]> => {
   try {
@@ -39,9 +50,7 @@ export const createCronJob = async (
 ): Promise<{ success: boolean; message: string; details?: string }> => {
   try {
     const schedule = formData.get("schedule") as string;
-    const command = formData.get("command") as string;
     const comment = formData.get("comment") as string;
-    const selectedScriptId = formData.get("selectedScriptId") as string;
     const user = formData.get("user") as string;
     const logsEnabled = formData.get("logsEnabled") === "true";
 
@@ -49,28 +58,14 @@ export const createCronJob = async (
       return { success: false, message: "Schedule is required" };
     }
 
-    let finalCommand = command;
-
-    if (selectedScriptId) {
-      const { fetchScripts } = await import("@/app/_server/actions/scripts");
-      const scripts = await fetchScripts();
-      const selectedScript = scripts.find((s) => s.id === selectedScriptId);
-
-      if (selectedScript) {
-        finalCommand = await getScriptPathForCron(selectedScript.filename);
-      } else {
-        return { success: false, message: "Selected script not found" };
-      }
-    } else if (!command) {
-      return {
-        success: false,
-        message: "Command or script selection is required",
-      };
+    const resolved = await resolveCommandFromForm(formData);
+    if (!resolved.success) {
+      return resolved;
     }
 
     const success = await addCronJob(
       schedule,
-      finalCommand,
+      resolved.command,
       comment,
       user,
       logsEnabled
@@ -130,12 +125,16 @@ export const editCronJob = async (
   try {
     const id = formData.get("id") as string;
     const schedule = formData.get("schedule") as string;
-    const command = formData.get("command") as string;
     const comment = formData.get("comment") as string;
     const logsEnabled = formData.get("logsEnabled") === "true";
 
-    if (!id || !schedule || !command) {
+    if (!id || !schedule) {
       return { success: false, message: "Missing required fields" };
+    }
+
+    const resolved = await resolveCommandFromForm(formData);
+    if (!resolved.success) {
+      return resolved;
     }
 
     const cronJobs = await getCronJobs(false);
@@ -148,7 +147,7 @@ export const editCronJob = async (
     const success = await updateCronJob(
       job,
       schedule,
-      command,
+      resolved.command,
       comment,
       logsEnabled
     );

@@ -133,7 +133,8 @@
         "draft": "草稿",
         "clearDraft": "清空草稿",
         "close": "关闭",
-        "draftCleared": "草稿已清空"
+        "draftCleared": "草稿已清空",
+        "scheduleScript": "计划运行此脚本"
     },
     "sidebar": {
         "systemOverview": "系统概述",

@@ -20,6 +20,9 @@ export const TabbedInterface = ({
   const [activeTab, setActiveTab] = useState<"cronjobs" | "scripts">(
     "cronjobs"
   );
+  const [scriptToSchedule, setScriptToSchedule] = useState<Script | null>(
+    null
+  );
   const t = useTranslations();
 
   return (
@@ -57,9 +60,20 @@ export const TabbedInterface = ({
 
       <div className="min-h-[60vh]">
         {activeTab === "cronjobs" ? (
-          <CronJobList cronJobs={cronJobs} scripts={scripts} />
+          <CronJobList
+            cronJobs={cronJobs}
+            scripts={scripts}
+            scriptToSchedule={scriptToSchedule}
+            onScriptScheduled={() => setScriptToSchedule(null)}
+          />
         ) : (
-          <ScriptsManager scripts={scripts} />
+          <ScriptsManager
+            scripts={scripts}
+            onSchedule={(script) => {
+              setScriptToSchedule(script);
+              setActiveTab("cronjobs");
+            }}
+          />
         )}
       </div>
     </div>

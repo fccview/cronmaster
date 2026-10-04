@@ -81,6 +81,7 @@ export const CronJobListModals = ({
                 isOpen={isEditModalOpen}
                 onClose={onEditModalClose}
                 onSubmit={onEditSubmit}
+                scripts={scripts}
                 form={editForm}
                 onFormChange={onEditFormChange}
             />

@@ -133,7 +133,8 @@
         "draft": "Чарнавік",
         "clearDraft": "Ачысціць чарнавік",
         "close": "Закрыць",
-        "draftCleared": "Чарнавік ачышчаны"
+        "draftCleared": "Чарнавік ачышчаны",
+        "scheduleScript": "Запланаваць гэты скрыпт"
     },
     "sidebar": {
         "systemOverview": "Агляд сістэмы",

@@ -48,9 +48,16 @@ import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 interface CronJobListProps {
   cronJobs: CronJob[];
   scripts: Script[];
+  scriptToSchedule?: Script | null;
+  onScriptScheduled?: () => void;
 }
 
-export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
+export const CronJobList = ({
+  cronJobs,
+  scripts,
+  scriptToSchedule,
+  onScriptScheduled,
+}: CronJobListProps) => {
   const t = useTranslations();
   const router = useRouter();
   const { subscribe } = useSSEContext();
@@ -225,10 +232,17 @@ export const CronJobList = ({ cronJobs, scripts }: CronJobListProps) => {
     confirmDelete,
     confirmClone,
     handleEdit,
+    openNewCronWithScript,
     handleEditSubmitLocal,
     handleNewCronSubmitLocal,
     handleBackupLocal,
   } = useCronJobState({ cronJobs, scripts });
+
+  useEffect(() => {
+    if (!scriptToSchedule) return;
+    openNewCronWithScript(scriptToSchedule);
+    onScriptScheduled?.();
+  }, [scriptToSchedule, openNewCronWithScript, onScriptScheduled]);
 
   return (
     <>

@@ -36,6 +36,7 @@ interface HandlerProps {
     schedule: string;
     command: string;
     comment: string;
+    selectedScriptId: string | null;
     logsEnabled: boolean;
   };
   newCronForm: {
@@ -327,6 +328,9 @@ export const handleEditSubmit = async (
     formData.append("command", editForm.command);
     formData.append("comment", editForm.comment);
     formData.append("logsEnabled", editForm.logsEnabled.toString());
+    if (editForm.selectedScriptId) {
+      formData.append("selectedScriptId", editForm.selectedScriptId);
+    }
 
     const result = await editCronJob(formData);
     if (result.success) {
