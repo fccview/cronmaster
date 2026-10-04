@@ -85,10 +85,3 @@ export const searchScripts = (scripts: Script[], query: string): Script[] => {
       script.description.toLowerCase().includes(lowercaseQuery)
   );
 }
-
-export const getScriptById = (
-  scripts: Script[],
-  id: string
-): Script | undefined => {
-  return scripts.find((script) => script.id === id);
-};

@@ -169,10 +169,3 @@ export const getSnippetCategories = (snippets: BashSnippet[]): string[] => {
   const categories = new Set(snippets.map((snippet) => snippet.category));
   return Array.from(categories).sort();
 }
-
-export const getSnippetById = (
-  snippets: BashSnippet[],
-  id: string
-): BashSnippet | undefined => {
-  return snippets.find((snippet) => snippet.id === id);
-}

@@ -101,14 +101,6 @@ export const startLogWatcher = () => {
   });
 };
 
-export const stopLogWatcher = () => {
-  if (watcher) {
-    log.info("Log watcher stopped");
-    watcher.close();
-    watcher = null;
-  }
-};
-
 export const watchForLogFile = (
   runId: string,
   logFolderName: string,

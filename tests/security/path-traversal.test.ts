@@ -92,12 +92,9 @@ describe("backup files", () => {
 
 describe("script content", () => {
   it("reads scripts inside the scripts dir only", async () => {
-    const { getScriptContent, executeScript } = await import("@/app/_server/actions/scripts");
+    const { getScriptContent } = await import("@/app/_server/actions/scripts");
     expect(await getScriptContent("hello.sh")).toBe("echo hello");
     expect(await getScriptContent("../../secret.sh")).toBe("");
     expect(await getScriptContent(path.join(root, "secret.sh"))).toBe("");
-
-    const run = await executeScript("../../secret.sh");
-    expect(run).toMatchObject({ success: false, error: "Invalid script filename" });
   });
 });

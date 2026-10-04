@@ -90,16 +90,3 @@ export async function requireAuth(
     { status: 401 }
   );
 }
-
-export function withAuth<T extends unknown[]>(
-  handler: (request: NextRequest, ...args: T) => Promise<Response>
-) {
-  return async (request: NextRequest, ...args: T): Promise<Response> => {
-    const authError = await requireAuth(request);
-    if (authError) {
-      return authError;
-    }
-
-    return handler(request, ...args);
-  };
-}

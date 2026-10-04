@@ -46,7 +46,6 @@ vi.mock("@/app/_utils/snippets-utils", () => ({
   loadAllSnippets: vi.fn(async () => []),
   searchBashSnippets: vi.fn(() => []),
   getSnippetCategories: vi.fn(() => []),
-  getSnippetById: vi.fn(),
 }));
 
 import { cookies } from "next/headers";
@@ -132,13 +131,11 @@ describe("server actions enforce auth", () => {
     ["editCronJob", () => cronActions.editCronJob(new FormData())],
     ["runCronJob", () => cronActions.runCronJob("abcd-1234")],
     ["executeJob", () => cronActions.executeJob("abcd-1234")],
-    ["cleanupCrontabAction", () => cronActions.cleanupCrontabAction()],
     ["restoreCronJob", () => cronActions.restoreCronJob("x.job")],
     ["deleteBackup", () => cronActions.deleteBackup("x.job")],
     ["fetchScripts", () => scriptActions.fetchScripts()],
     ["getScriptContent", () => scriptActions.getScriptContent("x.sh")],
     ["createScript", () => scriptActions.createScript(new FormData())],
-    ["executeScript", () => scriptActions.executeScript("x.sh")],
     ["getLogContent", () => logActions.getLogContent("abcd-1234", "a.log")],
     ["deleteLogFile", () => logActions.deleteLogFile("abcd-1234", "a.log")],
     ["getAllJobLogErrors", () => logActions.getAllJobLogErrors([])],

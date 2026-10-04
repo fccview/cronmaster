@@ -81,30 +81,3 @@ export const removeRunningJob = (runId: string): void => {
     throw error;
   }
 };
-
-export const cleanupOldRunningJobs = (): void => {
-  try {
-    const jobs = getAllRunningJobs();
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
-
-    const filtered = jobs.filter((job) => {
-      if (job.status === "running") {
-        return true;
-      }
-      const jobTime = new Date(job.startTime).getTime();
-      return jobTime > oneHourAgo;
-    });
-
-    writeFileSync(RUNNING_JOBS_FILE, JSON.stringify(filtered, null, 2), "utf-8");
-    log.debug("Pruned old running jobs", {
-      removed: jobs.length - filtered.length,
-    });
-  } catch (error) {
-    log.error("Error cleaning up old running jobs", error);
-  }
-};
-
-export const getRunningJobsForCronJob = (cronJobId: string): RunningJob[] => {
-  const jobs = getAllRunningJobs();
-  return jobs.filter((job) => job.cronJobId === cronJobId && job.status === "running");
-};

@@ -104,11 +104,3 @@ export const getErrorStack = (error: unknown): string | undefined =>
 
 export const isAbortError = (error: unknown): boolean =>
   readErrorField(error, "name") === "AbortError";
-
-export const clearAllJobErrors = () => {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {}
-};

@@ -5,10 +5,7 @@ import path from "path";
 import { existsSync } from "fs";
 import {
   getLogsBaseDir,
-  getMaxLogAgeDays,
-  getMaxLogsPerJob,
   listLogFiles,
-  pruneLogDirectory,
   pruneLogDirectoryIfDue,
 } from "@/app/_utils/log-files-utils";
 import { createLogger } from "@/app/_utils/logger";
@@ -213,39 +210,6 @@ export const deleteAllJobLogs = async (
     return {
       success: false,
       message: getErrorMessage(error) || "Error deleting log files",
-      deletedCount: 0,
-    };
-  }
-};
-
-export const cleanupJobLogs = async (
-  jobId: string
-): Promise<{ success: boolean; message: string; deletedCount: number }> => {
-  await requireActionAuth();
-  try {
-    const logDir = await getJobLogPath(jobId);
-    const deletedCount =
-      logDir && existsSync(logDir) ? await pruneLogDirectory(logDir) : 0;
-
-    if (deletedCount > 0) {
-      logger.info("Cleaned up old logs", {
-        jobId,
-        deletedCount,
-        maxLogsPerJob: getMaxLogsPerJob(),
-        maxLogAgeDays: getMaxLogAgeDays(),
-      });
-    }
-
-    return {
-      success: true,
-      message: `Cleaned up ${deletedCount} log files`,
-      deletedCount,
-    };
-  } catch (error: unknown) {
-    logger.error(`Error cleaning up logs for job ${jobId}`, error);
-    return {
-      success: false,
-      message: getErrorMessage(error) || "Error cleaning up log files",
       deletedCount: 0,
     };
   }

@@ -89,18 +89,6 @@ export const backupAllJobsToFiles = async (): Promise<{
   }
 };
 
-export const listBackupFiles = async (): Promise<string[]> => {
-  try {
-    await ensureBackupDirectoryExists();
-
-    const files = await fs.readdir(BACKUP_DIR);
-    return files.filter((file) => file.endsWith(".job"));
-  } catch (error) {
-    log.error("Error listing backup files", error);
-    return [];
-  }
-};
-
 export const readBackupFile = async (
   filename: string
 ): Promise<CronJob | null> => {

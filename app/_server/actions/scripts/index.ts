@@ -8,13 +8,12 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { SCRIPTS_DIR } from "@/app/_consts/file";
 import { loadAllScripts, Script } from "@/app/_utils/scripts-utils";
-import { MAKE_SCRIPT_EXECUTABLE, RUN_SCRIPT } from "@/app/_consts/commands";
+import { MAKE_SCRIPT_EXECUTABLE } from "@/app/_consts/commands";
 import { isDocker, getHostScriptsPath } from "@/app/_server/actions/global";
 import { requireActionAuth } from "@/app/_utils/server-action-auth";
 import { isSafePathSegment, toSingleLine } from "@/app/_utils/security-utils";
 import { createLogger } from "@/app/_utils/logger";
 import { shellQuoteIfNeeded } from "@/app/_utils/shell-utils";
-import { getErrorMessage } from "@/app/_utils/error-utils";
 
 const log = createLogger("scripts");
 
@@ -83,13 +82,6 @@ const ensureScriptsDirectory = async () => {
   const scriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
   if (!existsSync(scriptsDir)) {
     await mkdir(scriptsDir, { recursive: true });
-  }
-};
-
-const ensureHostScriptsDirectory = async () => {
-  const hostScriptsDir = path.join(process.cwd(), SCRIPTS_DIR);
-  if (!existsSync(hostScriptsDir)) {
-    await mkdir(hostScriptsDir, { recursive: true });
   }
 };
 
@@ -330,47 +322,5 @@ export const getScriptContent = async (filename: string): Promise<string> => {
   } catch (error) {
     log.error("Error reading script content", error);
     return "";
-  }
-};
-
-export const executeScript = async (
-  filename: string
-): Promise<{
-  success: boolean;
-  output: string;
-  error: string;
-}> => {
-  await requireActionAuth();
-  try {
-    if (!isSafeScriptFilename(filename)) {
-      return { success: false, output: "", error: "Invalid script filename" };
-    }
-
-    await ensureHostScriptsDirectory();
-    const hostScriptPath = await getHostScriptPath(filename);
-
-    if (!existsSync(hostScriptPath)) {
-      return {
-        success: false,
-        output: "",
-        error: "Script file not found",
-      };
-    }
-
-    const { stdout, stderr } = await execAsync(RUN_SCRIPT(hostScriptPath), {
-      timeout: 30000,
-    });
-
-    return {
-      success: true,
-      output: stdout,
-      error: stderr,
-    };
-  } catch (error: unknown) {
-    return {
-      success: false,
-      output: "",
-      error: getErrorMessage(error) || "Unknown error",
-    };
   }
 };

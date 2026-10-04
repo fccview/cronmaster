@@ -3,7 +3,6 @@
 import {
   getCronJobs,
   addCronJob,
-  cleanupCrontab,
   readUserCrontab,
   writeUserCrontab,
   findJobIndex,
@@ -354,32 +353,6 @@ export const fetchAvailableUsers = async (): Promise<string[]> => {
   } catch (error) {
     log.error("Error fetching available users", error);
     return [];
-  }
-};
-
-export const cleanupCrontabAction = async (): Promise<{
-  success: boolean;
-  message: string;
-  details?: string;
-}> => {
-  await requireActionAuth();
-  try {
-    const success = await cleanupCrontab();
-    if (success) {
-      revalidatePath("/");
-      log.info("Crontab cleaned");
-      return { success: true, message: "Crontab cleaned successfully" };
-    } else {
-      log.warn("Failed to clean crontab");
-      return { success: false, message: "Failed to clean crontab" };
-    }
-  } catch (error: unknown) {
-    log.error("Error cleaning crontab", error);
-    return {
-      success: false,
-      message: getErrorMessage(error) || "Error cleaning crontab",
-      details: debugDetails(error),
-    };
   }
 };
 

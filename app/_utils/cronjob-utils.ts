@@ -411,25 +411,6 @@ export const resumeCronJob = async (id: string): Promise<boolean> => {
   }
 };
 
-export const cleanupCrontab = async (): Promise<boolean> => {
-  try {
-    const userCrontabs = await getAllUsers();
-
-    for (const { user, content } of userCrontabs) {
-      if (!content.trim()) continue;
-
-      const cleanedContent = await cleanCrontabContent(content);
-      log.debug("Cleaned crontab", { user });
-      await writeUserCrontab(user, cleanedContent);
-    }
-
-    return true;
-  } catch (error) {
-    log.error("Error cleaning crontab", error);
-    return false;
-  }
-};
-
 export const findJobIndex = (
   jobData: {
     id: string;
