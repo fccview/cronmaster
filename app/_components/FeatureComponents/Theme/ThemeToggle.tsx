@@ -1,16 +1,12 @@
 'use client'
 
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 import { SunIcon, MoonIcon } from '@phosphor-icons/react';
+import { useIsHydrated } from '@/app/_hooks/useIsHydrated';
 
 export const ThemeToggle = () => {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsHydrated();
   const { theme, setTheme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) return null;
 

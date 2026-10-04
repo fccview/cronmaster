@@ -50,10 +50,12 @@ export const LiveLogModal = ({
   const [truncated, setTruncated] = useState<boolean>(false);
   const [showFullLog, setShowFullLog] = useState<boolean>(false);
   const [isJobComplete, setIsJobComplete] = useState<boolean>(false);
+  const openRunId = isOpen ? runId : null;
+  const [resetForRunId, setResetForRunId] = useState<string | null>(null);
 
-  useEffect(() => {
+  if (openRunId !== resetForRunId) {
+    setResetForRunId(openRunId);
     if (isOpen) {
-      lastOffsetRef.current = 0;
       setLogContent("");
       setTailMode(false);
       setShowSizeWarning(false);
@@ -62,15 +64,13 @@ export const LiveLogModal = ({
       setShowFullLog(false);
       setIsJobComplete(false);
     }
-  }, [isOpen, runId]);
+  }
 
   useEffect(() => {
-    if (isOpen && runId && !isJobComplete) {
+    if (isOpen) {
       lastOffsetRef.current = 0;
-      setLogContent("");
-      fetchLogs();
     }
-  }, [maxLines]);
+  }, [isOpen, runId]);
 
   const fetchLogs = useCallback(async () => {
     if (abortControllerRef.current) {
@@ -211,6 +211,14 @@ export const LiveLogModal = ({
     }
   }, [logContent]);
 
+  const changeMaxLines = (nextMaxLines: number) => {
+    if (nextMaxLines !== maxLines && isOpen && runId && !isJobComplete) {
+      lastOffsetRef.current = 0;
+      setLogContent("");
+    }
+    setMaxLines(nextMaxLines);
+  };
+
   const toggleTailMode = () => {
     setTailMode(!tailMode);
     if (!tailMode) {
@@ -270,7 +278,7 @@ export const LiveLogModal = ({
                 <select
                   id="maxLines"
                   value={maxLines}
-                  onChange={(e) => setMaxLines(parseInt(e.target.value, 10))}
+                  onChange={(e) => changeMaxLines(parseInt(e.target.value, 10))}
                   className="bg-background0 border border-border rounded px-2 py-1 text-sm"
                 >
                   <option value="100">{t("cronjobs.nLines", { count: "100" })}</option>
@@ -286,7 +294,7 @@ export const LiveLogModal = ({
                     size="sm"
                     onClick={() => {
                       setShowFullLog(true);
-                      setMaxLines(50000);
+                      changeMaxLines(50000);
                     }}
                     className="text-xs"
                   >
@@ -309,7 +317,7 @@ export const LiveLogModal = ({
                   size="sm"
                   onClick={() => {
                     setShowFullLog(false);
-                    setMaxLines(500);
+                    changeMaxLines(500);
                   }}
                   className="text-xs"
                 >

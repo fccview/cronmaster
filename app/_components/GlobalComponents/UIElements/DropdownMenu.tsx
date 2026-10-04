@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useState, useRef, useEffect, useEffectEvent, ReactNode } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { DotsThreeVerticalIcon } from "@phosphor-icons/react";
 
@@ -47,19 +47,21 @@ export const DropdownMenu = ({
     onOpenChange?.(open);
   };
 
+  const closeMenu = useEffectEvent(() => handleOpenChange(false));
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
       ) {
-        handleOpenChange(false);
+        closeMenu();
       }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        handleOpenChange(false);
+        closeMenu();
       }
     };
 

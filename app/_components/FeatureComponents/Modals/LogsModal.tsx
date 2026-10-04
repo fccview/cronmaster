@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useEffectEvent } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { FileTextIcon, TrashIcon, EyeIcon, XIcon, ArrowsClockwiseIcon, WarningCircleIcon, CheckCircleIcon, DownloadIcon } from "@phosphor-icons/react";
@@ -72,20 +72,6 @@ export const LogsModal = ({
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      loadLogs().then(() => {
-        if (preSelectedLog) {
-          handleViewLog(preSelectedLog);
-        }
-      });
-      if (!preSelectedLog) {
-        setSelectedLog(null);
-        setLogContent("");
-      }
-    }
-  }, [isOpen, jobId, preSelectedLog]);
-
   const handleViewLog = async (filename: string) => {
     setIsLoadingContent(true);
     setSelectedLog(filename);
@@ -99,6 +85,24 @@ export const LogsModal = ({
       setIsLoadingContent(false);
     }
   };
+
+  const openLogs = useEffectEvent(() => {
+    loadLogs().then(() => {
+      if (preSelectedLog) {
+        handleViewLog(preSelectedLog);
+      }
+    });
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      openLogs();
+      if (!preSelectedLog) {
+        setSelectedLog(null);
+        setLogContent("");
+      }
+    }
+  }, [isOpen, jobId, preSelectedLog]);
 
   const handleDeleteLog = async (filename: string) => {
     if (!confirm(t("cronjobs.confirmDeleteLog"))) return;

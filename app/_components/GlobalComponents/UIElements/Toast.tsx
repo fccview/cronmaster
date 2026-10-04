@@ -52,13 +52,16 @@ export const Toast = ({ toast, onRemove, onErrorClick }: ToastProps) => {
   const Icon = toastIcons[toast.type];
 
   useEffect(() => {
-    setIsVisible(true);
+    const frame = requestAnimationFrame(() => setIsVisible(true));
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(() => onRemove(toast.id), 300);
     }, toast.duration || 5000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
   }, [toast.id, toast.duration, onRemove]);
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   parseCronExpression,
   cronPatterns,
@@ -36,7 +36,6 @@ export const CronExpressionHelper = ({
   showPatterns = true,
 }: CronExpressionHelperProps) => {
   const locale = useLocale();
-  const [explanation, setExplanation] = useState<CronExplanation | null>(null);
   const [showPatternsPanel, setShowPatternsPanel] = useState(false);
   const [debouncedValue, setDebouncedValue] = useState(value);
   const [patternSearch, setPatternSearch] = useState("");
@@ -49,14 +48,11 @@ export const CronExpressionHelper = ({
     return () => clearTimeout(timer);
   }, [value]);
 
-  useEffect(() => {
-    if (debouncedValue) {
-      const result = parseCronExpression(debouncedValue, locale);
-      setExplanation(result);
-    } else {
-      setExplanation(null);
-    }
-  }, [debouncedValue]);
+  const explanation = useMemo<CronExplanation | null>(
+    () =>
+      debouncedValue ? parseCronExpression(debouncedValue, locale) : null,
+    [debouncedValue, locale]
+  );
 
   const handlePatternSelect = (pattern: string) => {
     onChange(pattern);

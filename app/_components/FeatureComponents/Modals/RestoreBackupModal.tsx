@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useEffectEvent } from "react";
 import { Modal } from "@/app/_components/GlobalComponents/UIElements/Modal";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import {
@@ -48,9 +48,11 @@ export const RestoreBackupModal = ({
   const [deletingFilename, setDeletingFilename] = useState<string | null>(null);
   const [commandCopied, setCommandCopied] = useState<string | null>(null);
 
+  const refreshBackups = useEffectEvent(() => onRefresh());
+
   useEffect(() => {
     if (isOpen) {
-      onRefresh();
+      refreshBackups();
     }
   }, [isOpen]);
 

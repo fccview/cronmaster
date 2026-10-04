@@ -40,6 +40,7 @@ import {
 } from "@/app/_server/actions/cronjobs";
 import { showToast } from "@/app/_components/GlobalComponents/UIElements/Toast";
 import { createLogger } from "@/app/_utils/logger";
+import { useIsHydrated } from "@/app/_hooks/useIsHydrated";
 
 const log = createLogger("ui:jobs");
 
@@ -73,10 +74,11 @@ export const CronJobList = ({
   const [loadedSettings, setLoadedSettings] = useState<boolean>(false);
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
   const [minimalMode, setMinimalMode] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useIsHydrated();
+  const [settingsChecked, setSettingsChecked] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
+  if (isClient && !settingsChecked) {
+    setSettingsChecked(true);
 
     try {
       const savedScheduleMode = localStorage.getItem(
@@ -99,7 +101,7 @@ export const CronJobList = ({
     } catch (error) {
       log.warn("Failed to load settings from localStorage", error);
     }
-  }, []);
+  }
 
   useEffect(() => {
     const unsubscribe = subscribe((event) => {

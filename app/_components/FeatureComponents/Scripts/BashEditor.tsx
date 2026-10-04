@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { EditorView, keymap, type ViewUpdate } from "@codemirror/view";
 import { EditorState, Transaction } from "@codemirror/state";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
@@ -97,6 +97,9 @@ export const BashEditor = ({
     return true;
   };
 
+  const getInitialDoc = useEffectEvent(() => value || placeholder);
+  const handleDocChange = useEffectEvent((doc: string) => onChange(doc));
+
   useEffect(() => {
     if (!editorRef.current) return;
 
@@ -144,7 +147,7 @@ export const BashEditor = ({
     }, { dark: isDark });
 
     const state = EditorState.create({
-      doc: value || placeholder,
+      doc: getInitialDoc(),
       extensions: [
         bashLanguage,
         customTheme,
@@ -154,7 +157,7 @@ export const BashEditor = ({
         ]),
         EditorView.updateListener.of((update: ViewUpdate) => {
           if (update.docChanged) {
-            onChange(update.state.doc.toString());
+            handleDocChange(update.state.doc.toString());
           }
         }),
         EditorView.theme({

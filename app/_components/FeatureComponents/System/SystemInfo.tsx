@@ -56,7 +56,7 @@ interface SystemInfoType {
     details: string;
   };
 }
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useEffectEvent, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useSSEContext } from "@/app/_contexts/SSEContext";
 import { SSEEvent } from "@/app/_utils/sse-events";
@@ -131,6 +131,8 @@ export const SystemInfoCard = ({
     return unsubscribe;
   }, [subscribe]);
 
+  const refreshSystemInfo = useEffectEvent(() => updateSystemInfo());
+
   useEffect(() => {
     const updateTime = () => {
       setCurrentTime(new Date().toLocaleTimeString());
@@ -139,7 +141,7 @@ export const SystemInfoCard = ({
     updateTime();
 
     if (isPageVisible) {
-      updateSystemInfo();
+      refreshSystemInfo();
     }
 
     const updateInterval = parseInt(
@@ -152,7 +154,7 @@ export const SystemInfoCard = ({
     const doUpdate = () => {
       if (!mounted || !isPageVisible || isDisabled) return;
       updateTime();
-      updateSystemInfo().finally(() => {
+      refreshSystemInfo().finally(() => {
         if (mounted && isPageVisible && !isDisabled) {
           timeoutId = setTimeout(doUpdate, updateInterval);
         }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/app/_components/GlobalComponents/UIElements/Button";
 import { DropdownMenu } from "@/app/_components/GlobalComponents/UIElements/DropdownMenu";
 import {
@@ -71,8 +71,6 @@ export const CronJobItem = ({
   onErrorClick,
   onErrorDismiss,
 }: CronJobItemProps) => {
-  const [cronExplanation, setCronExplanation] =
-    useState<CronExplanation | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showCopyConfirmation, setShowCopyConfirmation] = useState(false);
   const locale = useLocale();
@@ -80,14 +78,10 @@ export const CronJobItem = ({
   const displayCommand = unwrapCommand(job.command);
   const [commandCopied, setCommandCopied] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (job.schedule) {
-      const explanation = parseCronExpression(job.schedule, locale);
-      setCronExplanation(explanation);
-    } else {
-      setCronExplanation(null);
-    }
-  }, [job.schedule]);
+  const cronExplanation = useMemo<CronExplanation | null>(
+    () => (job.schedule ? parseCronExpression(job.schedule, locale) : null),
+    [job.schedule, locale]
+  );
 
   const dropdownMenuItems = [
     {
