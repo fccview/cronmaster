@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("fs/promises", () => ({ statfs: vi.fn() }));
+vi.mock("@/app/_server/actions/global", () => ({
+  isDocker: vi.fn(async () => false),
+}));
 
 import { statfs } from "fs/promises";
+import { isDocker } from "@/app/_server/actions/global";
 import {
   DISK_STATS_TTL_MS,
   MAX_DISK_MOUNTS,
@@ -171,8 +175,8 @@ describe("getDiskStats", () => {
     expect(result?.[0].mount).toBe("/");
   });
 
-  it("uses the host root in docker mode", async () => {
-    vi.stubEnv("DOCKER", "true");
+  it("uses the host root when running in docker, no DOCKER env needed", async () => {
+    vi.mocked(isDocker).mockResolvedValueOnce(true);
     statfsMock.mockResolvedValue(fakeStat() as never);
     await getDiskStats();
     expect(statfsMock).toHaveBeenCalledWith("/proc/1/root/");
@@ -199,6 +203,9 @@ describe("getDiskStats", () => {
     ) as never;
     const a = getDiskStats({ statfsFn: fn });
     const b = getDiskStats({ statfsFn: fn });
+    await vi.waitFor(() =>
+      expect(vi.mocked(fn as () => unknown)).toHaveBeenCalled()
+    );
     release(fakeStat());
     const [ra, rb] = await Promise.all([a, b]);
     expect(ra).toBe(rb);

@@ -2,6 +2,7 @@ import { statfs } from "fs/promises";
 import path from "path";
 import { createLogger } from "@/app/_utils/logger";
 import { formatBytes, getStatus } from "@/app/_utils/system-stats-utils";
+import { isDocker } from "@/app/_server/actions/global";
 
 const log = createLogger("system:disk");
 
@@ -198,8 +199,7 @@ export const getDiskStats = async (
     parsedMounts = { raw: rawMounts, mounts: parseDiskMounts(rawMounts) };
   }
   const mounts = parsedMounts.mounts;
-  const docker = process.env.DOCKER === "true";
-  const key = `${docker}|${mounts.join(",")}`;
+  const key = mounts.join(",");
 
   if (cache && cache.key === key && cache.expiresAt > now()) {
     return cache.value;
@@ -207,7 +207,8 @@ export const getDiskStats = async (
 
   if (inflight && inflight.key === key) return inflight.promise;
 
-  const promise = collectDiskStats(mounts, docker, options.statfsFn)
+  const promise = isDocker()
+    .then((docker) => collectDiskStats(mounts, docker, options.statfsFn))
     .then((value) => {
       cache = { key, expiresAt: now() + DISK_STATS_TTL_MS, value };
       log.debug("Disk stats refreshed", { mounts });
