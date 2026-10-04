@@ -149,7 +149,11 @@
         "performanceMetrics": "Performance Metrics",
         "statsUpdateEvery": "Stats update every",
         "updating": "Updating",
-        "networkSpeedEstimatedFromLatency": "Network speed estimated from latency"
+        "networkSpeedEstimatedFromLatency": "Network speed estimated from latency",
+        "diskMount": "Disk ({mount})",
+        "inodesMount": "Inodes ({mount})",
+        "diskDetail": "{free} free, {usage}% used",
+        "diskUsageMount": "Disk Usage ({mount})"
     },
     "system": {
         "optimal": "Optimal",

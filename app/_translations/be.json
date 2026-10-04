@@ -149,7 +149,11 @@
         "performanceMetrics": "Паказчыкі прадукцыйнасці",
         "statsUpdateEvery": "Статыстыка абнаўляецца кожныя",
         "updating": "Абнаўленне",
-        "networkSpeedEstimatedFromLatency": "Хуткасць сеткі разлічана на аснове затрымкі"
+        "networkSpeedEstimatedFromLatency": "Хуткасць сеткі разлічана на аснове затрымкі",
+        "diskMount": "Дыск ({mount})",
+        "inodesMount": "Inodes ({mount})",
+        "diskDetail": "{free} вольна, {usage}% занята",
+        "diskUsageMount": "Выкарыстанне дыска ({mount})"
     },
     "system": {
         "optimal": "Аптымальны",

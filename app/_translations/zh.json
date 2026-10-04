@@ -149,7 +149,11 @@
         "performanceMetrics": "性能指标",
         "statsUpdateEvery": "状态更新于每",
         "updating": "更新中",
-        "networkSpeedEstimatedFromLatency": "网速由延迟估算（所以不准）"
+        "networkSpeedEstimatedFromLatency": "网速由延迟估算（所以不准）",
+        "diskMount": "磁盘 ({mount})",
+        "inodesMount": "Inodes ({mount})",
+        "diskDetail": "剩余 {free}，已用 {usage}%",
+        "diskUsageMount": "磁盘使用率 ({mount})"
     },
     "system": {
         "optimal": "非常好",

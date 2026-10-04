@@ -4,7 +4,7 @@ import { MetricCard } from "@/app/_components/GlobalComponents/Cards/MetricCard"
 import { SystemStatus } from "@/app/_components/FeatureComponents/System/SystemStatus";
 import { PerformanceSummary } from "@/app/_components/FeatureComponents/System/PerformanceSummary";
 import { Sidebar } from "@/app/_components/FeatureComponents/Layout/Sidebar";
-import { ClockIcon, HardDriveIcon, CpuIcon, MonitorIcon, WifiHighIcon } from "@phosphor-icons/react";
+import { ClockIcon, HardDriveIcon, HardDrivesIcon, FilesIcon, CpuIcon, MonitorIcon, WifiHighIcon } from "@phosphor-icons/react";
 
 interface SystemInfoType {
   hostname: string;
@@ -36,13 +36,21 @@ interface SystemInfoType {
     uploadSpeed: number;
     status: string;
   };
-  disk: {
+  disks?: {
+    mount: string;
     total: string;
     used: string;
     free: string;
     usage: number;
     status: string;
-  };
+    inodes: {
+      total: string;
+      used: string;
+      free: string;
+      usage: number;
+      status: string;
+    } | null;
+  }[];
   systemStatus: {
     overall: string;
     details: string;
@@ -215,6 +223,33 @@ export const SystemInfoCard = ({
         },
       ]
       : []),
+    ...(systemInfo.disks ?? []).flatMap((disk) => [
+      {
+        icon: HardDrivesIcon,
+        label: t("sidebar.diskMount", { mount: disk.mount }),
+        value: `${disk.used} / ${disk.total}`,
+        detail: t("sidebar.diskDetail", { free: disk.free, usage: disk.usage }),
+        status: disk.status,
+        showProgress: true,
+        progressValue: disk.usage,
+      },
+      ...(disk.inodes
+        ? [
+          {
+            icon: FilesIcon,
+            label: t("sidebar.inodesMount", { mount: disk.mount }),
+            value: `${disk.inodes.used} / ${disk.inodes.total}`,
+            detail: t("sidebar.diskDetail", {
+              free: disk.inodes.free,
+              usage: disk.inodes.usage,
+            }),
+            status: disk.inodes.status,
+            showProgress: true,
+            progressValue: disk.inodes.usage,
+          },
+        ]
+        : []),
+    ]),
   ];
 
   const performanceMetrics = [
@@ -237,6 +272,11 @@ export const SystemInfoCard = ({
         },
       ]
       : []),
+    ...(systemInfo.disks ?? []).map((disk) => ({
+      label: t("sidebar.diskUsageMount", { mount: disk.mount }),
+      value: `${disk.usage}%`,
+      status: disk.status,
+    })),
   ];
 
   return (

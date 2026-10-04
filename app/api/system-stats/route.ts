@@ -10,6 +10,7 @@ import {
   getOverallStatus,
   formatGpuInfo,
 } from "@/app/_utils/system-stats-utils";
+import { getDiskStats, formatDiskStats } from "@/app/_utils/disk-stats-utils";
 import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
 
@@ -30,6 +31,7 @@ export const GET = async (request: NextRequest) => {
       [memInfo, cpuInfo, loadInfo, uptimeInfo, networkInfo],
       latency,
       graphics,
+      diskStats,
     ] = await Promise.all([
       Promise.all([
         si.mem(),
@@ -40,6 +42,7 @@ export const GET = async (request: NextRequest) => {
       ]),
       getPing(),
       si.graphics().catch(() => null),
+      getDiskStats().catch(() => null),
     ]);
 
     const actualUsed = memInfo.active || memInfo.used;
@@ -90,6 +93,7 @@ export const GET = async (request: NextRequest) => {
       },
       systemStatus: getOverallStatus(memUsage, cpuLoad, t),
       gpu: formatGpuInfo(graphics, t),
+      ...(diskStats ? { disks: formatDiskStats(diskStats, t) } : {}),
     };
 
     if (sseBroadcaster.hasClients()) {

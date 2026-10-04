@@ -53,13 +53,6 @@ export default async function Home() {
       model: "Loading...",
       status: "Loading",
     },
-    disk: {
-      total: "0 B",
-      used: "0 B",
-      free: "0 B",
-      usage: 0,
-      status: "Loading",
-    },
     systemStatus: {
       overall: "Loading",
       details: "Fetching system information...",

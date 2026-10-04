@@ -90,6 +90,16 @@ See `README_API.md` for API key usage instructions.
 - LIVE_UPDATES=false # Set to false to disable Server-Sent Events
 ```
 
+#### Disk Space and Inodes
+
+```yaml
+- DISK_MOUNTS=/,/mnt/data
+```
+
+Set `DISABLE_DISK_STATS=true` to turn the disk cards off entirely.
+
+By default only the host root filesystem is shown. With `pid: "host"` and `privileged: true` Cr\*nMaster reads host mounts through `/proc/1/root/<mount>`, so no extra volumes are needed. Each listed mount gets a single `statfs` call at most once per minute, and only when system stats are actually requested (the sidebar polls them while the page is visible). `statfs` reads filesystem counters, never file contents, but on some setups (mergerfs, network shares, sleepy USB disks) it can still wake the underlying drives, so only add mounts you are happy to have checked.
+
 ## Volume Mounts
 
 ### Required Volumes

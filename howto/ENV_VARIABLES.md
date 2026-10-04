@@ -57,6 +57,8 @@ Translation loading priority:
 | `NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL` | `30000` | Clock update interval in milliseconds (30 seconds) |
 | `LIVE_UPDATES`                      | `true`  | Enable/disable Server-Sent Events for live updates |
 | `DISABLE_SYSTEM_STATS`              | `false` | Set to `true` to completely disable system stats (stops polling and hides sidebar) |
+| `DISABLE_DISK_STATS`                | `false` | Set to `true` to hide disk space and inode usage from the sidebar |
+| `DISK_MOUNTS`                       | `/`     | Comma-separated absolute mount points to show disk space and inodes for (e.g. `/,/mnt/data`, max 8). Results are cached for 60 seconds. In Docker the host paths are read through `/proc/1/root`. Only add mounts you are fine with being checked, network or pooled filesystems may wake their disks |
 
 ## Logging Configuration
 

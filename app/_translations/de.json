@@ -149,7 +149,11 @@
         "performanceMetrics": "Leistungsmetriken",
         "statsUpdateEvery": "Statistiken aktualisieren alle",
         "updating": "Wird aktualisiert",
-        "networkSpeedEstimatedFromLatency": "Netzwerkgeschwindigkeit anhand der Latenz geschätzt"
+        "networkSpeedEstimatedFromLatency": "Netzwerkgeschwindigkeit anhand der Latenz geschätzt",
+        "diskMount": "Festplatte ({mount})",
+        "inodesMount": "Inodes ({mount})",
+        "diskDetail": "{free} frei, {usage}% belegt",
+        "diskUsageMount": "Festplattennutzung ({mount})"
     },
     "system": {
         "optimal": "Optimal",
