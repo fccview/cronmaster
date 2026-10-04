@@ -2,11 +2,17 @@ import { existsSync, copyFileSync } from "fs";
 import path from "path";
 import { DATA_DIR } from "../_consts/file";
 import { getHostDataPath } from "../_server/actions/global";
-import { toShellArg, fromShellArg } from "./wrapper-utils-client";
+import { toShellArg } from "./wrapper-utils-client";
 import { isSafeJobId } from "./security-utils";
 import { createLogger } from "@/app/_utils/logger";
 
 const log = createLogger("wrapper");
+
+export {
+  unwrapCommand,
+  isCommandWrapped,
+  extractJobIdFromWrappedCommand,
+} from "./wrapper-utils-client";
 
 export const generateLogFolderName = (jobId: string): string => {
   return jobId;
@@ -81,35 +87,4 @@ export const wrapCommandWithLogger = async (
     wrapperPath: localWrapperPath,
   });
   return `${localWrapperPath} "${logFolderName}" ${safeCmd}`;
-};
-
-export const unwrapCommand = (command: string): string => {
-  const wrapperPattern = /^(.+\/cron-log-wrapper\.sh)\s+"([^"]+)"\s+([\s\S]+)$/;
-
-  const match = command.match(wrapperPattern);
-
-  if (match && match[3]) {
-    return fromShellArg(match[3]);
-  }
-
-  return command;
-};
-
-export const isCommandWrapped = (command: string): boolean => {
-  const wrapperPattern = /\/cron-log-wrapper\.sh\s+"[^"]+"\s+/;
-  return wrapperPattern.test(command);
-};
-
-export const extractJobIdFromWrappedCommand = (
-  command: string
-): string | null => {
-  const wrapperPattern = /\/cron-log-wrapper\.sh\s+"([^"]+)"\s+/;
-
-  const match = command.match(wrapperPattern);
-
-  if (match && match[1]) {
-    return match[1];
-  }
-
-  return null;
 };
