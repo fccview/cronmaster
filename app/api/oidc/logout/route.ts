@@ -1,34 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("auth:oidc");
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  if (process.env.DEBUGGER) {
-    console.log("[OIDC Logout] Starting logout process");
-  }
+  log.debug("Starting OIDC logout");
 
   const appUrl = process.env.APP_URL || request.nextUrl.origin;
 
   if (process.env.SSO_MODE && process.env.SSO_MODE?.toLowerCase() !== "oidc") {
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Logout] SSO mode is not oidc, redirecting to login");
-    }
+    log.debug("SSO mode is not oidc, redirecting to login");
     return NextResponse.redirect(`${appUrl}/login`);
   }
 
   const customLogoutUrl = process.env.OIDC_LOGOUT_URL;
   if (customLogoutUrl) {
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Logout] Using custom logout URL", customLogoutUrl);
-    }
+    log.debug("Using custom logout URL", { url: customLogoutUrl });
     return NextResponse.redirect(customLogoutUrl);
   }
 
   const issuer = process.env.OIDC_ISSUER || "";
   if (!issuer) {
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Logout] Issuer is not set, redirecting to login");
-    }
+    log.warn("OIDC_ISSUER is not set, redirecting to login");
     return NextResponse.redirect(`${appUrl}/login`);
   }
 
@@ -36,28 +31,18 @@ export async function GET(request: NextRequest) {
     ? `${issuer}.well-known/openid-configuration`
     : `${issuer}/.well-known/openid-configuration`;
 
-  if (process.env.DEBUGGER) {
-    console.log("[OIDC Logout] Discovery URL:", discoveryUrl);
-  }
+  log.debug("Discovery URL", { url: discoveryUrl });
 
   try {
     const discoveryRes = await fetch(discoveryUrl, { cache: "no-store" });
 
-    if (process.env.DEBUGGER) {
-      console.log(
-        "[OIDC Logout] Discovery response status:",
-        discoveryRes.status
-      );
-    }
+    log.debug("Discovery response", { status: discoveryRes.status });
 
     if (!discoveryRes.ok) {
-      if (process.env.DEBUGGER) {
-        console.log(
-          "[OIDC Logout] Discovery URL is not ok",
-          discoveryRes.status,
-          discoveryRes.statusText
-        );
-      }
+      log.warn("OIDC discovery failed", {
+        status: discoveryRes.status,
+        statusText: discoveryRes.statusText,
+      });
       return NextResponse.redirect(`${appUrl}/login`);
     }
 
@@ -66,47 +51,36 @@ export async function GET(request: NextRequest) {
       discovery = (await discoveryRes.json()) as {
         end_session_endpoint?: string;
       };
-      if (process.env.DEBUGGER) {
-        console.log("[OIDC Logout] Discovery parsed:", {
-          end_session_endpoint: discovery.end_session_endpoint,
-        });
-      }
+      log.debug("Discovery parsed", {
+        endpoint: discovery.end_session_endpoint,
+      });
     } catch (jsonError) {
-      if (process.env.DEBUGGER) {
-        console.log("[OIDC Logout] Failed to parse discovery JSON", jsonError);
-      }
+      log.warn("Failed to parse OIDC discovery JSON", jsonError);
       return NextResponse.redirect(`${appUrl}/login`);
     }
 
     const endSession = discovery.end_session_endpoint;
     const postLogoutRedirect = `${appUrl}/login`;
 
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Logout] End session endpoint:", endSession);
-      console.log("[OIDC Logout] Post logout redirect:", postLogoutRedirect);
-    }
+    log.debug("End session resolved", {
+      endpoint: endSession,
+      postLogoutRedirect,
+    });
 
     if (!endSession) {
-      if (process.env.DEBUGGER) {
-        console.log(
-          "[OIDC Logout] No end_session_endpoint, redirecting to login"
-        );
-      }
+      log.debug("No end_session_endpoint, redirecting to login");
       return NextResponse.redirect(`${appUrl}/login`);
     }
 
     const url = new URL(endSession);
     url.searchParams.set("post_logout_redirect_uri", postLogoutRedirect);
 
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Logout] Final redirect URL:", url.toString());
-    }
+    log.info("OIDC logout, redirecting to provider end session");
+    log.debug("Final redirect URL", { url: url.toString() });
 
     return NextResponse.redirect(url);
   } catch (error) {
-    if (process.env.DEBUGGER) {
-      console.log("[OIDC Logout] Error during OIDC discovery", error);
-    }
+    log.warn("Error during OIDC logout discovery", error);
     return NextResponse.redirect(`${appUrl}/login`);
   }
 }

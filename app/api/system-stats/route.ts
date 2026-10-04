@@ -13,6 +13,9 @@ import {
 import { getDiskStats, formatDiskStats } from "@/app/_utils/disk-stats-utils";
 import { sseBroadcaster } from "@/app/_utils/sse-broadcaster";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("api:system");
 
 export const dynamic = "force-dynamic";
 
@@ -106,7 +109,7 @@ export const GET = async (request: NextRequest) => {
 
     return NextResponse.json(systemStats);
   } catch (error) {
-    console.error("Error fetching system stats:", error);
+    log.error("Error fetching system stats", error);
     return NextResponse.json(
       { error: "Failed to fetch system stats" },
       { status: 500 }

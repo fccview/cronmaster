@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
 import { fetchScripts } from "@/app/_server/actions/scripts";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("api:scripts");
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +18,7 @@ export async function GET(request: NextRequest) {
     const scripts = await fetchScripts();
     return NextResponse.json({ success: true, data: scripts });
   } catch (error: any) {
-    console.error("[API] Error fetching scripts:", error);
+    log.error("Error fetching scripts", error);
     return NextResponse.json(
       {
         success: false,

@@ -5,6 +5,9 @@ import { existsSync, type Stats } from "fs";
 import path from "path";
 import { requireAuth } from "@/app/_utils/api-auth-utils";
 import { isLogFileFromRun } from "@/app/_utils/log-files-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("logs:stream");
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +36,7 @@ export const GET = async (request: NextRequest) => {
     const job = getRunningJob(runId);
 
     if (!job) {
+      log.debug("Log stream requested for unknown run", { runId });
       return NextResponse.json(
         { error: "Running job not found" },
         { status: 404 }
@@ -88,7 +92,7 @@ export const GET = async (request: NextRequest) => {
           latestLogFile = cachedFilePath;
           latestStats = await stat(latestLogFile);
         } catch (error) {
-          console.error(`Error reading cached log file ${job.logFileName}:`, error);
+          log.error(`Error reading cached log file ${job.logFileName}`, error);
         }
       }
     }
@@ -106,7 +110,7 @@ export const GET = async (request: NextRequest) => {
             break;
           }
         } catch (error) {
-          console.error(`Error checking file ${file}:`, error);
+          log.error(`Error checking file ${file}`, error);
         }
       }
     }
@@ -206,7 +210,7 @@ export const GET = async (request: NextRequest) => {
       truncated,
     });
   } catch (error: any) {
-    console.error("Error streaming log:", error);
+    log.error("Error streaming log", error);
     return NextResponse.json(
       { error: error.message || "Failed to stream log" },
       { status: 500 }

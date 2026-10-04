@@ -3,6 +3,9 @@ import {
   createSession,
   getSessionCookieName,
 } from "@/app/_utils/session-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("auth");
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -11,6 +14,7 @@ export const POST = async (request: NextRequest) => {
     const authPassword = process.env.AUTH_PASSWORD;
 
     if (!authPassword) {
+      log.warn("Password login attempted but AUTH_PASSWORD is not configured");
       return NextResponse.json(
         { success: false, message: "Authentication not configured" },
         { status: 400 }
@@ -18,6 +22,9 @@ export const POST = async (request: NextRequest) => {
     }
 
     if (password !== authPassword) {
+      log.warn("Login failed, invalid password", {
+        ip: request.headers.get("x-forwarded-for") || undefined,
+      });
       return NextResponse.json(
         { success: false, message: "Invalid password" },
         { status: 401 }
@@ -33,12 +40,12 @@ export const POST = async (request: NextRequest) => {
 
     const cookieName = getSessionCookieName();
 
-    if (process.env.DEBUGGER) {
-      console.log("LOGIN - cookieName:", cookieName);
-      console.log("LOGIN - NODE_ENV:", process.env.NODE_ENV);
-      console.log("LOGIN - HTTPS:", process.env.HTTPS);
-      console.log("LOGIN - sessionId:", sessionId.substring(0, 10) + "...");
-    }
+    log.info("Login successful", { authType: "password" });
+    log.debug("Setting session cookie", {
+      credentialName: cookieName,
+      nodeEnv: process.env.NODE_ENV,
+      https: process.env.HTTPS,
+    });
     response.cookies.set(cookieName, sessionId, {
       httpOnly: true,
       secure:
@@ -50,7 +57,7 @@ export const POST = async (request: NextRequest) => {
 
     return response;
   } catch (error) {
-    console.error("Login error:", error);
+    log.error("Login error", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

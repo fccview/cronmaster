@@ -4,6 +4,9 @@ import {
   getSessionCookieName,
   getSession,
 } from "@/app/_utils/session-utils";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("auth");
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -17,6 +20,8 @@ export const POST = async (request: NextRequest) => {
 
       await deleteSession(sessionId);
     }
+
+    log.info("Logout", { authType: authType || "none" });
 
     if (authType === "oidc") {
       const appUrl = process.env.APP_URL || request.nextUrl.origin;
@@ -57,7 +62,7 @@ export const POST = async (request: NextRequest) => {
 
     return response;
   } catch (error) {
-    console.error("Logout error:", error);
+    log.error("Logout error", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }

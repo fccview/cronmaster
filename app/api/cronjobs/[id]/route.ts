@@ -5,6 +5,9 @@ import {
   editCronJob,
   removeCronJob,
 } from "@/app/_server/actions/cronjobs";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("api:cronjobs");
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 
     return NextResponse.json({ success: true, data: cronJob });
   } catch (error: any) {
-    console.error("[API] Error fetching cron job:", error);
+    log.error("Error fetching cron job", error);
     return NextResponse.json(
       {
         success: false,
@@ -63,7 +66,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
       return NextResponse.json(result, { status: 400 });
     }
   } catch (error: any) {
-    console.error("[API] Error updating cron job:", error);
+    log.error("Error updating cron job", error);
     return NextResponse.json(
       {
         success: false,
@@ -89,7 +92,7 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
       return NextResponse.json(result, { status: 400 });
     }
   } catch (error: any) {
-    console.error("[API] Error deleting cron job:", error);
+    log.error("Error deleting cron job", error);
     return NextResponse.json(
       {
         success: false,

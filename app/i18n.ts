@@ -1,5 +1,8 @@
 import { getRequestConfig } from "next-intl/server";
 import { loadTranslationMessages } from "@/app/_server/actions/translations";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("i18n");
 
 export default getRequestConfig(async ({ locale }) => {
   const safeLocale = locale || "en";
@@ -11,7 +14,7 @@ export default getRequestConfig(async ({ locale }) => {
       messages,
     };
   } catch (error) {
-    console.error(
+    log.error(
       `Failed to load translations for locale: ${safeLocale}`,
       error
     );

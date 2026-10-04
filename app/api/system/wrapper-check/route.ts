@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, existsSync } from "fs";
 import path from "path";
 import { DATA_DIR } from "@/app/_consts/file";
+import { createLogger } from "@/app/_utils/logger";
+
+const log = createLogger("api:system");
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ modified });
   } catch (error) {
-    console.error("Error checking wrapper script:", error);
+    log.error("Error checking wrapper script", error);
     return NextResponse.json(
       { error: "Failed to check wrapper script" },
       { status: 500 }
