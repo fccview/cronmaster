@@ -38,7 +38,6 @@ export const ID_G = (username: string) => `id -g ${shellQuote(username)}`;
 export const MAKE_SCRIPT_EXECUTABLE = (scriptPath: string) =>
   `chmod +x ${shellQuote(scriptPath)}`;
 
-export const RUN_SCRIPT = (scriptPath: string) => `bash ${shellQuote(scriptPath)}`;
 
 export const GET_TARGET_USER = `getent passwd | grep ":/home/" | head -1 | cut -d: -f1`;
 
