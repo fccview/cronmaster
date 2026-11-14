@@ -12,7 +12,7 @@
         "refresh": "Aktualisieren",
         "loading": "Wird geladen",
         "version": "Version {version}",
-        "tryAgainLater": "Bitte versuchen Sie es später erneut.",
+        "tryAgainLater": "Bitte später erneut versuchen.",
         "validationError": "Validierungsfehler",
         "copy": "Kopieren",
         "copied": "Kopiert!",
@@ -148,8 +148,8 @@
         "deleteBackupFailed": "Sicherung konnte nicht gelöscht werden",
         "noTasksForUser": "Keine Aufgaben für Benutzer {user}",
         "noScheduledTasksYet": "Noch keine geplanten Aufgaben",
-        "noTasksForUserDescription": "Für Benutzer {user} wurden keine geplanten Aufgaben gefunden. Wählen Sie einen anderen Benutzer oder erstellen Sie eine neue Aufgabe.",
-        "createFirstTaskDescription": "Erstellen Sie Ihre erste geplante Aufgabe, um Systemvorgänge zu automatisieren und produktiver zu arbeiten.",
+        "noTasksForUserDescription": "Für Benutzer {user} wurden keine geplanten Aufgaben gefunden. Einen anderen Benutzer auswählen oder eine neue Aufgabe erstellen.",
+        "createFirstTaskDescription": "Die erste geplante Aufgabe erstellen, um Systemvorgänge zu automatisieren und produktiver zu arbeiten.",
         "createYourFirstTask": "Erste Aufgabe erstellen",
         "copyJobId": "Klicken, um die Job-UUID zu kopieren",
         "latestExecutionFailed": "Letzte Ausführung fehlgeschlagen - Klicken, um das Fehlerprotokoll anzuzeigen",
@@ -308,11 +308,11 @@
         "loginFailed": "Anmeldung fehlgeschlagen",
         "genericError": "Es ist ein Fehler aufgetreten. Bitte erneut versuchen.",
         "invalidPassword": "Ungültiges Passwort",
-        "tooManyAttempts": "Zu viele fehlgeschlagene Versuche, bitte versuchen Sie es später erneut"
+        "tooManyAttempts": "Zu viele fehlgeschlagene Versuche, bitte später erneut versuchen"
     },
     "warnings": {
         "wrapperScriptModified": "Wrapper-Skript geändert",
-        "wrapperScriptModifiedDescription": "Ihr cron-log-wrapper.sh-Skript wurde von der offiziellen Version geändert. Dies kann die Protokollierungsfunktionalität beeinflussen. Rückkehr zur offiziellen Version erwägen oder sicherstellen, dass Änderungen das erforderliche Format für die Protokollanalyse nicht beschädigen.",
+        "wrapperScriptModifiedDescription": "Das Skript cron-log-wrapper.sh wurde gegenüber der offiziellen Version geändert. Dies kann die Protokollierungsfunktionalität beeinflussen. Rückkehr zur offiziellen Version erwägen oder sicherstellen, dass Änderungen das erforderliche Format für die Protokollanalyse nicht beschädigen.",
         "dismissWarning": "Warnung ausblenden"
     },
     "notFound": {
