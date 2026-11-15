@@ -15,6 +15,11 @@ const generateStableJobId = (
   return hash.substring(0, 8);
 };
 
+export const isJobLine = (trimmedLine: string): boolean => {
+  const parts = trimmedLine.split(/(?:\s|\t)+/);
+  return parts[0].startsWith("@") ? parts.length >= 2 : parts.length >= 6;
+};
+
 export const pauseJobInLines = (
   lines: string[],
   targetJobIndex: number,
@@ -64,7 +69,7 @@ export const pauseJobInLines = (
       if (
         i + 1 < lines.length &&
         !lines[i + 1].trim().startsWith("#") &&
-        lines[i + 1].trim()
+        isJobLine(lines[i + 1].trim())
       ) {
         if (currentJobIndex === targetJobIndex) {
           const commentText = trimmedLine.substring(1).trim();
@@ -89,6 +94,12 @@ export const pauseJobInLines = (
         newCronEntries.push(line);
         i++;
       }
+      continue;
+    }
+
+    if (!isJobLine(trimmedLine)) {
+      newCronEntries.push(line);
+      i++;
       continue;
     }
 
@@ -179,7 +190,9 @@ export const resumeJobInLines = (
     }
 
     newCronEntries.push(line);
-    currentJobIndex++;
+    if (isJobLine(trimmedLine)) {
+      currentJobIndex++;
+    }
     i++;
   }
 
@@ -353,7 +366,7 @@ export const parseJobsFromLines = (
       if (
         i + 1 < lines.length &&
         !lines[i + 1].trim().startsWith("#") &&
-        lines[i + 1].trim()
+        isJobLine(lines[i + 1].trim())
       ) {
         const commentText = trimmedLine.substring(1).trim();
         const { comment, logsEnabled, uuid } =
@@ -463,7 +476,7 @@ export const deleteJobInLines = (
       if (
         i + 1 < lines.length &&
         !lines[i + 1].trim().startsWith("#") &&
-        lines[i + 1].trim()
+        isJobLine(lines[i + 1].trim())
       ) {
         if (currentJobIndex !== targetJobIndex) {
           newCronEntries.push(line);
@@ -475,6 +488,12 @@ export const deleteJobInLines = (
         newCronEntries.push(line);
         i++;
       }
+      continue;
+    }
+
+    if (!isJobLine(trimmedLine)) {
+      newCronEntries.push(line);
+      i++;
       continue;
     }
 
@@ -559,7 +578,7 @@ export const updateJobInLines = (
       if (
         i + 1 < lines.length &&
         !lines[i + 1].trim().startsWith("#") &&
-        lines[i + 1].trim()
+        isJobLine(lines[i + 1].trim())
       ) {
         if (currentJobIndex === targetJobIndex) {
           const formattedComment = formatCommentWithMetadata(
@@ -582,6 +601,12 @@ export const updateJobInLines = (
         newCronEntries.push(line);
         i++;
       }
+      continue;
+    }
+
+    if (!isJobLine(trimmedLine)) {
+      newCronEntries.push(line);
+      i++;
       continue;
     }
 

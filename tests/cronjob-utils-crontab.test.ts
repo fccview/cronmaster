@@ -35,6 +35,7 @@ import {
 import {
   deleteJobInLines,
   pauseJobInLines,
+  updateJobInLines,
 } from "@/app/_utils/line-manipulation-utils";
 
 const crontab = [
@@ -101,6 +102,63 @@ describe("modifyJobInCrontab", () => {
     );
 
     expect(result).toBe("write-failed");
+  });
+});
+
+describe("crontab with variable lines", () => {
+  const withVariables = [
+    'MAILTO=""',
+    "SHELL=/bin/bash",
+    "# daily backup",
+    "0 3 * * * /usr/local/bin/backup.sh",
+    "*/5 * * * * echo hi",
+  ].join("\n");
+
+  const echoJob = async () => {
+    const job = (await getCronJobs(false)).find((j) => j.command === "echo hi");
+    return jobRef(job!.id, "*/5 * * * *", "echo hi");
+  };
+
+  beforeEach(() => {
+    host.crontab = withVariables;
+  });
+
+  it("deletes the targeted job and keeps the variables", async () => {
+    await modifyJobInCrontab(await echoJob(), (lines, index) => deleteJobInLines(lines, index));
+
+    expect(host.writes[0].content.split("\n")).toEqual([
+      'MAILTO=""',
+      "SHELL=/bin/bash",
+      "# daily backup",
+      "0 3 * * * /usr/local/bin/backup.sh",
+    ]);
+  });
+
+  it("updates the targeted job and keeps the variables", async () => {
+    const job = await echoJob();
+    await modifyJobInCrontab(job, (lines, index) =>
+      updateJobInLines(lines, index, "*/10 * * * *", "echo hi", "", false, job.id)
+    );
+
+    const lines = host.writes[0].content.split("\n");
+    expect(lines.slice(0, 4)).toEqual([
+      'MAILTO=""',
+      "SHELL=/bin/bash",
+      "# daily backup",
+      "0 3 * * * /usr/local/bin/backup.sh",
+    ]);
+    expect(lines.filter((line) => line.endsWith("echo hi"))).toEqual(["*/10 * * * * echo hi"]);
+  });
+
+  it("pauses the targeted job and keeps the variables", async () => {
+    const job = await echoJob();
+    await modifyJobInCrontab(job, (lines, index) => pauseJobInLines(lines, index, job.id));
+
+    host.crontab = host.writes[0].content;
+    expect(host.crontab).toContain("SHELL=/bin/bash");
+    const jobs = await getCronJobs(false);
+    expect(jobs.find((j) => j.command === "echo hi")?.paused).toBe(true);
+    expect(jobs.find((j) => j.command === "/usr/local/bin/backup.sh")?.paused).toBeFalsy();
   });
 });
 
