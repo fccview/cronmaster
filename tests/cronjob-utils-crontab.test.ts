@@ -115,6 +115,14 @@ describe("addCronJob", () => {
     expect(lines[lines.length - 2]).toMatch(/^# new \| id: [a-z0-9]{4}-[a-z0-9]{4}$/);
   });
 
+  it("writes a paused job in the paused form", async () => {
+    await expect(addCronJob("*/5 * * * *", "echo hi", "new", "root", false, true)).resolves.toBe(true);
+
+    host.crontab = host.writes[0].content;
+    const added = (await getCronJobs(false)).find((job) => job.comment === "new");
+    expect(added).toMatchObject({ schedule: "*/5 * * * *", command: "echo hi", paused: true });
+  });
+
   it("falls back to the host target crontab when no user is given", async () => {
     host.crontab = "";
     await expect(addCronJob("*/5 * * * *", "echo hi", "")).resolves.toBe(true);

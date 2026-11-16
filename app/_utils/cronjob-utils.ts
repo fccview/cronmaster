@@ -163,7 +163,8 @@ export const addCronJob = async (
   command: string,
   comment: string = "",
   user?: string,
-  logsEnabled: boolean = false
+  logsEnabled: boolean = false,
+  paused: boolean = false
 ): Promise<boolean> => {
   try {
     if (!isValidCronSchedule(schedule)) {
@@ -187,7 +188,9 @@ export const addCronJob = async (
       jobId
     );
 
-    const newEntry = `# ${formattedComment}\n${schedule} ${finalCommand}`;
+    const newEntry = paused
+      ? `# PAUSED: ${formattedComment}\n# ${schedule} ${finalCommand}`
+      : `# ${formattedComment}\n${schedule} ${finalCommand}`;
 
     const newCron =
       cronContent.trim() === ""

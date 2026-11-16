@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   runJobSynchronously: vi.fn(),
   runJobInBackground: vi.fn(),
   isDocker: vi.fn(),
+  restoreJobFromBackup: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -26,6 +27,10 @@ vi.mock("@/app/_utils/cronjob-utils", () => ({
   findJobIndex: vi.fn(),
 }));
 
+vi.mock("@/app/_utils/backup-utils", () => ({
+  restoreJobFromBackup: mocks.restoreJobFromBackup,
+}));
+
 vi.mock("@/app/_utils/job-execution-utils", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@/app/_utils/job-execution-utils")>();
@@ -41,6 +46,7 @@ import {
   createCronJob,
   editCronJob,
   executeJob,
+  restoreCronJob,
   runCronJob,
   toggleCronJobLogging,
 } from "@/app/_server/actions/cronjobs";
@@ -209,6 +215,27 @@ describe("cloneCronJob", () => {
       "copy",
       "root",
       false
+    );
+  });
+});
+
+describe("restoreCronJob", () => {
+  it("restores a paused job as paused", async () => {
+    mocks.restoreJobFromBackup.mockResolvedValue({
+      success: true,
+      job: { ...job, paused: true },
+    });
+
+    const result = await restoreCronJob(`${job.id}.job`);
+
+    expect(result.success).toBe(true);
+    expect(mocks.addCronJob).toHaveBeenCalledWith(
+      job.schedule,
+      job.command,
+      job.comment,
+      "root",
+      false,
+      true
     );
   });
 });

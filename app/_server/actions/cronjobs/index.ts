@@ -485,7 +485,8 @@ const addJobFromBackup = (job: CronJob) =>
     job.command,
     job.comment || "",
     job.user,
-    job.logsEnabled || false
+    job.logsEnabled || false,
+    job.paused || false
   );
 
 export const restoreCronJob = async (
