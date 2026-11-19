@@ -319,7 +319,7 @@
         "title": "404 - Página no encontrada",
         "subtitle": "ERROR: No se ha podido encontrar el recurso solicitado",
         "message": "La página que buscas no existe. ¿Te apetece una partida al Snake?",
-        "gameOver": "GAME OVER",
+        "gameOver": "FIN DE LA PARTIDA",
         "score": "Puntuación",
         "highScore": "Récord",
         "pressToStart": "Pulsa ESPACIO o toca para empezar",
